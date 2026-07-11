@@ -1,7 +1,14 @@
+# Excluir todos os scripts em Python e pastas de automação local (100% locais)
+painel_admin.py
+script_gestao_orcamentaria/
+iniciar_painel.bat
+rotina_diaria.bat
+
 # Cache do Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.py
 
 # Configurações locais de IDEs e ferramentas
 .vscode/
@@ -13,22 +20,8 @@ __pycache__/
 # Banco de dados e credenciais locais (Altamente Confidencial!)
 siteadm/dados/logins.json
 siteadm/dados/config.json
-script_gestao_orcamentaria/auth/
-**/auth/
-**/credentials.json
-**/client_secret.json
-**/token.json
-**/token.pickle
-**/master_key.txt
-**/credenciais.json
 
-# Backups e Fotografias locais
-script_gestao_orcamentaria/snapshots/
-script_gestao_orcamentaria/backup/
-**/backup/
-**/snapshots/
-
-# Arquivos temporários e mídia temporária
+# Arquivos de mídia temporária
 .tempmediaStorage/
 attached_pdf_*
 
