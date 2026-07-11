@@ -1,0 +1,290 @@
+/* ── LOGIN OVERLAY & MODAL ── */
+#login-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(245, 242, 232, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#login-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.login-modal {
+  background: var(--white, #ffffff);
+  border: 1px solid var(--cream-dark, #e8e4d3);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  padding: 32px;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+  position: relative;
+}
+
+#login-overlay.active .login-modal {
+  transform: translateY(0);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.login-header h2 {
+  color: var(--olive-dark, #2a3810);
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.login-header p {
+  color: var(--gray-600, #4b5563);
+  font-size: 13px;
+}
+
+.login-group {
+  margin-bottom: 16px;
+  text-align: left;
+}
+.login-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-600, #4b5563);
+  margin-bottom: 6px;
+}
+.login-group input[type="text"],
+.login-group input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #fafafa;
+}
+.login-group input:focus {
+  outline: none;
+  border-color: var(--gold, #c9a227);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.2);
+  background: #fff;
+}
+
+.login-options {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 8px;
+}
+.login-options input[type="checkbox"] {
+  accent-color: var(--olive, #3d5016);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.login-options label {
+  font-size: 13px;
+  color: var(--gray-600, #4b5563);
+  cursor: pointer;
+}
+
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  background: var(--olive, #3d5016);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-login:hover {
+  background: var(--olive-dark, #2a3810);
+}
+.btn-login:active {
+  transform: scale(0.98);
+}
+.btn-login:disabled {
+  background: var(--gray-400, #9ca3af);
+  cursor: not-allowed;
+}
+
+#login-error {
+  color: var(--red, #ef4444);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 12px;
+  min-height: 18px;
+}
+
+.login-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--gray-400, #9ca3af);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+.login-close:hover {
+  background: var(--gray-200, #e5e7eb);
+  color: var(--gray-600, #4b5563);
+}
+
+/* ── SUCCESS EFFECT ── */
+#login-success-overlay {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  text-align: center;
+}
+.success-icon {
+  width: 60px;
+  height: 60px;
+  background: var(--olive, #3d5016);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  transform: scale(0);
+}
+#login-success-overlay h3 {
+  color: var(--olive-dark, #2a3810);
+  font-size: 18px;
+  opacity: 0;
+}
+.animate-success .success-icon {
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.animate-success h3 {
+  animation: fadeIn 0.3s ease forwards 0.2s;
+}
+@keyframes popIn {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── USER BADGE ── */
+.adm-user-badge {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--cream-dark, #e8e4d3);
+  padding: 8px 16px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  z-index: 9900;
+  animation: slideDownFade 0.4s ease forwards;
+}
+.adm-user-badge .user-icon {
+  font-size: 14px;
+}
+.adm-user-badge .user-name {
+  font-size: 13px;
+  color: var(--gray-600, #4b5563);
+}
+.adm-user-badge .user-name b {
+  color: var(--olive-dark, #2a3810);
+  font-weight: 600;
+}
+.adm-user-badge .btn-logout {
+  background: none;
+  border: none;
+  color: var(--red, #ef4444);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.adm-user-badge .btn-logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+@keyframes slideDownFade {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── COMPACT MODE FOR MODULES ── */
+.adm-user-badge.compact-mode {
+  border-radius: 50%;
+  padding: 8px;
+  gap: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.adm-user-badge.compact-mode .user-icon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+.adm-user-badge.compact-mode .user-name,
+.adm-user-badge.compact-mode .btn-logout {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+.adm-user-badge.compact-mode:hover {
+  border-radius: 30px;
+  padding: 8px 16px;
+  gap: 12px;
+  cursor: default;
+}
+.adm-user-badge.compact-mode:hover .user-name {
+  max-width: 200px;
+  opacity: 1;
+}
+.adm-user-badge.compact-mode:hover .btn-logout {
+  max-width: 60px;
+  opacity: 1;
+  padding: 4px 8px;
+}

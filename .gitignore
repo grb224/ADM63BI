@@ -1,0 +1,39 @@
+# Cache do Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Configurações locais de IDEs e ferramentas
+.vscode/
+.idea/
+.impeccable/
+.gemini/
+*.log
+
+# Banco de dados e credenciais locais (Altamente Confidencial!)
+siteadm/dados/logins.json
+siteadm/dados/config.json
+script_gestao_orcamentaria/auth/
+**/auth/
+**/credentials.json
+**/client_secret.json
+**/token.json
+**/token.pickle
+**/master_key.txt
+**/credenciais.json
+
+# Backups e Fotografias locais
+script_gestao_orcamentaria/snapshots/
+script_gestao_orcamentaria/backup/
+**/backup/
+**/snapshots/
+
+# Arquivos temporários e mídia temporária
+.tempmediaStorage/
+attached_pdf_*
+
+# Documentos locais com dados sigilosos
+*.pdf
+*.xlsx
+*.xls
+*.csv

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COMEX SFPC | Dashboard Gerencial - 63º Batalhão de Infantaria</title>
+  <meta name="description" content="Painel Gerencial de Inteligência Operacional e Logística - Controle de Inspeções de Produtos Controlados pelo Exército (PCE) - SFPC 63º BI">
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+  <!-- Dashboard Styles -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Favicon -->
+  <link rel="icon" href="../assets/logo.png">
+
+  <!-- Login System -->
+  <link rel="stylesheet" href="../assets/login.css">
+  <script src="../assets/login.js"></script>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Carregando dados do COMEX...</div>
+</div>
+
+  <div class="dashboard-container">
+
+    <!-- ═══════════════════════════════════════════════════════
+         HEADER
+         ═══════════════════════════════════════════════════════ -->
+    <header class="dashboard-header" id="dashboard-header">
+      <div class="header-left">
+        <div class="header-emblem">
+          <img src="../assets/logo.png" alt="Logo 63º BI" style="width: 100%; height: 100%; object-fit: contain;">
+        </div>
+        <div class="header-info">
+          <h1>COMEX — SFPC</h1>
+          <p class="header-subtitle">Painel Gerencial de Inteligência Operacional • 63º Batalhão de Infantaria</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-meta">
+          <div class="meta-label">Última Atualização</div>
+          <div class="meta-value" id="last-update">—</div>
+        </div>
+        <a href="../" class="btn-voltar" style="background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; padding: 10px 16px; border-radius: 8px; cursor: pointer; text-decoration: none; margin-right: 12px; display: inline-flex; align-items: center; transition: all 0.2s;">← Menu</a>
+        <button class="btn-load-csv" id="btn-load-csv" title="Carregar novo arquivo CSV para atualizar os dados">
+          📁 Atualizar CSV
+        </button>
+        <input type="file" id="csv-file-input" accept=".csv" class="hidden-input">
+      </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════════
+         FILTROS INTERATIVOS
+         ═══════════════════════════════════════════════════════ -->
+    <section class="filters-section" id="filters-section">
+      <div class="filter-group">
+        <label class="filter-label" for="filter-date-start">Período — De</label>
+        <input type="text" id="filter-date-start" class="filter-control" placeholder="Todos" onfocus="(this.type='date')" onblur="if(!this.value) this.type='text'">
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filter-date-end">Período — Até</label>
+        <input type="text" id="filter-date-end" class="filter-control" placeholder="Todos" onfocus="(this.type='date')" onblur="if(!this.value) this.type='text'">
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filter-city">Cidade</label>
+        <select id="filter-city" class="filter-control">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filter-location">Local de Desembaraço</label>
+        <select id="filter-location" class="filter-control">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filter-company">Empresa (PJ/PF)</label>
+        <select id="filter-company" class="filter-control">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filter-fiscal">Fiscal</label>
+        <select id="filter-fiscal" class="filter-control">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <button class="btn-clear-filters" id="btn-clear-filters">✕ Limpar</button>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         KPIs — INDICADORES CHAVE
+         ═══════════════════════════════════════════════════════ -->
+    <section class="kpi-section" id="kpi-section">
+      <div class="section-title">
+        <span class="title-icon">📊</span>
+        Indicadores Chave de Desempenho
+        <span class="title-line"></span>
+      </div>
+      <div class="kpi-grid">
+        <!-- KPI 1: Valor Total -->
+        <div class="kpi-card kpi-value-card">
+          <div class="kpi-header">
+            <span class="kpi-label">Valor Total Desembaraçado</span>
+            <div class="kpi-icon">💰</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-value">$0.00</div>
+          <div class="kpi-subtitle">Total acumulado em US$</div>
+        </div>
+
+        <!-- KPI 2: Total Processos -->
+        <div class="kpi-card kpi-process-card">
+          <div class="kpi-header">
+            <span class="kpi-label">Processos Finalizados</span>
+            <div class="kpi-icon">📋</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-processes">0</div>
+          <div class="kpi-subtitle">Termos de inspeção emitidos</div>
+        </div>
+
+        <!-- KPI 3: LI -->
+        <div class="kpi-card kpi-li-card">
+          <div class="kpi-header">
+            <span class="kpi-label">Processos LI</span>
+            <div class="kpi-icon">📄</div>
+          </div>
+          <div class="kpi-value" id="kpi-li-count">0</div>
+          <div class="kpi-subtitle">Licença de Importação</div>
+        </div>
+
+        <!-- KPI 4: LPCO -->
+        <div class="kpi-card kpi-lpco-card">
+          <div class="kpi-header">
+            <span class="kpi-label">Processos LPCO</span>
+            <div class="kpi-icon">📑</div>
+          </div>
+          <div class="kpi-value" id="kpi-lpco-count">0</div>
+          <div class="kpi-subtitle">LPCO / DUIMP</div>
+        </div>
+
+        <!-- KPI 5: SLA -->
+        <div class="kpi-card kpi-sla-card">
+          <div class="kpi-header">
+            <span class="kpi-label">Tempo Médio de Resposta</span>
+            <div class="kpi-icon">⏱️</div>
+          </div>
+          <div class="kpi-value" id="kpi-sla">0 dias</div>
+          <div class="kpi-subtitle">SLA — Solicitação → Inspeção</div>
+          <span class="sla-badge" id="kpi-sla-badge"></span>
+        </div>
+      </div>
+
+      <!-- Painel de Detalhes Expandível -->
+      <div id="kpi-details-panel" class="kpi-details-panel">
+        <div class="details-panel-header">
+          <h3 id="details-panel-title">Detalhamento dos Processos</h3>
+          <button id="btn-close-details" class="btn-close-details">✕ Fechar</button>
+        </div>
+        <div class="details-panel-body">
+          <div class="table-responsive">
+            <table class="details-table">
+              <thead>
+                <tr>
+                  <th>Nº Doc</th>
+                  <th>Tipo Doc</th>
+                  <th>Produto</th>
+                  <th>Qtd</th>
+                  <th>Importador</th>
+                  <th>Cidade</th>
+                  <th>Local</th>
+                  <th>Fiscal</th>
+                  <th>Data Inspeção</th>
+                  <th>Valor (US$)</th>
+                </tr>
+              </thead>
+              <tbody id="details-table-body">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         GRÁFICOS DE TENDÊNCIA E EVOLUÇÃO
+         ═══════════════════════════════════════════════════════ -->
+    <section class="charts-section" id="trend-section">
+      <div class="section-title">
+        <span class="title-icon">📈</span>
+        Tendência e Evolução
+        <span class="title-line"></span>
+      </div>
+      <div class="charts-grid">
+        <!-- Chart 1: Values by Date -->
+        <div class="chart-panel" style="animation-delay: 0.3s;">
+          <div class="chart-title">
+            <span class="chart-icon">💵</span>
+            Valores Desembaraçados por Mês
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-values-month"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Volume Over Time -->
+        <div class="chart-panel" style="animation-delay: 0.35s;">
+          <div class="chart-title">
+            <span class="chart-icon">📉</span>
+            Volume de Vistorias por Mês
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-volume-time"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         ANÁLISE DE LOCAIS E LOGÍSTICA
+         ═══════════════════════════════════════════════════════ -->
+    <section class="charts-section" id="logistics-section">
+      <div class="section-title">
+        <span class="title-icon">🗺️</span>
+        Análise de Locais e Logística
+        <span class="title-line"></span>
+      </div>
+      <div class="charts-grid">
+        <!-- Chart 3: Cities Doughnut -->
+        <div class="chart-panel" style="animation-delay: 0.4s;">
+          <div class="chart-title">
+            <span class="chart-icon">🏙️</span>
+            Vistorias por Cidade
+          </div>
+          <div class="chart-wrapper chart-wrapper-doughnut">
+            <canvas id="chart-cities"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 4: Locations Horizontal Bar -->
+        <div class="chart-panel" style="animation-delay: 0.45s;">
+          <div class="chart-title">
+            <span class="chart-icon">🏭</span>
+            Recintos com Maior Volume de Vistorias
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-locations"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         INTELIGÊNCIA DE PRODUTOS E EMPRESAS
+         ═══════════════════════════════════════════════════════ -->
+    <section class="intel-section" id="intelligence-section">
+      <div class="section-title">
+        <span class="title-icon">🔍</span>
+        Inteligência de Produtos e Empresas (PCE)
+        <span class="title-line"></span>
+      </div>
+      <div class="intel-grid">
+        <!-- Products Chart -->
+        <div class="chart-panel" style="animation-delay: 0.5s;">
+          <div class="chart-title">
+            <span class="chart-icon">📦</span>
+            Top Produtos Importados — Valor × Quantidade
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-products"></canvas>
+          </div>
+        </div>
+
+        <!-- Companies Table -->
+        <div class="company-table-panel" style="animation-delay: 0.55s;">
+          <div class="chart-title">
+            <span class="chart-icon">🏢</span>
+            Ranking — Maiores Importadores por Valor (US$)
+          </div>
+          <table class="company-table">
+            <thead>
+              <tr>
+                <th style="width:40px">#</th>
+                <th>Empresa</th>
+                <th style="width:25%">Participação</th>
+                <th style="width:140px">Valor (US$)</th>
+              </tr>
+            </thead>
+            <tbody id="companies-table-body">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         FOOTER
+         ═══════════════════════════════════════════════════════ -->
+    <footer class="dashboard-footer">
+      <span>COMEX SFPC</span> • 63º Batalhão de Infantaria • Painel de Inteligência Operacional — Dados classificados para uso institucional
+    </footer>
+
+  </div>
+
+  <!-- Dashboard Logic -->
+  <script src="dashboard.js"></script>
+
+</body>
+</html>

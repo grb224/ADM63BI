@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administração — 63º BI</title>
+  <meta name="description" content="Painel administrativo do 63º Batalhão de Infantaria — Sistema de Gestão Financeira">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="assets/login.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --olive-dark: #2a3810;
+      --olive: #3d5016;
+      --olive-light: #6b7c3a;
+      --gold: #c9a227;
+      --gold-light: #e8bc3a;
+      --cream: #f5f2e8;
+      --white: #ffffff;
+      --black: #1a1a1a;
+      --gray-600: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--black);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, rgba(42,56,16,0.9) 0%, rgba(61,80,22,0.95) 100%);
+      color: var(--white);
+      padding: 24px 32px;
+      border-bottom: 3px solid var(--gold);
+    }
+    .header-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; gap: 20px;
+    }
+    .header-logo {
+      height: 70px; width: auto; object-fit: contain;
+      filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.4));
+    }
+    .header-title h1 {
+      font-size: 22px; font-weight: 800;
+      color: var(--gold-light);
+    }
+    .header-title p {
+      font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px;
+    }
+
+    /* MAIN */
+    .main-content {
+      flex: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 32px;
+      width: 100%;
+    }
+    .section-label {
+      font-size: 12px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--olive);
+      margin-bottom: 20px;
+    }
+
+    /* MODULE CARDS */
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .module-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 28px 24px;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-left: 5px solid var(--olive-light);
+      text-decoration: none;
+      color: var(--black);
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .module-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    .module-card .icon {
+      font-size: 28px;
+    }
+    .module-card .title {
+      font-size: 16px; font-weight: 700;
+    }
+    .module-card .desc {
+      font-size: 13px; color: var(--gray-600); line-height: 1.5;
+    }
+    .module-card.active {
+      border-left-color: var(--gold);
+    }
+    .module-card.disabled {
+      opacity: 0.5; pointer-events: none;
+      border-left-color: var(--gray-600);
+    }
+    .module-card .badge-soon {
+      display: inline-block;
+      font-size: 9px; font-weight: 700;
+      background: var(--cream); color: var(--gray-600);
+      padding: 2px 8px; border-radius: 10px;
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+
+    /* Actions container and action buttons inside module-card */
+    .module-card.card-buttons {
+      cursor: default;
+    }
+    .module-card.card-buttons:hover {
+      transform: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .module-actions-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+      width: 100%;
+    }
+    .module-action-btn {
+      display: block;
+      text-align: center;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .module-action-btn.primary-btn {
+      background: var(--olive);
+      color: var(--white);
+    }
+    .module-action-btn.primary-btn:hover {
+      background: var(--olive-dark);
+    }
+    .module-action-btn.secondary-btn {
+      background: var(--cream);
+      color: var(--olive-dark);
+      border: 1px solid var(--olive-light);
+    }
+    .module-action-btn.secondary-btn:hover:not(.disabled-btn) {
+      background: var(--cream-dark);
+    }
+    .module-action-btn.disabled-btn {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* PLANILHAS LIST */
+    .planilhas-section { margin-top: 48px; max-width: 800px; margin-left: auto; margin-right: auto; }
+    
+    .planilhas-accordion-btn {
+      background: var(--white); border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 12px; padding: 18px 24px; width: 100%; text-align: left;
+      font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600;
+      color: var(--black); cursor: pointer; display: flex;
+      justify-content: space-between; align-items: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    .planilhas-accordion-btn:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-2px);
+    }
+    .planilhas-accordion-btn .chevron {
+      transition: transform 0.3s; font-size: 16px; color: var(--gray-600);
+    }
+    .planilhas-accordion-btn.open .chevron { transform: rotate(180deg); }
+    
+    .planilhas-content {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+      opacity: 0;
+    }
+    .planilhas-content.open { max-height: 2000px; padding-top: 20px; opacity: 1; }
+
+    .planilhas-grid {
+      display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;
+    }
+     .planilha-btn {
+      position: relative;
+      background: var(--white); border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 16px; padding: 16px;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; color: var(--black);
+      transition: all 0.2s;
+      width: 216px; height: 216px;
+    }
+    .planilha-btn:hover {
+      background: var(--cream); border-color: var(--gold);
+      transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+    }
+    .planilha-btn .icon-img { width: 175px; height: 175px; object-fit: contain; }
+    
+    .planilha-fallback {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      height: 100%;
+      color: var(--olive-dark);
+      text-align: center;
+      padding: 10px;
+    }
+    .planilha-fallback .fallback-icon {
+      font-size: 40px;
+    }
+    .planilha-fallback .fallback-title {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--black);
+    }
+
+    /* FOOTER */
+    .footer {
+      text-align: center; padding: 20px;
+      font-size: 11px; color: var(--gray-600);
+      border-top: 1px solid rgba(0,0,0,0.06);
+    }
+
+    /* ---------- RESPONSIVIDADE ---------- */
+    @media (max-width: 768px) {
+      .header { padding: 16px; }
+      .header-inner { flex-direction: column; align-items: center; text-align: center; gap: 12px; }
+      .header-logo { height: 60px; }
+      .main-content { padding: 24px 16px; }
+      .modules-grid { grid-template-columns: 1fr; }
+      .planilhas-section { margin-top: 32px; }
+      .planilhas-accordion-btn { padding: 14px 16px; font-size: 14px; }
+      .planilhas-grid { gap: 12px; justify-content: center; }
+      .planilha-btn { width: calc(50% - 6px); height: auto; aspect-ratio: 1; max-width: none; padding: 10px; border-radius: 12px; }
+      .planilha-btn .icon-img { width: 100%; height: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <img src="assets/logo.png" alt="Logo 63º BI" class="header-logo">
+    <div class="header-title">
+      <h1>Administração — 63º BI</h1>
+      <p>Sistema de acompanhamento e gestão do 63° BI</p>
+    </div>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="section-label">Módulos Disponíveis</div>
+  <div class="modules-grid">
+
+    <a href="projecao/" class="module-card active" id="module-projecao">
+      <div class="icon">📊</div>
+      <div class="title">Gestão Orçamentária</div>
+      <div class="desc">Dashboard interativo com metas, projeções setoriais, auditoria de previsões e alertas de empenhos.</div>
+    </a>
+
+    <a href="comex/" class="module-card active" id="module-comex">
+      <div class="icon">🛡️</div>
+      <div class="title">COMEX</div>
+      <div class="desc">Dashboard interativo de inteligência operacional e logística para controle de Inspeções de Produtos Controlados pelo Exército (PCE).</div>
+    </a>
+
+    <div class="module-card active card-buttons" id="module-financeiro">
+      <div class="icon">💵</div>
+      <div class="title">Setor Financeiro</div>
+      <div class="desc">Gerenciamento de liquidações de documentos hábeis e relatórios analíticos de execução.</div>
+      <div class="module-actions-container">
+        <a href="/scirpt_teouraria/liquidacoes.html" class="module-action-btn primary-btn">Controle das liquidações</a>
+        <a href="#" class="module-action-btn secondary-btn disabled-btn" onclick="event.preventDefault(); alert('Dashboard em desenvolvimento — Em breve!')">Dashboard interativo</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="planilhas-section">
+    <button class="planilhas-accordion-btn" onclick="togglePlanilhas()">
+      <span><span style="font-size: 18px; margin-right: 8px;">📑</span> Planilhas da Administração (Google Drive)</span>
+      <span class="chevron">▼</span>
+    </button>
+    <div class="planilhas-content" id="planilhasContent">
+      <div class="planilhas-grid">
+        <a href="https://docs.google.com/spreadsheets/d/1ygdPVym9diDZoMHMx7lvNCjrrFbCaftiiA8tMw3ufzY/edit?usp=sharing" target="_blank" class="planilha-btn" title="RPCM" onclick="return checkPlanilhaLogin(event)">
+          <img src="assets/icons/icon_1.png" alt="RPCM" class="icon-img" onerror="handleImageError(this, 'RPCM')">
+        </a>
+        <a href="https://docs.google.com/spreadsheets/d/1ToRibNcO5GJ7oXZ0oeGpBXFmIE17gTUWNYA5B-oy7Ww/edit?usp=sharing" target="_blank" class="planilha-btn" title="Empenhos e Créditos" onclick="return checkPlanilhaLogin(event)">
+          <img src="assets/icons/icon_2.png" alt="Empenhos e Créditos" class="icon-img" onerror="handleImageError(this, 'Empenhos & Créditos')">
+        </a>
+        <a href="https://docs.google.com/spreadsheets/d/1vBnvAjccdwN5js8XvqTXv4LZI2XPt1Yv3JSsF_QJWMs/edit?usp=sharing" target="_blank" class="planilha-btn" title="Critério das metas" onclick="return checkPlanilhaLogin(event)">
+          <img src="assets/icons/icon_3.png" alt="Critério das metas" class="icon-img" onerror="handleImageError(this, 'Critério das Metas')">
+        </a>
+        <a href="https://docs.google.com/spreadsheets/d/1dhW6NL7Cw5VoXmdj_UqvFgp_Skz_GT1dzfBg9L_Pi7A/edit?usp=sharing" target="_blank" class="planilha-btn" title="Para quem solicitar crédito" onclick="return checkPlanilhaLogin(event)">
+          <img src="assets/icons/icon_4.png" alt="Para quem solicitar crédito" class="icon-img" onerror="handleImageError(this, 'Solicitação de Crédito')">
+        </a>
+        <a href="https://docs.google.com/spreadsheets/d/14FU9KD9UJ9AvO618S3aDi9WRCLCXdHZUKmHdA7Cnvx4/edit?usp=sharing" target="_blank" class="planilha-btn" title="SALC / Pregões" onclick="return checkPlanilhaLogin(event)">
+          <img src="assets/icons/icon_5.png" alt="SALC / Pregões" class="icon-img" onerror="handleImageError(this, 'SALC / Pregões')">
+        </a>
+        <a href="https://docs.google.com/spreadsheets/d/17ea-vL3RaFen3UjA-WOWPEp75o6Ju5vemqW433qEBK0/edit?usp=sharing" target="_blank" class="planilha-btn" title="Projetos" onclick="return checkPlanilhaLogin(event)">
+          <img src="assets/icons/icon_6.png" alt="Projetos" class="icon-img" onerror="handleImageError(this, 'Projetos')">
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  SAG 2026 · 63º Batalhão de Infantaria · Sistema de Gestão Administrativa
+</div>
+
+</body>
+<script src="assets/login.js"></script>
+<script>
+  function handleImageError(img, title) {
+    img.style.display = 'none';
+    const fallback = document.createElement('div');
+    fallback.className = 'planilha-fallback';
+    fallback.innerHTML = `
+      <span class="fallback-icon">📊</span>
+      <span class="fallback-title">${title}</span>
+    `;
+    img.parentNode.appendChild(fallback);
+  }
+
+  function togglePlanilhas() {
+    const content = document.getElementById('planilhasContent');
+    const btn = document.querySelector('.planilhas-accordion-btn');
+    content.classList.toggle('open');
+    btn.classList.toggle('open');
+  }
+
+  function checkPlanilhaLogin(event) {
+    if (typeof LoginSystem !== 'undefined' && !LoginSystem.isLoggedIn()) {
+      event.preventDefault();
+      LoginSystem.openModal("Acesso Restrito. Faça login para abrir as planilhas da Administração.");
+      return false;
+    }
+    return true;
+  }
+</script>
+</html>

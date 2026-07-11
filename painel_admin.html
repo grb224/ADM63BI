@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel Administrativo - 63º BI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --olive: #3d5016; --olive-dark: #2a3810;
+      --cream: #f5f2e8; --cream-dark: #e8e4d3;
+      --gold: #c9a227; --white: #ffffff;
+      --gray: #6b7280; --red: #ef4444;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: #1a1a1a;
+      margin: 0; padding: 40px 20px;
+    }
+    .container {
+      max-width: 900px; margin: 0 auto;
+    }
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 30px;
+    }
+    h1 { color: var(--olive-dark); margin: 0; font-size: 24px; }
+    
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--cream-dark); }
+    th { color: var(--gray); font-size: 13px; font-weight: 600; text-transform: uppercase; }
+    td { font-size: 14px; }
+    .tag-badge {
+      display: inline-block; background: var(--olive); color: white;
+      padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-right: 4px;
+    }
+    
+    .btn {
+      padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600;
+      cursor: pointer; font-size: 13px; transition: background 0.2s;
+    }
+    .btn-primary { background: var(--olive); color: white; }
+    .btn-primary:hover { background: var(--olive-dark); }
+    .btn-danger { background: var(--red); color: white; padding: 4px 8px; font-size: 12px; }
+    
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center;
+    }
+    .modal { background: white; padding: 24px; border-radius: 12px; width: 400px; max-width: 90%; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+    .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+    .checkbox-group { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+
+    /* TOGGLE SWITCH */
+    .toggle-card {
+      background: var(--white); border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      padding: 20px 24px; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+    }
+    .toggle-card .toggle-info h3 { font-size: 15px; margin: 0 0 4px; color: var(--olive-dark); }
+    .toggle-card .toggle-info p { font-size: 12px; color: var(--gray); margin: 0; }
+    .toggle-switch {
+      position: relative; width: 52px; height: 28px; flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background: #ccc; border-radius: 28px; transition: background 0.3s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute; height: 22px; width: 22px;
+      left: 3px; bottom: 3px; background: white; border-radius: 50%;
+      transition: transform 0.3s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--olive); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(24px); }
+    .toggle-status { font-size: 12px; font-weight: 600; min-width: 80px; text-align: center; }
+
+    /* ---------- RESPONSIVIDADE ---------- */
+    @media (max-width: 768px) {
+      body { padding: 20px 10px; }
+      .header { flex-direction: column; align-items: stretch; gap: 12px; text-align: center; }
+      .header h1 { font-size: 20px; }
+      .header .btn { width: 100%; }
+      .card { padding: 16px 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 500px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Controle de Acessos & Permissões</h1>
+    <button class="btn btn-primary" onclick="openModal()">+ Novo Perfil</button>
+  </div>
+  
+  <div class="toggle-card">
+    <div class="toggle-info">
+      <h3>🔒 Exigir Login para Acesso</h3>
+      <p>Quando desativado, qualquer pessoa pode acessar o site sem autenticação.</p>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-login" onchange="toggleLoginRequired()">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-status" id="toggle-status">—</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Perfil (Login)</th>
+          <th>Nome Visível</th>
+          <th>Permissões (Tags)</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="user-table">
+        <!-- Preenchido via JS -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">Novo Perfil</h2>
+    <input type="hidden" id="edit-index" value="-1">
+    
+    <div class="form-group">
+      <label>Login do Perfil (minúsculas, sem espaço)</label>
+      <input type="text" id="ipt-perfil" placeholder="ex: financas">
+    </div>
+    
+    <div class="form-group">
+      <label>Nome Visível</label>
+      <input type="text" id="ipt-nome" placeholder="ex: Seção de Finanças">
+    </div>
+    
+    <div class="form-group">
+      <label>Senha (Se deixar em branco, não altera)</label>
+      <input type="text" id="ipt-senha" placeholder="Digite a senha">
+    </div>
+    
+    <div class="form-group">
+      <label>Permissões (Tags)</label>
+      <div class="checkbox-group"><input type="checkbox" id="tag-admin" value="admin"> <label for="tag-admin" style="margin:0; font-weight:bold; color:var(--red);">ADMIN (Acesso Total)</label></div>
+      <div class="checkbox-group"><input type="checkbox" id="tag-comex" value="comex"> <label for="tag-comex" style="margin:0;">COMEX</label></div>
+      <div class="checkbox-group"><input type="checkbox" id="tag-projecao" value="projecao"> <label for="tag-projecao" style="margin:0;">Gestão Orçamentária (Acesso Completo)</label></div>
+      <div class="checkbox-group"><input type="checkbox" id="tag-auditor" value="auditor"> <label for="tag-auditor" style="margin:0;">Auditor (Acesso restrito em Gestão Orç.)</label></div>
+    </div>
+    
+    <div style="display:flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUser()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let users = [];
+  
+  async function loadUsers() {
+    try {
+      const res = await fetch('/api/logins');
+      users = await res.json();
+      
+      // Migrar usuários antigos se não tiverem tags
+      let modified = false;
+      users.forEach(u => {
+        if (!u.tags) { u.tags = []; modified = true; }
+      });
+      if(modified) await saveToServer();
+      
+      renderTable();
+    } catch (e) {
+      alert("Erro ao carregar banco de dados local.");
+    }
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('user-table');
+    tbody.innerHTML = '';
+    users.forEach((u, index) => {
+      const tr = document.createElement('tr');
+      
+      let tagsHtml = '';
+      if(u.tags) {
+        u.tags.forEach(t => tagsHtml += `<span class="tag-badge">${t}</span>`);
+      }
+      
+      tr.innerHTML = `
+        <td><b>${u.perfil}</b></td>
+        <td>${u.nome || u.perfil}</td>
+        <td>${tagsHtml || '<span style="color:#aaa; font-size:12px;">Nenhuma permissão</span>'}</td>
+        <td>
+          <button class="btn btn-primary" style="padding:4px 8px; font-size:12px;" onclick="editUser(${index})">Editar</button>
+          <button class="btn btn-danger" onclick="deleteUser(${index})">Excluir</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+  
+  function openModal() {
+    document.getElementById('modal').style.display = 'flex';
+    document.getElementById('modal-title').innerText = 'Novo Perfil';
+    document.getElementById('edit-index').value = '-1';
+    document.getElementById('ipt-perfil').value = '';
+    document.getElementById('ipt-nome').value = '';
+    document.getElementById('ipt-senha').value = '';
+    document.getElementById('tag-admin').checked = false;
+    document.getElementById('tag-comex').checked = false;
+    document.getElementById('tag-projecao').checked = false;
+    document.getElementById('tag-auditor').checked = false;
+  }
+  
+  function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+  }
+  
+  function editUser(index) {
+    const u = users[index];
+    openModal();
+    document.getElementById('modal-title').innerText = 'Editar Perfil';
+    document.getElementById('edit-index').value = index;
+    document.getElementById('ipt-perfil').value = u.perfil;
+    document.getElementById('ipt-nome').value = u.nome || '';
+    
+    document.getElementById('tag-admin').checked = u.tags && u.tags.includes('admin');
+    document.getElementById('tag-comex').checked = u.tags && u.tags.includes('comex');
+    document.getElementById('tag-projecao').checked = u.tags && u.tags.includes('projecao');
+    document.getElementById('tag-auditor').checked = u.tags && u.tags.includes('auditor');
+  }
+  
+  async function saveUser() {
+    const idx = parseInt(document.getElementById('edit-index').value);
+    const perfil = document.getElementById('ipt-perfil').value.trim().toLowerCase();
+    const nome = document.getElementById('ipt-nome').value.trim();
+    const senha = document.getElementById('ipt-senha').value.trim();
+    
+    if(!perfil) return alert("O login do perfil é obrigatório.");
+    
+    let tags = [];
+    if(document.getElementById('tag-admin').checked) tags.push('admin');
+    if(document.getElementById('tag-comex').checked) tags.push('comex');
+    if(document.getElementById('tag-projecao').checked) tags.push('projecao');
+    if(document.getElementById('tag-auditor').checked) tags.push('auditor');
+    
+    let hash = "";
+    
+    if (idx === -1) {
+      // Create new
+      if(!senha) return alert("A senha é obrigatória para um novo perfil.");
+      hash = await sha256(senha);
+      users.push({ perfil, nome, hash, tags, senha });
+    } else {
+      // Update
+      users[idx].perfil = perfil;
+      users[idx].nome = nome;
+      users[idx].tags = tags;
+      if (senha) {
+        users[idx].hash = await sha256(senha);
+        users[idx].senha = senha;
+      }
+    }
+    
+    await saveToServer();
+    closeModal();
+    renderTable();
+  }
+  
+  async function deleteUser(index) {
+    if(confirm(`Tem certeza que deseja excluir o perfil ${users[index].perfil}?`)) {
+      users.splice(index, 1);
+      await saveToServer();
+      renderTable();
+    }
+  }
+
+  async function saveToServer() {
+    try {
+      await fetch('/api/logins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(users)
+      });
+    } catch(e) {
+      alert("Erro ao salvar.");
+    }
+  }
+  
+  async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // ── CONFIG: LOGIN TOGGLE ──
+  async function loadConfig() {
+    try {
+      const res = await fetch('/siteadm/dados/config.json?_t=' + Date.now());
+      if (res.ok) {
+        const config = await res.json();
+        const toggle = document.getElementById('toggle-login');
+        const status = document.getElementById('toggle-status');
+        toggle.checked = config.login_required !== false;
+        status.textContent = toggle.checked ? 'Ativado' : 'Desativado';
+        status.style.color = toggle.checked ? 'var(--olive)' : 'var(--red)';
+      }
+    } catch(e) { console.warn('Config load failed', e); }
+  }
+
+  async function toggleLoginRequired() {
+    const toggle = document.getElementById('toggle-login');
+    const status = document.getElementById('toggle-status');
+    const newValue = toggle.checked;
+    status.textContent = newValue ? 'Ativado' : 'Desativado';
+    status.style.color = newValue ? 'var(--olive)' : 'var(--red)';
+    
+    try {
+      await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login_required: newValue })
+      });
+    } catch(e) {
+      alert('Erro ao salvar configuração.');
+    }
+  }
+
+  window.onload = () => { loadUsers(); loadConfig(); };
+</script>
+
+</body>
+</html>
