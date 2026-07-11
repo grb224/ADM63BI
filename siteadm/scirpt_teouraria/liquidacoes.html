@@ -1129,9 +1129,14 @@ function renderTable() {
     }
   });
 
-  // Sort by date desc, then by number desc
+  // Sort by date desc (newest first), placing empty dates at the bottom, then by number desc
   data.sort((a, b) => {
-    const dateCompare = (b.dataEmissao || '').localeCompare(a.dataEmissao || '');
+    if (!a.dataEmissao && b.dataEmissao) return 1;
+    if (a.dataEmissao && !b.dataEmissao) return -1;
+    if (!a.dataEmissao && !b.dataEmissao) {
+      return parseInt(b.numero || 0) - parseInt(a.numero || 0);
+    }
+    const dateCompare = b.dataEmissao.localeCompare(a.dataEmissao);
     if (dateCompare !== 0) return dateCompare;
     return parseInt(b.numero || 0) - parseInt(a.numero || 0);
   });
