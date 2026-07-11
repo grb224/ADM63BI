@@ -261,26 +261,26 @@
         <span>📎</span> Informações Complementares
       </div>
       <div class="form-grid">
-        <div class="form-group">
+        <div class="form-group" style="display: none;">
           <label>CNPJ da Empresa</label>
           <input type="text" id="fieldCNPJ" placeholder="Ex: 00.000.000/0000-00">
         </div>
-        <div class="form-group">
+        <div class="form-group" style="display: none;">
           <label>Data de Emissão da OB</label>
           <input type="date" id="fieldDataOB">
         </div>
-        <div class="form-group">
+        <div class="form-group" style="display: none;">
           <label>Incluído no E-cac</label>
           <select id="fieldECac">
             <option value="Não">Não</option>
             <option value="Sim">Sim</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-group span-2">
           <label>Documento Relacionado</label>
           <input type="text" id="fieldDocRelacionado" placeholder="Ex: NF 18594">
         </div>
-        <div class="form-group span-4">
+        <div class="form-group span-2">
           <label>Observação</label>
           <textarea id="fieldObservacao" placeholder="Observações adicionais..."></textarea>
         </div>
@@ -659,6 +659,8 @@ function gatherFormData() {
     });
   }
 
+  const original = editingId ? loadData().find(r => r.id === editingId) : null;
+
   return {
     id: editingId || Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
     uge: document.getElementById('fieldUGE').value,
@@ -671,13 +673,13 @@ function gatherFormData() {
     deducoes,
     totalDeducoes,
     valorLiquido: bruto - totalDeducoes,
-    cnpj: document.getElementById('fieldCNPJ').value.trim(),
-    dataOB: document.getElementById('fieldDataOB').value,
-    eCac: document.getElementById('fieldECac').value,
+    cnpj: original ? (original.cnpj || '') : '',
+    dataOB: original ? (original.dataOB || '') : '',
+    eCac: original ? (original.eCac || 'Não') : 'Não',
     docRelacionado: document.getElementById('fieldDocRelacionado').value.trim(),
     observacao: document.getElementById('fieldObservacao').value.trim(),
     fase: 1,
-    createdAt: new Date().toISOString()
+    createdAt: original ? original.createdAt : new Date().toISOString()
   };
 }
 
