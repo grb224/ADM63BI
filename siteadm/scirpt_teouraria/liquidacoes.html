@@ -345,15 +345,23 @@ let pendingDuplicateData = null;
 var columnFilters = {};
 let editingRowId = null;
 
+let cachedLiquidacoes = [];
+
 function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
+  return cachedLiquidacoes;
 }
 
 function saveData(data) {
+  cachedLiquidacoes = data;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function syncRecordToBackend(record) {
+  fetch('/api/liquidacoes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(record)
+  }).catch(err => console.error('[DB] Erro de sincronização com Sheets:', err));
 }
 
 function getFilteredData() {
@@ -691,6 +699,7 @@ function saveLiquidacao(data) {
   }
 
   saveData(all);
+  syncRecordToBackend(data);
   
   const panel = document.getElementById('formPanel');
   if (panel.classList.contains('open') && !editingRowId) {
@@ -772,6 +781,15 @@ function closeConfirmDeleteModal() {
 function confirmDeleteRecord() {
   if (pendingDeleteRowId) {
     let all = loadData();
+    const record = all.find(r => r.id === pendingDeleteRowId);
+    if (record) {
+      fetch('/api/liquidacoes/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: pendingDeleteRowId, uge: record.uge })
+      }).catch(err => console.error('[DB] Erro ao excluir na planilha:', err));
+    }
+
     all = all.filter(r => r.id !== pendingDeleteRowId);
     saveData(all);
     renderTable();
@@ -795,6 +813,7 @@ function updateRecordField(id, field, value) {
   if (idx >= 0) {
     all[idx][field] = value;
     saveData(all);
+    syncRecordToBackend(all[idx]);
     updateStats();
     updateCounts();
   }
@@ -806,6 +825,7 @@ function updateOBDateField(id, value) {
   if (idx >= 0) {
     all[idx].dataOB = value;
     saveData(all);
+    syncRecordToBackend(all[idx]);
     
     // Dynamically update the GERCOMP/GEROP badge inside the DOM for instant feedback
     const tr = document.querySelector(`tr[data-id="${id}"]`);
@@ -837,6 +857,7 @@ function updateOptanteField(id, value) {
       all[idx].valorLiquido = all[idx].valorBruto;
     }
     saveData(all);
+    syncRecordToBackend(all[idx]);
     renderTable();
   }
 }
@@ -849,6 +870,7 @@ function updateBrutoField(id, value) {
     all[idx].valorBruto = bruto;
     all[idx].valorLiquido = bruto - (all[idx].totalDeducoes || 0);
     saveData(all);
+    syncRecordToBackend(all[idx]);
     renderTable();
   }
 }
@@ -996,6 +1018,7 @@ function saveRowEdition(id, forceSaveWithoutPrompt = false) {
     }
 
     saveData(all);
+    syncRecordToBackend(all[idx]);
     editingRowId = null;
     renderTable();
     updateStats();
@@ -1094,6 +1117,7 @@ function saveInlineDeductions() {
     all[idx].valorLiquido = all[idx].valorBruto - total;
 
     saveData(all);
+    syncRecordToBackend(all[idx]);
     renderTable();
     closeDeductionsEditModal();
     showToast('Deduções atualizadas com sucesso!', 'success');
@@ -1535,21 +1559,34 @@ function showToast(message, type = 'info') {
 // INIT
 // ═══════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
-  // Auto-import pre-existing CSV backup records on local load
-  if (!localStorage.getItem('imported_backup_v1')) {
+  // Load data from backend
+  try {
+    const response = await fetch('/api/liquidacoes');
+    if (response.ok) {
+      cachedLiquidacoes = await response.json();
+      console.log('[DB] Dados carregados do backend:', cachedLiquidacoes.length);
+    } else {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      cachedLiquidacoes = raw ? JSON.parse(raw) : [];
+      console.log('[DB] Fallback localStorage ativo:', cachedLiquidacoes.length);
+    }
+  } catch (e) {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    cachedLiquidacoes = raw ? JSON.parse(raw) : [];
+    console.log('[DB] Falha de conexão. Fallback localStorage ativo:', cachedLiquidacoes.length);
+  }
+
+  // Auto-import pre-existing CSV backup records on local load if not done yet
+  if (!localStorage.getItem('imported_backup_v1') && cachedLiquidacoes.length === 0) {
     try {
       const response = await fetch('../dados/liquidacoes_import.json');
       if (response.ok) {
         const importData = await response.json();
-        const existingData = loadData();
-        const map = new Map();
-        existingData.forEach(r => map.set(r.id, r));
-        importData.forEach(r => {
-          if (!map.has(r.id)) {
-            map.set(r.id, r);
-          }
-        });
-        saveData(Array.from(map.values()));
+        saveData(importData);
+        // Sync each to backend to populate Sheets
+        for (let r of importData) {
+          syncRecordToBackend(r);
+        }
         localStorage.setItem('imported_backup_v1', 'true');
         console.log('Importação de backups concluída com sucesso!');
       }
