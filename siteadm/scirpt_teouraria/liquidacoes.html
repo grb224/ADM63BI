@@ -14,6 +14,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <link rel="stylesheet" href="liquidacoes.css">
+  
+  <!-- Login System -->
+  <link rel="stylesheet" href="../assets/login.css">
+  <script src="../assets/login.js"></script>
 </head>
 <body>
 
@@ -98,6 +102,9 @@
         <h1>Setor Financeiro — Liquidações</h1>
         <div class="header-subtitle">Controle de Documentos Hábeis • 63º Batalhão de Infantaria</div>
       </div>
+    </div>
+    <div class="header-right" style="display: flex; align-items: center; gap: 12px;">
+      <a href="../" class="btn-voltar" style="background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; padding: 10px 16px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.2s; margin-right: 48px;">← Menu</a>
     </div>
   </header>
 
@@ -1522,7 +1529,30 @@ function showToast(message, type = 'info') {
 // ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Auto-import pre-existing CSV backup records on local load
+  if (!localStorage.getItem('imported_backup_v1')) {
+    try {
+      const response = await fetch('../dados/liquidacoes_import.json');
+      if (response.ok) {
+        const importData = await response.json();
+        const existingData = loadData();
+        const map = new Map();
+        existingData.forEach(r => map.set(r.id, r));
+        importData.forEach(r => {
+          if (!map.has(r.id)) {
+            map.set(r.id, r);
+          }
+        });
+        saveData(Array.from(map.values()));
+        localStorage.setItem('imported_backup_v1', 'true');
+        console.log('Importação de backups concluída com sucesso!');
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar dados do backup:', e);
+    }
+  }
+
   renderTable();
   updateStats();
   updateCounts();

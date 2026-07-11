@@ -7,10 +7,15 @@ const LoginSystem = {
   pendingUrl: null,
   loginRequired: true, // default, overridden by config.json
 
+  isModulePage: function() {
+    const path = window.location.pathname;
+    return path.includes('/projecao/') || path.includes('/comex/') || path.includes('/scirpt_teouraria/');
+  },
+
   init: async function() {
     // 0. Check if login is required
     try {
-      const rootPath = window.location.pathname.includes('/projecao/') || window.location.pathname.includes('/comex/') ? '../' : './';
+      const rootPath = this.isModulePage() ? '../' : './';
       const configRes = await fetch(rootPath + 'dados/config.json?_t=' + Date.now());
       if (configRes.ok) {
         const config = await configRes.json();
@@ -27,7 +32,7 @@ const LoginSystem = {
       // Set a dummy master key for data decryption — need the real one
       if (!sessionStorage.getItem('adm_master_key') && !localStorage.getItem('adm_master_key')) {
         try {
-          const rootPath2 = window.location.pathname.includes('/projecao/') || window.location.pathname.includes('/comex/') ? '../' : './';
+          const rootPath2 = this.isModulePage() ? '../' : './';
           const loginsRes = await fetch(rootPath2 + 'dados/logins.json?_t=' + Date.now());
           if (loginsRes.ok) {
             const logins = await loginsRes.json();
@@ -109,8 +114,8 @@ const LoginSystem = {
   },
 
   loadLogins: function() {
-    // Tentamos achar a raiz (caso estejamos em /projecao/ ou /comex/)
-    const rootPath = window.location.pathname.includes('/projecao/') || window.location.pathname.includes('/comex/') ? '../' : './';
+    // Tentamos achar a raiz (caso estejamos em um módulo)
+    const rootPath = this.isModulePage() ? '../' : './';
     const url = rootPath + 'dados/logins.json?_t=' + new Date().getTime();
     
     fetch(url)
@@ -125,7 +130,7 @@ const LoginSystem = {
 
   interceptLinks: function() {
     // Interceptar cliques no index.html
-    const links = document.querySelectorAll('a.module-card.active, a.btn-acesso-restrito');
+    const links = document.querySelectorAll('a.module-card.active, a.btn-acesso-restrito, a.module-action-btn:not(.disabled-btn)');
     links.forEach(link => {
       link.addEventListener('click', (e) => {
         if (!this.isLoggedIn()) {
@@ -141,7 +146,7 @@ const LoginSystem = {
     // Se a página atual NÃO for o index (menu raiz), e não estiver logado, bloqueia
     const path = window.location.pathname;
     
-    if (path.includes('/projecao/') || path.includes('/comex/')) {
+    if (this.isModulePage()) {
       if (!this.isLoggedIn()) {
         this.showAccessDenied("Acesso Negado. Você precisa fazer login para acessar este módulo.", '../');
         return;
@@ -291,7 +296,7 @@ const LoginSystem = {
        nomeVisivel = perfil.charAt(0).toUpperCase() + perfil.slice(1);
     }
     
-    const isModule = window.location.pathname.includes('/projecao/') || window.location.pathname.includes('/comex/');
+    const isModule = this.isModulePage();
     const badgeClass = isModule ? 'adm-user-badge compact-mode' : 'adm-user-badge';
     
     const html = `
@@ -320,7 +325,7 @@ const LoginSystem = {
 
   hideUnauthorizedModules: function() {
     // Esconde os cartões do index.html se não tiver tag
-    const isIndex = !window.location.pathname.includes('/projecao/') && !window.location.pathname.includes('/comex/');
+    const isIndex = !this.isModulePage();
     if (!isIndex) return;
     
     const tagsStr = localStorage.getItem('adm_auth_tags') || sessionStorage.getItem('adm_auth_tags') || "[]";
