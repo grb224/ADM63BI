@@ -343,6 +343,59 @@
       /* Chart container */
       .card canvas { height: 120px !important; }
     }
+    .header-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-right: 48px;
+    }
+    .btn-atualizar {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+      border: none;
+      color: var(--olive-dark);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 4px 12px rgba(201,162,39,0.2);
+      outline: none;
+      text-decoration: none;
+    }
+    .btn-atualizar:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(201,162,39,0.4);
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
+    }
+    .btn-atualizar:active {
+      transform: translateY(0);
+    }
+    .btn-atualizar:disabled {
+      background: var(--gray-600);
+      color: var(--gray-200);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 768px) {
+      .header-actions {
+        margin: 8px 0 0 !important;
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+        margin-right: 0 !important;
+      }
+      .btn-atualizar {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body>
@@ -366,7 +419,12 @@
       <h1>GESTÃO ORÇAMENTÁRIA — 63º BI</h1>
       <p>Sistema de Gestão Financeira · Seção de Administração · Gerado em: <span id="tsGeradoHeader">—</span></p>
     </div>
-    <a href="../" class="btn-voltar">← Menu</a>
+    <div class="header-actions">
+      <button class="btn-atualizar" id="btnAtualizar" onclick="solicitarAtualizacaoPlanilha()">
+        <span id="btnAtualizarIcon" style="display: inline-block;">🔄</span> Atualizar dados
+      </button>
+      <a href="../" class="btn-voltar" style="margin: 0;">← Menu</a>
+    </div>
   </div>
 </div>
 
@@ -1248,6 +1306,143 @@ window.openTab = function(evt, tabName) {
   }
   
   originalOpenTab(evt, tabName);
+}
+
+async function solicitarAtualizacaoPlanilha() {
+  const btn = document.getElementById('btnAtualizar');
+  const icon = document.getElementById('btnAtualizarIcon');
+  if (!btn) return;
+
+  btn.disabled = true;
+  if (icon) icon.style.animation = 'spin 1s linear infinite';
+
+  try {
+    const response = await fetch('/api/projecao/atualizar', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const rawData = await response.json();
+
+    if (rawData.encrypted) {
+      const masterKeyHex = sessionStorage.getItem('adm_master_key') || localStorage.getItem('adm_master_key');
+      if (!masterKeyHex) {
+        throw new Error("Chave de decriptação não encontrada. Efetue login novamente.");
+      }
+      DADOS = await LoginSystem.decryptData(rawData.encrypted, masterKeyHex);
+    } else {
+      DADOS = rawData;
+    }
+
+    // Atualiza logo se disponível
+    if (DADOS.logo_base64) {
+      const logoEl = document.getElementById('headerLogo');
+      if (logoEl) {
+        logoEl.src = 'data:image/png;base64,' + DADOS.logo_base64;
+        logoEl.style.display = '';
+      }
+    }
+
+    // Atualiza timestamp
+    const geradoEm = DADOS.gerado_em || '—';
+    const tsEl = document.getElementById('tsGerado');
+    if (tsEl) tsEl.textContent = geradoEm;
+    const tsH = document.getElementById('tsGeradoHeader');
+    if (tsH) tsH.textContent = geradoEm;
+
+    // Atualiza os inputs na tela se novos valores de metas foram carregados
+    if (DADOS.data_meta) {
+      const parts = DADOS.data_meta.split('/');
+      if (parts.length === 3) {
+        const inputDataEl = document.getElementById('inputData');
+        if (inputDataEl) {
+          inputDataEl.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+      }
+    }
+    if (DADOS.metas) {
+      if (DADOS.metas.emp_corr) document.getElementById('inputPctEmpCorr').value = DADOS.metas.emp_corr;
+      if (DADOS.metas.liq_corr) document.getElementById('inputPctLiqCorr').value = DADOS.metas.liq_corr;
+      if (DADOS.metas.liq_rpnp) document.getElementById('inputPctLiqRpnp').value = DADOS.metas.liq_rpnp;
+    }
+
+    // Re-renderiza tudo com animação de contagem
+    startCountUpAnimation();
+    setTimeout(initChart, 300);
+    renderAuditoria();
+    renderEmpenhos40();
+
+    showNotification("Dados da planilha atualizados com sucesso!", "success");
+
+  } catch (err) {
+    console.error('Erro ao atualizar dados da planilha:', err);
+    showNotification('Erro ao atualizar: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    if (icon) icon.style.animation = '';
+  }
+}
+
+function showNotification(message, type = 'success') {
+  let container = document.getElementById('notification-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'notification-container';
+    container.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    `;
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  const bg = type === 'success' ? 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)' : 'linear-gradient(135deg, #c0392b 0%, #e74c3c 100%)';
+  toast.style.cssText = `
+    background: ${bg};
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  `;
+  
+  const icon = document.createElement('span');
+  icon.textContent = type === 'success' ? '✓' : '✕';
+  toast.appendChild(icon);
+
+  const textNode = document.createTextNode(message);
+  toast.appendChild(textNode);
+  
+  container.appendChild(toast);
+
+  void toast.offsetWidth;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateY(0)';
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-20px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
 }
 </script>
 </body>
