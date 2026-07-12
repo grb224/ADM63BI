@@ -143,6 +143,9 @@
     <button class="btn-incluir" id="btnIncluir" onclick="toggleForm()">
       <span class="icon">＋</span> Incluir Liquidação
     </button>
+    <button class="btn-incluir" id="btnSincronizar" onclick="sincronizarComPlanilha()" style="background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%); color: var(--olive-dark); border: none; box-shadow: 0 4px 12px rgba(201,162,39,0.2);">
+      <span id="btnSincronizarIcon" style="display: inline-block;">🔄</span> Sincronizar da Planilha
+    </button>
     <div class="search-box">
       <span class="search-icon">🔍</span>
       <input type="text" id="searchInput" placeholder="Buscar por nº, documento, observação..." oninput="renderTable()">
@@ -392,8 +395,10 @@ function updateCounts() {
 // STATS
 // ═══════════════════════════════════════════════
 function updateStats() {
+  const searchInput = document.getElementById('searchInput');
+  if (!searchInput) return;
   const data = getFilteredData();
-  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  const search = searchInput.value.toLowerCase().trim();
   const filtered = search ? data.filter(r => matchesSearch(r, search)) : data;
 
   const totalBruto = filtered.reduce((s, r) => s + (r.valorBruto || 0), 0);
@@ -500,6 +505,9 @@ function addDeductionRow() {
   deductionCounter++;
   const id = deductionCounter;
 
+  // Get current Gross Value to default the Base de Cálculo
+  const valorBrutoVal = document.getElementById('fieldValorBruto').value.trim();
+
   const row = document.createElement('div');
   row.className = 'deduction-row';
   row.id = `deduction-${id}`;
@@ -510,7 +518,7 @@ function addDeductionRow() {
     </div>
     <div class="form-group">
       <label>Base de Cálculo</label>
-      <input type="text" class="ded-base" placeholder="0,00" oninput="calcularLiquido()">
+      <input type="text" class="ded-base" value="${valorBrutoVal}" placeholder="0,00" oninput="calcularLiquido()">
     </div>
     <div class="form-group">
       <label>Valor da Dedução</label>
@@ -555,11 +563,20 @@ function formatMoney(value) {
 }
 
 function calcularLiquido() {
-  const bruto = parseMoney(document.getElementById('fieldValorBruto').value);
+  const brutoStr = document.getElementById('fieldValorBruto').value;
+  const bruto = parseMoney(brutoStr);
   let totalDeducoes = 0;
 
   const optante = document.getElementById('fieldOptante').value;
   if (optante === 'Não') {
+    // Fill Base de Cálculo if it is empty
+    document.querySelectorAll('.deduction-row').forEach(row => {
+      const baseInput = row.querySelector('.ded-base');
+      if (baseInput && !baseInput.value.trim()) {
+        baseInput.value = brutoStr;
+      }
+    });
+
     document.querySelectorAll('.ded-valor').forEach(input => {
       totalDeducoes += parseMoney(input.value);
     });
@@ -1139,9 +1156,11 @@ function matchesSearch(record, search) {
 }
 
 function renderTable() {
+  const searchInput = document.getElementById('searchInput');
+  if (!searchInput) return;
   const tbody = document.getElementById('tableBody');
   const empty = document.getElementById('emptyState');
-  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  const search = searchInput.value.toLowerCase().trim();
 
   let data = getFilteredData();
   if (search) {
@@ -1612,6 +1631,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateStats();
   updateCounts();
 
+
 // Keyboard shortcut: Ctrl+N = new record
   document.addEventListener('keydown', e => {
     if (e.ctrlKey && e.key === 'n') {
@@ -1959,6 +1979,49 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+async function sincronizarComPlanilha() {
+  const btn = document.getElementById('btnSincronizar');
+  const icon = document.getElementById('btnSincronizarIcon');
+  if (!btn) return;
+
+  btn.disabled = true;
+  if (icon) icon.style.animation = 'spin 1s linear infinite';
+
+  try {
+    const response = await fetch('/api/liquidacoes/sincronizar_planilha', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || `HTTP ${response.status}`);
+    }
+
+    const resData = await response.json();
+    
+    // Reload local data from backend
+    const dataResponse = await fetch('/api/liquidacoes');
+    if (dataResponse.ok) {
+      cachedLiquidacoes = await dataResponse.json();
+    }
+    
+    renderTable();
+    updateStats();
+    updateCounts();
+    
+    showToast(`Sincronização concluída! ${resData.count} registros carregados.`, 'success');
+  } catch (err) {
+    console.error('Erro ao sincronizar com a planilha:', err);
+    showToast('Erro ao sincronizar: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    if (icon) icon.style.animation = '';
+  }
+}
 </script>
 
 </body>
