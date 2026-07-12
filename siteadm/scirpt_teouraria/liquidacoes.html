@@ -313,7 +313,8 @@
             <th data-col="optante" class="filterable-header"><div class="header-content"><span>Optante</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'optante')">▼</span></div></th>
             <th data-col="valorBruto" class="filterable-header"><div class="header-content"><span>Valor Bruto</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'valorBruto')">▼</span></div></th>
             <th data-col="baseCalculo" class="filterable-header"><div class="header-content"><span>Base de Cálculo</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'baseCalculo')">▼</span></div></th>
-            <th data-col="totalDeducoes" class="filterable-header"><div class="header-content"><span>Deduções</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'totalDeducoes')">▼</span></div></th>
+            <th data-col="codigoRetencao" class="filterable-header"><div class="header-content"><span>Cód. Retenção</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'codigoRetencao')">▼</span></div></th>
+            <th data-col="valorRetencao" class="filterable-header"><div class="header-content"><span>Valor Retido</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'valorRetencao')">▼</span></div></th>
             <th data-col="valorLiquido" class="filterable-header"><div class="header-content"><span>Valor Líquido</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'valorLiquido')">▼</span></div></th>
             <th data-col="codNatureza" class="filterable-header"><div class="header-content"><span>Cód. Natureza</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'codNatureza')">▼</span></div></th>
             <th data-col="docRelacionado" class="filterable-header"><div class="header-content"><span>Doc. Relacionado</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'docRelacionado')">▼</span></div></th>
@@ -1204,12 +1205,8 @@ function renderTable() {
     const dateFormatted = r.dataEmissao ? new Date(r.dataEmissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
     const obDateFormatted = r.dataOB ? new Date(r.dataOB + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
 
-    const deducoesSummary = r.deducoes && r.deducoes.length > 0
-      ? r.deducoes.map(d => `${d.codigo}: ${formatMoney(d.valor)}`).join(' | ')
-      : (r.totalDeducoes ? formatMoney(r.totalDeducoes) : '—');
-
     const basesSummary = r.deducoes && r.deducoes.length > 0
-      ? r.deducoes.map(d => `${d.codigo}: ${formatMoney(d.base)}`).join(' | ')
+      ? formatMoney(r.deducoes[0].base)
       : '—';
 
     const isRowEditing = (r.id === editingRowId);
@@ -1245,10 +1242,13 @@ function renderTable() {
         <td class="valor-cell selectable-val" style="color: var(--text-muted); font-size: 11px;">
           ${r.optante === 'Não' ? basesSummary : 'N/A'}
         </td>
+        <td style="font-size: 11px; color: var(--text-muted);">
+          ${r.optante === 'Não' ? (r.deducoes || []).map(d => d.codigo).join(', ') || '—' : 'N/A'}
+        </td>
         <td class="valor-cell negative selectable-val" data-val="${r.totalDeducoes}" data-deducoes="${(r.deducoes || []).length > 0 ? encodeURIComponent(JSON.stringify(r.deducoes)) : ''}">
           <div id="edit-deducoes-container-${r.id}">
             ${r.optante === 'Não' 
-              ? `<button class="btn-inline-deducoes" onclick="openInlineDeductionsModal('${r.id}'); event.stopPropagation();" title="Editar Deduções">✏️ ${deducoesSummary}</button>`
+              ? `<button class="btn-inline-deducoes" onclick="openInlineDeductionsModal('${r.id}'); event.stopPropagation();" title="Editar Deduções">✏️ ${r.totalDeducoes ? formatMoney(r.totalDeducoes) : 'R$ 0,00'}</button>`
               : `<span style="color: var(--text-muted); font-size: 11px;">N/A</span>`
             }
           </div>
@@ -1291,7 +1291,20 @@ function renderTable() {
         <td class="valor-cell selectable-val" data-val="${r.deducoes && r.deducoes.length > 0 ? r.deducoes[0].base : 0}">
           ${r.optante === 'Não' ? basesSummary : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
         </td>
-        <td class="valor-cell negative selectable-val" data-val="${r.totalDeducoes}" data-deducoes="${(r.deducoes || []).length > 0 ? encodeURIComponent(JSON.stringify(r.deducoes)) : ''}">${deducoesSummary}</td>
+        <td class="selectable-val" style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+          ${r.optante === 'Não' 
+            ? (r.deducoes && r.deducoes.length > 0 
+                ? r.deducoes.map(d => `<div style="height: 18px; display: flex; align-items: center; justify-content: center;">${d.codigo}</div>`).join('')
+                : '—')
+            : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
+        </td>
+        <td class="valor-cell negative selectable-val" data-val="${r.totalDeducoes}" data-deducoes="${(r.deducoes || []).length > 0 ? encodeURIComponent(JSON.stringify(r.deducoes)) : ''}" style="line-height: 1.4;">
+          ${r.optante === 'Não' 
+            ? (r.deducoes && r.deducoes.length > 0 
+                ? r.deducoes.map(d => `<div style="height: 18px; display: flex; align-items: center; justify-content: right;">${formatMoney(d.valor)}</div>`).join('')
+                : '—')
+            : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
+        </td>
         <td class="valor-cell positive selectable-val" data-val="${r.valorLiquido}">${formatMoney(r.valorLiquido)}</td>
         <td>${r.codNatureza || '—'}</td>
         <td>${r.docRelacionado || '—'}</td>
@@ -1814,11 +1827,15 @@ function getColumnTextValue(r, col) {
     case 'valorBruto': return formatMoney(r.valorBruto);
     case 'baseCalculo':
       return r.deducoes && r.deducoes.length > 0
-        ? r.deducoes.map(d => `${d.codigo}: ${formatMoney(d.base)}`).join(' | ')
+        ? formatMoney(r.deducoes[0].base)
         : '—';
-    case 'totalDeducoes': 
+    case 'codigoRetencao': 
       return r.deducoes && r.deducoes.length > 0
-        ? r.deducoes.map(d => `${d.codigo}: ${formatMoney(d.valor)}`).join(' | ')
+        ? r.deducoes.map(d => d.codigo).join(', ')
+        : '—';
+    case 'valorRetencao': 
+      return r.deducoes && r.deducoes.length > 0
+        ? r.deducoes.map(d => formatMoney(d.valor)).join(', ')
         : (r.totalDeducoes ? formatMoney(r.totalDeducoes) : '—');
     case 'valorLiquido': return formatMoney(r.valorLiquido);
     case 'codNatureza': return r.codNatureza || '—';
