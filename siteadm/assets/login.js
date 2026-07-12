@@ -71,6 +71,7 @@ const LoginSystem = {
         this.hideUnauthorizedModules();
       }
     }
+    this.initialized = true;
   },
 
   createModal: function() {

@@ -362,6 +362,8 @@ function saveData(data) {
 }
 
 function syncRecordToBackend(record) {
+  const user = localStorage.getItem('adm_auth_nome') || sessionStorage.getItem('adm_auth_nome') || 'Acesso Livre';
+  record.usuario = user;
   fetch('/api/liquidacoes', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1310,17 +1312,26 @@ function renderTable() {
         <td class="valor-cell selectable-val" data-val="${r.deducoes && r.deducoes.length > 0 ? r.deducoes[0].base : 0}">
           ${r.optante === 'Não' ? basesSummary : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
         </td>
-        <td class="selectable-val ${r.optante === 'Não' && r.deducoes && r.deducoes.length > 0 ? 'has-sub-rows' : ''}" style="font-size: 12px; color: var(--text-muted);">
+        <td class="selectable-val ${r.optante === 'Não' && r.deducoes && r.deducoes.length > 1 ? 'has-sub-rows' : ''}" 
+            style="font-size: 12px; color: var(--text-muted);"
+            ${r.optante === 'Não' && r.deducoes && r.deducoes.length === 1 ? `data-type="codigo" data-codigo="${r.deducoes[0].codigo}" data-val="0"` : ''}>
           ${r.optante === 'Não' 
             ? (r.deducoes && r.deducoes.length > 0 
-                ? r.deducoes.map(d => `<div class="deduction-sub-row center" data-type="codigo" data-codigo="${d.codigo}" data-val="0">${d.codigo}</div>`).join('')
+                ? (r.deducoes.length > 1 
+                    ? r.deducoes.map(d => `<div class="deduction-sub-row center" data-type="codigo" data-codigo="${d.codigo}" data-val="0">${d.codigo}</div>`).join('')
+                    : r.deducoes[0].codigo)
                 : '—')
             : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
         </td>
-        <td class="valor-cell negative selectable-val ${r.optante === 'Não' && r.deducoes && r.deducoes.length > 0 ? 'has-sub-rows' : ''}" data-val="${r.totalDeducoes}" data-deducoes="${(r.deducoes || []).length > 0 ? encodeURIComponent(JSON.stringify(r.deducoes)) : ''}">
+        <td class="valor-cell negative selectable-val ${r.optante === 'Não' && r.deducoes && r.deducoes.length > 1 ? 'has-sub-rows' : ''}" 
+            data-val="${r.optante === 'Não' && r.deducoes && r.deducoes.length === 1 ? r.deducoes[0].valor : r.totalDeducoes}" 
+            data-deducoes="${(r.deducoes || []).length > 0 ? encodeURIComponent(JSON.stringify(r.deducoes)) : ''}"
+            ${r.optante === 'Não' && r.deducoes && r.deducoes.length === 1 ? `data-type="valor" data-codigo="${r.deducoes[0].codigo}"` : ''}>
           ${r.optante === 'Não' 
             ? (r.deducoes && r.deducoes.length > 0 
-                ? r.deducoes.map(d => `<div class="deduction-sub-row right" data-type="valor" data-codigo="${d.codigo}" data-val="${d.valor}">${formatMoney(d.valor)}</div>`).join('')
+                ? (r.deducoes.length > 1 
+                    ? r.deducoes.map(d => `<div class="deduction-sub-row right" data-type="valor" data-codigo="${d.codigo}" data-val="${d.valor}">${formatMoney(d.valor)}</div>`).join('')
+                    : formatMoney(r.deducoes[0].valor))
                 : '—')
             : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
         </td>
@@ -1623,6 +1634,12 @@ function showToast(message, type = 'info') {
 // INIT
 // ═══════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
+  // Wait for login system to initialize
+  if (window.LoginSystem) {
+    while (!window.LoginSystem.initialized) {
+      await new Promise(r => setTimeout(r, 20));
+    }
+  }
   // Load data from backend
   try {
     const response = await fetch('/api/liquidacoes');

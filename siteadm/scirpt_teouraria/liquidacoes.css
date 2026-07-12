@@ -1324,10 +1324,26 @@ tr.row-editing .table-inline-select {
   justify-content: center;
 }
 .deduction-sub-row.right {
-  justify-content: flex-end;
+  justify-content: center;
 }
 .deduction-sub-row:not(:last-child) {
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Force all headers and cells to be centered */
+.data-table thead th {
+  text-align: center !important;
+}
+.data-table tbody td {
+  text-align: center !important;
+}
+.header-content {
+  justify-content: center !important;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 
