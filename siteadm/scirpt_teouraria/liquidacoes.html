@@ -1172,7 +1172,26 @@ function renderTable() {
   Object.keys(columnFilters).forEach(col => {
     const allowedVals = columnFilters[col];
     if (allowedVals) {
-      data = data.filter(r => allowedVals.includes(getColumnTextValue(r, col)));
+      if (col === 'codigoRetencao') {
+        data = data.filter(r => {
+          if (r.optante === 'Não' && r.deducoes && r.deducoes.length > 0) {
+            return r.deducoes.some(d => allowedVals.includes(d.codigo));
+          } else {
+            return allowedVals.includes('—');
+          }
+        });
+      } else if (col === 'valorRetencao') {
+        data = data.filter(r => {
+          if (r.optante === 'Não' && r.deducoes && r.deducoes.length > 0) {
+            return r.deducoes.some(d => allowedVals.includes(formatMoney(d.valor)));
+          } else {
+            const fallback = r.totalDeducoes ? formatMoney(r.totalDeducoes) : '—';
+            return allowedVals.includes(fallback);
+          }
+        });
+      } else {
+        data = data.filter(r => allowedVals.includes(getColumnTextValue(r, col)));
+      }
     }
   });
 
@@ -1294,14 +1313,14 @@ function renderTable() {
         <td class="selectable-val ${r.optante === 'Não' && r.deducoes && r.deducoes.length > 0 ? 'has-sub-rows' : ''}" style="font-size: 12px; color: var(--text-muted);">
           ${r.optante === 'Não' 
             ? (r.deducoes && r.deducoes.length > 0 
-                ? r.deducoes.map(d => `<div class="deduction-sub-row center">${d.codigo}</div>`).join('')
+                ? r.deducoes.map(d => `<div class="deduction-sub-row center" data-type="codigo" data-codigo="${d.codigo}" data-val="0">${d.codigo}</div>`).join('')
                 : '—')
             : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
         </td>
         <td class="valor-cell negative selectable-val ${r.optante === 'Não' && r.deducoes && r.deducoes.length > 0 ? 'has-sub-rows' : ''}" data-val="${r.totalDeducoes}" data-deducoes="${(r.deducoes || []).length > 0 ? encodeURIComponent(JSON.stringify(r.deducoes)) : ''}">
           ${r.optante === 'Não' 
             ? (r.deducoes && r.deducoes.length > 0 
-                ? r.deducoes.map(d => `<div class="deduction-sub-row right">${formatMoney(d.valor)}</div>`).join('')
+                ? r.deducoes.map(d => `<div class="deduction-sub-row right" data-type="valor" data-codigo="${d.codigo}" data-val="${d.valor}">${formatMoney(d.valor)}</div>`).join('')
                 : '—')
             : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
         </td>
@@ -1666,8 +1685,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Excel-like selection events
   let isSelecting = false;
 
+  function getSelectableTarget(el) {
+    if (!el) return null;
+    const sub = el.closest('.deduction-sub-row');
+    if (sub) return sub;
+    return el.closest('.selectable-val');
+  }
+
   document.addEventListener('mousedown', (e) => {
-    const cell = e.target.closest('.selectable-val');
+    const cell = getSelectableTarget(e.target);
     if (cell) {
       isSelecting = true;
       e.preventDefault();
@@ -1687,7 +1713,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.addEventListener('mouseover', (e) => {
     if (isSelecting) {
-      const cell = e.target.closest('.selectable-val');
+      const cell = getSelectableTarget(e.target);
       if (cell) {
         cell.classList.add('selected-cell');
         updateSelectionSummary(e);
@@ -1731,21 +1757,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       const val = parseFloat(cell.getAttribute('data-val') || '0');
       sum += val;
 
-      // Extract grouped deductions if present on the cell
-      const dedsAttr = cell.getAttribute('data-deducoes');
-      if (dedsAttr) {
-        try {
-          const deds = JSON.parse(decodeURIComponent(dedsAttr));
-          deds.forEach(d => {
-            const cod = d.codigo || 'Não especificado';
-            const valor = parseFloat(d.valor || '0');
-            if (!deducoesPorCodigo[cod]) {
-              deducoesPorCodigo[cod] = 0;
-            }
+      if (cell.classList.contains('deduction-sub-row')) {
+        const cod = cell.getAttribute('data-codigo');
+        const type = cell.getAttribute('data-type');
+        if (cod) {
+          const valor = type === 'valor' ? val : 0;
+          if (!deducoesPorCodigo[cod]) {
+            deducoesPorCodigo[cod] = 0;
+          }
+          if (valor > 0) {
             deducoesPorCodigo[cod] += valor;
-          });
-        } catch (e) {
-          console.error('Erro ao ler data-deducoes:', e);
+          }
+        }
+      } else {
+        // Standard td cell
+        const dedsAttr = cell.getAttribute('data-deducoes');
+        if (dedsAttr) {
+          try {
+            const deds = JSON.parse(decodeURIComponent(dedsAttr));
+            deds.forEach(d => {
+              const cod = d.codigo || 'Não especificado';
+              const valor = parseFloat(d.valor || '0');
+              if (!deducoesPorCodigo[cod]) {
+                deducoesPorCodigo[cod] = 0;
+              }
+              deducoesPorCodigo[cod] += valor;
+            });
+          } catch (err) {
+            console.error('Erro ao ler data-deducoes:', err);
+          }
         }
       }
     });
@@ -1856,7 +1896,34 @@ function generateFilterOptions(col) {
   
   // Get unique values for current active UGE
   const rawData = getFilteredData();
-  const uniqueVals = [...new Set(rawData.map(r => getColumnTextValue(r, col)))];
+  let uniqueVals;
+  if (col === 'codigoRetencao') {
+    const codes = [];
+    rawData.forEach(r => {
+      if (r.optante === 'Não' && r.deducoes && r.deducoes.length > 0) {
+        r.deducoes.forEach(d => {
+          if (d.codigo) codes.push(d.codigo);
+        });
+      } else {
+        codes.push('—');
+      }
+    });
+    uniqueVals = [...new Set(codes)];
+  } else if (col === 'valorRetencao') {
+    const vals = [];
+    rawData.forEach(r => {
+      if (r.optante === 'Não' && r.deducoes && r.deducoes.length > 0) {
+        r.deducoes.forEach(d => {
+          vals.push(formatMoney(d.valor));
+        });
+      } else {
+        vals.push(r.totalDeducoes ? formatMoney(r.totalDeducoes) : '—');
+      }
+    });
+    uniqueVals = [...new Set(vals)];
+  } else {
+    uniqueVals = [...new Set(rawData.map(r => getColumnTextValue(r, col)))];
+  }
   
   uniqueVals.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   
@@ -2054,6 +2121,8 @@ function initColumnResizers() {
       ths.forEach((th, idx) => {
         if (widths[idx]) {
           th.style.width = widths[idx];
+          th.style.minWidth = widths[idx];
+          th.style.maxWidth = widths[idx];
         }
       });
     } catch (e) {
@@ -2081,7 +2150,10 @@ function initColumnResizers() {
         function onMouseMove(moveEvent) {
           const currentWidth = startWidth + (moveEvent.pageX - startX);
           if (currentWidth > 50) {
-            th.style.width = currentWidth + 'px';
+            const widthStr = currentWidth + 'px';
+            th.style.width = widthStr;
+            th.style.minWidth = widthStr;
+            th.style.maxWidth = widthStr;
           }
         }
 

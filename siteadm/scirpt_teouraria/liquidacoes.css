@@ -1307,6 +1307,18 @@ tr.row-editing .table-inline-select {
   padding: 4px 14px;
   box-sizing: border-box;
   width: 100%;
+  cursor: cell !important;
+  user-select: none;
+  position: relative;
+  transition: background-color 0.15s, outline 0.15s;
+}
+.deduction-sub-row:hover {
+  background-color: rgba(61, 80, 22, 0.08) !important;
+}
+.deduction-sub-row.selected-cell {
+  background-color: rgba(201, 162, 39, 0.18) !important;
+  outline: 2px solid var(--accent-amber) !important;
+  outline-offset: -2px;
 }
 .deduction-sub-row.center {
   justify-content: center;
