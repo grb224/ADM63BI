@@ -1291,17 +1291,17 @@ function renderTable() {
         <td class="valor-cell selectable-val" data-val="${r.deducoes && r.deducoes.length > 0 ? r.deducoes[0].base : 0}">
           ${r.optante === 'Não' ? basesSummary : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
         </td>
-        <td class="selectable-val" style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+        <td class="selectable-val ${r.optante === 'Não' && r.deducoes && r.deducoes.length > 0 ? 'has-sub-rows' : ''}" style="font-size: 12px; color: var(--text-muted);">
           ${r.optante === 'Não' 
             ? (r.deducoes && r.deducoes.length > 0 
-                ? r.deducoes.map(d => `<div style="height: 18px; display: flex; align-items: center; justify-content: center;">${d.codigo}</div>`).join('')
+                ? r.deducoes.map(d => `<div class="deduction-sub-row center">${d.codigo}</div>`).join('')
                 : '—')
             : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
         </td>
-        <td class="valor-cell negative selectable-val" data-val="${r.totalDeducoes}" data-deducoes="${(r.deducoes || []).length > 0 ? encodeURIComponent(JSON.stringify(r.deducoes)) : ''}" style="line-height: 1.4;">
+        <td class="valor-cell negative selectable-val ${r.optante === 'Não' && r.deducoes && r.deducoes.length > 0 ? 'has-sub-rows' : ''}" data-val="${r.totalDeducoes}" data-deducoes="${(r.deducoes || []).length > 0 ? encodeURIComponent(JSON.stringify(r.deducoes)) : ''}">
           ${r.optante === 'Não' 
             ? (r.deducoes && r.deducoes.length > 0 
-                ? r.deducoes.map(d => `<div style="height: 18px; display: flex; align-items: center; justify-content: right;">${formatMoney(d.valor)}</div>`).join('')
+                ? r.deducoes.map(d => `<div class="deduction-sub-row right">${formatMoney(d.valor)}</div>`).join('')
                 : '—')
             : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
         </td>
@@ -1643,6 +1643,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderTable();
   updateStats();
   updateCounts();
+  initColumnResizers();
 
 
 // Keyboard shortcut: Ctrl+N = new record
@@ -2038,6 +2039,67 @@ async function sincronizarComPlanilha() {
     btn.disabled = false;
     if (icon) icon.style.animation = '';
   }
+}
+
+function initColumnResizers() {
+  const table = document.getElementById('dataTable');
+  if (!table) return;
+  const ths = table.querySelectorAll('thead th');
+  
+  // Load saved column widths from localStorage
+  const savedWidths = localStorage.getItem('liquidacoes_col_widths');
+  if (savedWidths) {
+    try {
+      const widths = JSON.parse(savedWidths);
+      ths.forEach((th, idx) => {
+        if (widths[idx]) {
+          th.style.width = widths[idx];
+        }
+      });
+    } catch (e) {
+      console.warn('Failed to load column widths:', e);
+    }
+  }
+
+  ths.forEach((th, idx) => {
+    // Don't add resizer to the last column (Ações)
+    if (idx === ths.length - 1) return;
+
+    if (!th.querySelector('.col-resizer')) {
+      const resizer = document.createElement('div');
+      resizer.className = 'col-resizer';
+      th.appendChild(resizer);
+
+      resizer.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const startX = e.pageX;
+        const startWidth = th.offsetWidth;
+        resizer.classList.add('resizing');
+
+        function onMouseMove(moveEvent) {
+          const currentWidth = startWidth + (moveEvent.pageX - startX);
+          if (currentWidth > 50) {
+            th.style.width = currentWidth + 'px';
+          }
+        }
+
+        function onMouseUp() {
+          resizer.classList.remove('resizing');
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+
+          // Save new widths to localStorage
+          const currentWidths = Array.from(ths).map(t => t.style.width || (t.offsetWidth + 'px'));
+          localStorage.setItem('liquidacoes_col_widths', JSON.stringify(currentWidths));
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+    }
+  });
 }
 </script>
 

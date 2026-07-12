@@ -1277,4 +1277,45 @@ tr.row-editing .table-inline-select {
   background: var(--bg-card) !important;
 }
 
+/* ---------- Column Resizers ---------- */
+.data-table thead th {
+  position: relative;
+}
+.col-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  z-index: 10;
+}
+.col-resizer:hover, .col-resizer.resizing {
+  background: rgba(201, 162, 39, 0.4);
+}
+
+/* ---------- Deduction Sub-rows ---------- */
+.data-table tbody td.has-sub-rows {
+  padding: 0 !important;
+  vertical-align: stretch;
+}
+.deduction-sub-row {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  padding: 4px 14px;
+  box-sizing: border-box;
+  width: 100%;
+}
+.deduction-sub-row.center {
+  justify-content: center;
+}
+.deduction-sub-row.right {
+  justify-content: flex-end;
+}
+.deduction-sub-row:not(:last-child) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
 
