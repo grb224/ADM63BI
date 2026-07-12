@@ -15399,5 +15399,67 @@
     "eCac": "Não",
     "fase": 1,
     "createdAt": "2026-07-11T00:00:00.000Z"
+  },
+  {
+    "id": "mrhvh7uv8uas5",
+    "uge": "160443",
+    "tipoDH": "NP",
+    "numero": "353",
+    "dataEmissao": "2026-07-12",
+    "optante": "Não",
+    "valorBruto": 100.0,
+    "deducoes": [
+      {
+        "codigo": "6190",
+        "base": 100.0,
+        "valor": 10.0
+      },
+      {
+        "codigo": "6220",
+        "base": 100.0,
+        "valor": 20.0
+      }
+    ],
+    "totalDeducoes": 30.0,
+    "valorLiquido": 70.0,
+    "codNatureza": "1",
+    "docRelacionado": "NF 88",
+    "cnpj": "",
+    "dataOB": "",
+    "eCac": "Não",
+    "observacao": "",
+    "fase": 1,
+    "createdAt": "2026-07-11T00:00:00.000Z"
+  },
+  {
+    "id": "mrhw1tkp87wm7",
+    "uge": "160443",
+    "tipoDH": "NP",
+    "numero": "999",
+    "dataEmissao": "2026-07-12",
+    "optante": "Não",
+    "valorBruto": 100.0,
+    "deducoes": [
+      {
+        "codigo": "6190",
+        "base": 100.0,
+        "valor": 10.0
+      },
+      {
+        "codigo": "6220",
+        "base": 100.0,
+        "valor": 20.0
+      }
+    ],
+    "totalDeducoes": 30.0,
+    "valorLiquido": 70.0,
+    "codNatureza": "1",
+    "docRelacionado": "NF TEST",
+    "cnpj": "",
+    "dataOB": "",
+    "eCac": "Não",
+    "observacao": "",
+    "fase": 1,
+    "createdAt": "2026-07-12T14:28:10.873Z"
   }
 ]

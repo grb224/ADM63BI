@@ -309,6 +309,7 @@
             <th data-col="dataEmissao" class="filterable-header"><div class="header-content"><span>Data Emissão</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'dataEmissao')">▼</span></div></th>
             <th data-col="optante" class="filterable-header"><div class="header-content"><span>Optante</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'optante')">▼</span></div></th>
             <th data-col="valorBruto" class="filterable-header"><div class="header-content"><span>Valor Bruto</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'valorBruto')">▼</span></div></th>
+            <th data-col="baseCalculo" class="filterable-header"><div class="header-content"><span>Base de Cálculo</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'baseCalculo')">▼</span></div></th>
             <th data-col="totalDeducoes" class="filterable-header"><div class="header-content"><span>Deduções</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'totalDeducoes')">▼</span></div></th>
             <th data-col="valorLiquido" class="filterable-header"><div class="header-content"><span>Valor Líquido</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'valorLiquido')">▼</span></div></th>
             <th data-col="codNatureza" class="filterable-header"><div class="header-content"><span>Cód. Natureza</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'codNatureza')">▼</span></div></th>
@@ -1188,6 +1189,10 @@ function renderTable() {
       ? r.deducoes.map(d => `${d.codigo}: ${formatMoney(d.valor)}`).join(' | ')
       : (r.totalDeducoes ? formatMoney(r.totalDeducoes) : '—');
 
+    const basesSummary = r.deducoes && r.deducoes.length > 0
+      ? r.deducoes.map(d => `${d.codigo}: ${formatMoney(d.base)}`).join(' | ')
+      : '—';
+
     const isRowEditing = (r.id === editingRowId);
 
     if (isRowEditing) {
@@ -1217,6 +1222,9 @@ function renderTable() {
         </td>
         <td class="valor-cell selectable-val" data-val="${r.valorBruto}">
           <input type="text" class="table-inline-input editing-input inline-money" id="edit-valorBruto-${r.id}" value="${formatMoney(r.valorBruto).replace('R$ ', '')}" onkeydown="if(event.key === 'Enter') { saveRowEdition('${r.id}', false); event.stopPropagation(); }">
+        </td>
+        <td class="valor-cell selectable-val" style="color: var(--text-muted); font-size: 11px;">
+          ${r.optante === 'Não' ? basesSummary : 'N/A'}
         </td>
         <td class="valor-cell negative selectable-val" data-val="${r.totalDeducoes}" data-deducoes="${(r.deducoes || []).length > 0 ? encodeURIComponent(JSON.stringify(r.deducoes)) : ''}">
           <div id="edit-deducoes-container-${r.id}">
@@ -1261,6 +1269,9 @@ function renderTable() {
         <td>${dateFormatted}</td>
         <td><span class="optante-badge ${optanteCls}">${r.optante === 'Sim' ? '✅ SIM' : (r.optante === 'N/A' ? 'N/A' : '❌ NÃO')}</span></td>
         <td class="valor-cell selectable-val" data-val="${r.valorBruto}">${formatMoney(r.valorBruto)}</td>
+        <td class="valor-cell selectable-val" data-val="${r.deducoes && r.deducoes.length > 0 ? r.deducoes[0].base : 0}">
+          ${r.optante === 'Não' ? basesSummary : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
+        </td>
         <td class="valor-cell negative selectable-val" data-val="${r.totalDeducoes}" data-deducoes="${(r.deducoes || []).length > 0 ? encodeURIComponent(JSON.stringify(r.deducoes)) : ''}">${deducoesSummary}</td>
         <td class="valor-cell positive selectable-val" data-val="${r.valorLiquido}">${formatMoney(r.valorLiquido)}</td>
         <td>${r.codNatureza || '—'}</td>
@@ -1781,6 +1792,10 @@ function getColumnTextValue(r, col) {
     case 'dataEmissao': return r.dataEmissao ? new Date(r.dataEmissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
     case 'optante': return r.optante === 'Sim' ? '✅ SIM' : (r.optante === 'N/A' ? 'N/A' : '❌ NÃO');
     case 'valorBruto': return formatMoney(r.valorBruto);
+    case 'baseCalculo':
+      return r.deducoes && r.deducoes.length > 0
+        ? r.deducoes.map(d => `${d.codigo}: ${formatMoney(d.base)}`).join(' | ')
+        : '—';
     case 'totalDeducoes': 
       return r.deducoes && r.deducoes.length > 0
         ? r.deducoes.map(d => `${d.codigo}: ${formatMoney(d.valor)}`).join(' | ')
