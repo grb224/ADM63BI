@@ -1,13 +1,12 @@
 /**
  * ParticleLoader — 63º BI
  * 
- * Creates a premium particle animation from the logo.png image.
- * Particles scatter → converge to form the logo → hold → scatter again (loop).
+ * Particles scatter → converge to form "63° BI" text → hold → scatter again (loop).
+ * Pure Canvas 2D, no external images needed.
  * 
  * Usage:
  *   const loader = new ParticleLoader('#container');
  *   loader.show();
- *   // ...later...
  *   loader.hide();
  */
 
@@ -23,15 +22,26 @@ class ParticleLoader {
     }
 
     this.options = {
-      logoSrc: options.logoSrc || '../assets/logo.png',
-      particleSize: options.particleSize || 2.2,
-      sampleStep: options.sampleStep || 3,        // lower = more particles, slower
-      convergeDuration: options.convergeDuration || 2800,
-      holdDuration: options.holdDuration || 1800,
-      disperseDuration: options.disperseDuration || 2200,
+      text: options.text || '63° BI',
+      fontSize: options.fontSize || 120,
+      fontFamily: options.fontFamily || "'Inter', 'Arial Black', sans-serif",
+      fontWeight: options.fontWeight || '900',
+      particleSize: options.particleSize || 2.5,
+      sampleStep: options.sampleStep || 3,
+      convergeDuration: options.convergeDuration || 2500,
+      holdDuration: options.holdDuration || 2200,
+      disperseDuration: options.disperseDuration || 2000,
       pauseDuration: options.pauseDuration || 600,
-      maxCanvasSize: options.maxCanvasSize || 400,
       bgColor: options.bgColor || '#f5f2e8',
+      // Military palette for particles
+      colors: options.colors || [
+        { r: 61,  g: 80,  b: 22  },   // olive
+        { r: 107, g: 124, b: 58  },   // olive-light
+        { r: 42,  g: 56,  b: 16  },   // olive-dark
+        { r: 201, g: 162, b: 39  },   // amber/gold
+        { r: 232, g: 188, b: 58  },   // amber-light
+        { r: 150, g: 130, b: 50  },   // muted gold
+      ],
       ...options
     };
 
@@ -39,131 +49,104 @@ class ParticleLoader {
     this.ctx = null;
     this.particles = [];
     this.animFrame = null;
-    this.phase = 'converge'; // converge | hold | disperse | pause
+    this.phase = 'converge';
     this.phaseStart = 0;
     this.isActive = false;
     this.overlay = null;
-    this.logoImageData = null;
+    this.canvasW = 0;
+    this.canvasH = 0;
 
     this._init();
   }
 
-  async _init() {
+  _init() {
     // Create overlay
     this.overlay = document.createElement('div');
     this.overlay.className = 'particle-loader-overlay';
     this.overlay.innerHTML = `
       <canvas class="particle-loader-canvas"></canvas>
-      <div class="particle-loader-text">Carregando...</div>
+      <div class="particle-loader-subtitle">Carregando...</div>
     `;
     this.container.appendChild(this.overlay);
 
     this.canvas = this.overlay.querySelector('.particle-loader-canvas');
     this.ctx = this.canvas.getContext('2d');
 
-    // Load and sample the logo
-    try {
-      await this._loadLogo();
-    } catch (e) {
-      console.error('[ParticleLoader] Failed to load logo:', e);
-    }
+    this._sampleText();
+
+    // Handle resize
+    this._resizeHandler = () => this._sampleText();
+    window.addEventListener('resize', this._resizeHandler);
   }
 
-  _loadLogo() {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        this._sampleImage(img);
-        resolve();
-      };
-      img.onerror = reject;
+  _sampleText() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.min(window.innerWidth, 900);
+    const h = Math.min(window.innerHeight, 500);
 
-      // Resolve logo path relative to current page
-      const basePath = this.options.logoSrc;
-      img.src = basePath;
-    });
-  }
+    this.canvasW = w;
+    this.canvasH = h;
+    this.canvas.width = w * dpr;
+    this.canvas.height = h * dpr;
+    this.canvas.style.width = w + 'px';
+    this.canvas.style.height = h + 'px';
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  _sampleImage(img) {
-    const maxSize = this.options.maxCanvasSize;
-    const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
-    const w = Math.floor(img.width * scale);
-    const h = Math.floor(img.height * scale);
-
-    // Use an offscreen canvas to read pixel data
+    // Render text to offscreen canvas
     const offCanvas = document.createElement('canvas');
     offCanvas.width = w;
     offCanvas.height = h;
     const offCtx = offCanvas.getContext('2d');
-    offCtx.drawImage(img, 0, 0, w, h);
 
+    // Compute responsive font size
+    const baseFontSize = this.options.fontSize;
+    const fontScale = Math.min(w / 600, 1);
+    const fontSize = Math.max(48, Math.floor(baseFontSize * fontScale));
+
+    offCtx.fillStyle = '#000';
+    offCtx.font = `${this.options.fontWeight} ${fontSize}px ${this.options.fontFamily}`;
+    offCtx.textAlign = 'center';
+    offCtx.textBaseline = 'middle';
+    offCtx.fillText(this.options.text, w / 2, h / 2);
+
+    // Sample pixels
     const imageData = offCtx.getImageData(0, 0, w, h);
     const data = imageData.data;
-
-    // Set the main canvas size
-    const canvasSize = Math.max(w, h) + 120;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.canvas.width = canvasSize * dpr;
-    this.canvas.height = canvasSize * dpr;
-    this.canvas.style.width = canvasSize + 'px';
-    this.canvas.style.height = canvasSize + 'px';
-    this.ctx.scale(dpr, dpr);
-    this.canvasSize = canvasSize;
-
-    // Offset to center the logo in the canvas
-    const offsetX = (canvasSize - w) / 2;
-    const offsetY = (canvasSize - h) / 2;
-
-    // Sample pixels to create particles
-    this.particles = [];
     const step = this.options.sampleStep;
+    const colors = this.options.colors;
+
+    this.particles = [];
 
     for (let y = 0; y < h; y += step) {
       for (let x = 0; x < w; x += step) {
         const i = (y * w + x) * 4;
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
         const a = data[i + 3];
+        if (a < 128) continue; // skip transparent
 
-        // Skip transparent or near-white pixels
-        if (a < 100) continue;
-        if (r > 240 && g > 240 && b > 240) continue;
+        // Pick a random color from the military palette
+        const c = colors[Math.floor(Math.random() * colors.length)];
 
-        const targetX = x + offsetX;
-        const targetY = y + offsetY;
-
-        // Random scatter position (circular)
+        // Scatter origin - random ring around center
         const angle = Math.random() * Math.PI * 2;
-        const dist = canvasSize * 0.5 + Math.random() * canvasSize * 0.4;
-        const scatterX = canvasSize / 2 + Math.cos(angle) * dist;
-        const scatterY = canvasSize / 2 + Math.sin(angle) * dist;
+        const dist = Math.max(w, h) * (0.6 + Math.random() * 0.5);
+        const sx = w / 2 + Math.cos(angle) * dist;
+        const sy = h / 2 + Math.sin(angle) * dist;
 
         this.particles.push({
-          // Target position (logo pixel)
-          tx: targetX,
-          ty: targetY,
-          // Current position (scattered)
-          x: scatterX,
-          y: scatterY,
-          // Scatter position (saved for disperse phase)
-          sx: scatterX,
-          sy: scatterY,
-          // Color from logo
-          color: `rgba(${r},${g},${b},${(a / 255).toFixed(2)})`,
-          r, g, b, a,
-          // Per-particle randomness for organic motion
-          delay: Math.random() * 0.35,
-          speed: 0.6 + Math.random() * 0.4,
-          wobbleAmp: 1 + Math.random() * 3,
-          wobbleFreq: 0.5 + Math.random() * 2,
-          size: this.options.particleSize * (0.7 + Math.random() * 0.6),
+          tx: x, ty: y,       // target (text pixel)
+          x: sx, y: sy,       // current
+          sx: sx, sy: sy,     // scatter origin
+          r: c.r, g: c.g, b: c.b,
+          delay: Math.random() * 0.3,
+          speed: 0.7 + Math.random() * 0.3,
+          wobbleAmp: 1.5 + Math.random() * 3,
+          wobbleFreq: 0.8 + Math.random() * 2,
+          size: this.options.particleSize * (0.6 + Math.random() * 0.8),
+          angle: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.02,
         });
       }
     }
-
-    console.log(`[ParticleLoader] Sampled ${this.particles.length} particles from logo`);
   }
 
   show() {
@@ -173,12 +156,14 @@ class ParticleLoader {
     this.phase = 'converge';
     this.phaseStart = performance.now();
 
-    // Randomize scatter positions each time we show
+    // Randomize scatter positions
+    const w = this.canvasW;
+    const h = this.canvasH;
     this.particles.forEach(p => {
       const angle = Math.random() * Math.PI * 2;
-      const dist = this.canvasSize * 0.5 + Math.random() * this.canvasSize * 0.4;
-      p.sx = this.canvasSize / 2 + Math.cos(angle) * dist;
-      p.sy = this.canvasSize / 2 + Math.sin(angle) * dist;
+      const dist = Math.max(w, h) * (0.6 + Math.random() * 0.5);
+      p.sx = w / 2 + Math.cos(angle) * dist;
+      p.sy = h / 2 + Math.sin(angle) * dist;
       p.x = p.sx;
       p.y = p.sy;
     });
@@ -195,13 +180,20 @@ class ParticleLoader {
     }
   }
 
+  destroy() {
+    this.hide();
+    window.removeEventListener('resize', this._resizeHandler);
+    if (this.overlay && this.overlay.parentNode) {
+      this.overlay.parentNode.removeChild(this.overlay);
+    }
+  }
+
   _animate() {
     if (!this.isActive) return;
 
     const now = performance.now();
     const elapsed = now - this.phaseStart;
 
-    // Phase machine
     switch (this.phase) {
       case 'converge':
         if (elapsed >= this.options.convergeDuration) {
@@ -213,15 +205,13 @@ class ParticleLoader {
         if (elapsed >= this.options.holdDuration) {
           this.phase = 'disperse';
           this.phaseStart = now;
-          // Save current positions as starting point for disperse
           this.particles.forEach(p => {
             p.disperseFromX = p.x;
             p.disperseFromY = p.y;
-            // New random scatter target
             const angle = Math.random() * Math.PI * 2;
-            const dist = this.canvasSize * 0.5 + Math.random() * this.canvasSize * 0.4;
-            p.sx = this.canvasSize / 2 + Math.cos(angle) * dist;
-            p.sy = this.canvasSize / 2 + Math.sin(angle) * dist;
+            const dist = Math.max(this.canvasW, this.canvasH) * (0.6 + Math.random() * 0.5);
+            p.sx = this.canvasW / 2 + Math.cos(angle) * dist;
+            p.sy = this.canvasH / 2 + Math.sin(angle) * dist;
           });
         }
         break;
@@ -245,121 +235,143 @@ class ParticleLoader {
 
   _draw(elapsed) {
     const ctx = this.ctx;
-    const size = this.canvasSize;
+    const w = this.canvasW;
+    const h = this.canvasH;
+    const time = performance.now() * 0.001;
 
-    // Clear with semi-transparent bg for subtle trail effect
+    // Clear
     ctx.fillStyle = this.options.bgColor;
-    ctx.fillRect(0, 0, size, size);
+    ctx.fillRect(0, 0, w, h);
 
-    const time = performance.now() * 0.001; // seconds for wobble
+    // Draw ambient floating particles in background (very subtle)
+    this._drawAmbient(ctx, w, h, time);
 
+    // Main particles
     for (const p of this.particles) {
-      let progress;
+      let alpha = 1;
 
       switch (this.phase) {
         case 'converge': {
           const raw = elapsed / this.options.convergeDuration;
-          // Per-particle staggered progress
-          const adjusted = Math.max(0, Math.min(1, (raw - p.delay) / (1 - p.delay)));
-          progress = this._easeInOutCubic(adjusted) * p.speed;
-          progress = Math.min(1, progress);
+          const adj = Math.max(0, Math.min(1, (raw - p.delay) / (1 - p.delay)));
+          const progress = Math.min(1, this._easeOutQuart(adj) * p.speed);
 
           p.x = p.sx + (p.tx - p.sx) * progress;
           p.y = p.sy + (p.ty - p.sy) * progress;
 
-          // Add wobble during flight
-          if (progress > 0 && progress < 0.95) {
-            const wobble = Math.sin(time * p.wobbleFreq + p.delay * 20) * p.wobbleAmp * (1 - progress);
-            p.x += wobble;
-            p.y += wobble * 0.6;
+          // Orbital wobble during flight
+          if (progress > 0.01 && progress < 0.9) {
+            const wobbleStrength = (1 - progress) * p.wobbleAmp;
+            p.x += Math.sin(time * p.wobbleFreq + p.delay * 20) * wobbleStrength;
+            p.y += Math.cos(time * p.wobbleFreq * 0.7 + p.delay * 15) * wobbleStrength * 0.7;
           }
+
+          // Fade in as they approach
+          alpha = Math.min(1, progress * 3);
           break;
         }
 
         case 'hold': {
-          // Gentle breathing at target
-          const breathe = Math.sin(time * 1.5 + p.delay * 10) * 0.5;
+          // Subtle breathing / shimmer in place
+          const breathe = Math.sin(time * 2 + p.delay * 12) * 0.4;
           p.x = p.tx + breathe;
-          p.y = p.ty + breathe * 0.4;
+          p.y = p.ty + Math.cos(time * 1.5 + p.delay * 8) * 0.3;
+          alpha = 0.85 + Math.sin(time * 3 + p.delay * 10) * 0.15;
           break;
         }
 
         case 'disperse': {
           const raw = elapsed / this.options.disperseDuration;
-          const adjusted = Math.max(0, Math.min(1, (raw - p.delay * 0.5) / (1 - p.delay * 0.5)));
-          progress = this._easeInCubic(adjusted);
+          const adj = Math.max(0, Math.min(1, (raw - p.delay * 0.4) / (1 - p.delay * 0.4)));
+          const progress = this._easeInQuart(adj);
 
-          const fromX = p.disperseFromX || p.tx;
-          const fromY = p.disperseFromY || p.ty;
-          p.x = fromX + (p.sx - fromX) * progress;
-          p.y = fromY + (p.sy - fromY) * progress;
+          const fx = p.disperseFromX || p.tx;
+          const fy = p.disperseFromY || p.ty;
+          p.x = fx + (p.sx - fx) * progress;
+          p.y = fy + (p.sy - fy) * progress;
 
-          // Spiral wobble during disperse
-          if (progress > 0.05 && progress < 1) {
-            const spiral = progress * p.wobbleAmp * 2;
-            p.x += Math.sin(time * p.wobbleFreq * 2 + p.delay * 30) * spiral;
-            p.y += Math.cos(time * p.wobbleFreq * 2 + p.delay * 30) * spiral;
+          // Spiral outward
+          if (progress > 0.02) {
+            const spiral = progress * p.wobbleAmp * 2.5;
+            p.x += Math.sin(time * p.wobbleFreq * 2.5 + p.delay * 25) * spiral;
+            p.y += Math.cos(time * p.wobbleFreq * 2.5 + p.delay * 25) * spiral;
           }
+
+          alpha = Math.max(0, 1 - progress * 1.2);
           break;
         }
 
         case 'pause': {
-          // Particles drift gently at scattered positions
-          p.x = p.sx + Math.sin(time * 0.5 + p.delay * 10) * 3;
-          p.y = p.sy + Math.cos(time * 0.4 + p.delay * 10) * 3;
+          // Gentle drift
+          p.x = p.sx + Math.sin(time * 0.4 + p.delay * 10) * 4;
+          p.y = p.sy + Math.cos(time * 0.3 + p.delay * 10) * 4;
+          alpha = 0.15 + Math.sin(time * 0.8 + p.delay * 5) * 0.1;
           break;
         }
       }
 
-      // Draw particle
-      const alpha = this.phase === 'disperse'
-        ? Math.max(0.15, 1 - (elapsed / this.options.disperseDuration))
-        : (this.phase === 'pause' ? 0.4 : 1);
+      // Draw particle as a small circle
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
 
-      ctx.globalAlpha = alpha * (p.a / 255);
-
-      // Glow effect for converged state
+      // Glow during hold
       if (this.phase === 'hold') {
-        ctx.shadowColor = `rgba(${p.r},${p.g},${p.b},0.4)`;
-        ctx.shadowBlur = 3;
+        ctx.shadowColor = `rgba(${p.r},${p.g},${p.b},0.5)`;
+        ctx.shadowBlur = 4;
       } else {
-        ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
       }
 
-      ctx.fillStyle = p.color;
+      ctx.fillStyle = `rgb(${p.r},${p.g},${p.b})`;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Draw golden shimmer ring during hold phase
+    // Gold underline shimmer during hold
     if (this.phase === 'hold') {
-      const shimmerAlpha = 0.15 + Math.sin(time * 2) * 0.1;
-      ctx.globalAlpha = shimmerAlpha;
-      ctx.shadowColor = 'transparent';
+      const lineAlpha = 0.3 + Math.sin(time * 2.5) * 0.15;
+      ctx.globalAlpha = lineAlpha;
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = '#c9a227';
-      ctx.lineWidth = 1.5;
-      const cx = size / 2;
-      const cy = size / 2;
-      const radius = size * 0.32 + Math.sin(time * 1.5) * 4;
+
+      const gradient = ctx.createLinearGradient(w * 0.25, 0, w * 0.75, 0);
+      gradient.addColorStop(0, 'transparent');
+      gradient.addColorStop(0.3, '#c9a227');
+      gradient.addColorStop(0.7, '#e8bc3a');
+      gradient.addColorStop(1, 'transparent');
+
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 2;
+      const lineY = h / 2 + this.options.fontSize * 0.35;
       ctx.beginPath();
-      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.moveTo(w * 0.25, lineY);
+      ctx.lineTo(w * 0.75, lineY);
       ctx.stroke();
     }
 
     ctx.globalAlpha = 1;
-    ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
   }
 
-  _easeInOutCubic(t) {
-    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  _drawAmbient(ctx, w, h, time) {
+    // Very subtle floating specks in the background
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = '#3d5016';
+    for (let i = 0; i < 20; i++) {
+      const x = (w * 0.5 + Math.sin(time * 0.2 + i * 1.7) * w * 0.45);
+      const y = (h * 0.5 + Math.cos(time * 0.15 + i * 2.3) * h * 0.45);
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
 
-  _easeInCubic(t) {
-    return t * t * t;
+  _easeOutQuart(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  _easeInQuart(t) {
+    return t * t * t * t;
   }
 }
 
@@ -380,7 +392,18 @@ class ParticleLoader {
       background: #f5f2e8;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.6s cubic-bezier(.4,0,.2,1);
+    }
+
+    .particle-loader-overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(74, 124, 89, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74, 124, 89, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
     }
 
     .particle-loader-overlay.active {
@@ -390,23 +413,27 @@ class ParticleLoader {
 
     .particle-loader-canvas {
       display: block;
+      position: relative;
+      z-index: 1;
     }
 
-    .particle-loader-text {
-      margin-top: 16px;
+    .particle-loader-subtitle {
+      position: relative;
+      z-index: 1;
+      margin-top: 8px;
       font-family: 'Inter', -apple-system, sans-serif;
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 600;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       text-transform: uppercase;
       color: #3d5016;
-      opacity: 0.7;
-      animation: loader-text-pulse 2s ease-in-out infinite;
+      opacity: 0;
+      animation: loader-text-fade 2.5s ease-in-out infinite;
     }
 
-    @keyframes loader-text-pulse {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.9; }
+    @keyframes loader-text-fade {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.7; }
     }
   `;
   document.head.appendChild(style);

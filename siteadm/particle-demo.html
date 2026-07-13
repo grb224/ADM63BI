@@ -13,29 +13,15 @@
     body {
       font-family: 'Inter', sans-serif;
       background: #f5f2e8;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       min-height: 100vh;
-      color: #1a1a1a;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(74, 124, 89, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(74, 124, 89, 0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
+      overflow: hidden;
     }
 
     .demo-controls {
       position: fixed;
       bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 100000;
       display: flex;
       gap: 12px;
@@ -50,6 +36,7 @@
       font-weight: 700;
       cursor: pointer;
       transition: all 0.2s ease;
+      backdrop-filter: blur(10px);
     }
 
     .demo-btn.show {
@@ -64,7 +51,7 @@
     }
 
     .demo-btn.hide {
-      background: #3d5016;
+      background: rgba(61,80,22,0.9);
       color: white;
       box-shadow: 0 4px 16px rgba(61,80,22,0.25);
     }
@@ -73,49 +60,30 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 24px rgba(61,80,22,0.4);
     }
-
-    .page-content {
-      text-align: center;
-      z-index: 1;
-    }
-
-    .page-content h1 {
-      font-size: 28px;
-      color: #3d5016;
-      margin-bottom: 8px;
-    }
-
-    .page-content p {
-      color: #6b7280;
-      font-size: 14px;
-    }
   </style>
 </head>
 <body>
 
-  <div class="page-content">
-    <h1>🎖️ Particle Loader Demo</h1>
-    <p>63º Batalhão de Infantaria — Animação de Carregamento</p>
-  </div>
-
   <div class="demo-controls">
-    <button class="demo-btn show" onclick="loader.show()">⚡ Mostrar Loader</button>
+    <button class="demo-btn show" onclick="loader.show()">⚡ Mostrar</button>
     <button class="demo-btn hide" onclick="loader.hide()">✕ Esconder</button>
   </div>
 
   <script src="assets/particle-loader.js"></script>
   <script>
     const loader = new ParticleLoader(document.body, {
-      logoSrc: 'assets/logo.png',
+      text: '63° BI',
+      fontSize: 140,
       sampleStep: 3,
-      convergeDuration: 3000,
-      holdDuration: 2000,
-      disperseDuration: 2500,
-      pauseDuration: 800,
+      particleSize: 2.5,
+      convergeDuration: 2800,
+      holdDuration: 2200,
+      disperseDuration: 2200,
+      pauseDuration: 700,
     });
 
-    // Auto-show on page load
-    setTimeout(() => loader.show(), 300);
+    // Auto-show
+    setTimeout(() => loader.show(), 200);
   </script>
 </body>
 </html>
