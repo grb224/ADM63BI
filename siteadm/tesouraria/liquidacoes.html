@@ -10,8 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-  <!-- PDF.js for PDF extraction -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 
   <link rel="stylesheet" href="liquidacoes.css">
   
@@ -192,32 +191,39 @@
       <button class="btn-close-form" onclick="toggleForm()">✕</button>
     </div>
 
-    <!-- PDF Upload Section -->
-    <div class="pdf-upload-section">
-      <div class="pdf-upload-label">Preenchimento automático via PDF</div>
-      <div class="pdf-upload-grid">
-        <div class="pdf-drop-zone" id="dropDadosBasicos" onclick="document.getElementById('fileDadosBasicos').click()">
-          <span class="drop-icon">📄</span>
-          <div class="drop-title">Aba Dados Básicos</div>
-          <div class="drop-hint">Arraste o PDF ou clique para enviar</div>
-          <div class="drop-filename" id="filenameDadosBasicos"></div>
-          <button class="btn-remove-pdf" onclick="removePdf(event, 'dadosBasicos')" title="Remover PDF">✕</button>
-          <input type="file" id="fileDadosBasicos" accept=".pdf" onchange="handlePdfAttach(this, 'dadosBasicos')">
+    <!-- SIAFI Paste Section -->
+    <div class="siafi-paste-section">
+      <div class="siafi-paste-label">Preenchimento automático via SIAFI</div>
+      <div class="siafi-paste-grid">
+        <!-- Dados Básicos Card -->
+        <div class="siafi-paste-card" id="pasteDadosBasicos">
+          <div class="paste-idle">
+            <span class="paste-icon">📋</span>
+            <div class="paste-title">Aba Dados Básicos</div>
+            <div class="paste-hint">Clique em qualquer lugar no SIAFI com a aba Dados Básicos aberta, pressione Ctrl+A e depois cole aqui</div>
+          </div>
+          <textarea class="paste-input" id="inputDadosBasicos" placeholder="Cole aqui o texto copiado da aba Dados Básicos do SIAFI (Ctrl+V)..."></textarea>
+          <div class="paste-filled-badge">
+            <span class="badge-check">✓</span>
+            <span class="badge-text" id="badgeDadosBasicos">Dados extraídos</span>
+          </div>
+          <button class="paste-clear-btn" onclick="clearPasteCard('dadosBasicos')" title="Limpar">✕</button>
         </div>
-        <div class="pdf-drop-zone" id="dropDeducao" onclick="document.getElementById('fileDeducao').click()">
-          <span class="drop-icon">📄</span>
-          <div class="drop-title">Aba Dedução</div>
-          <div class="drop-hint">Arraste o PDF ou clique para enviar</div>
-          <div class="drop-filename" id="filenameDeducao"></div>
-          <button class="btn-remove-pdf" onclick="removePdf(event, 'deducao')" title="Remover PDF">✕</button>
-          <input type="file" id="fileDeducao" accept=".pdf" onchange="handlePdfAttach(this, 'deducao')">
+        <!-- Dedução Card -->
+        <div class="siafi-paste-card" id="pasteDeducao">
+          <div class="paste-idle">
+            <span class="paste-icon">📊</span>
+            <div class="paste-title">Aba Dedução</div>
+            <div class="paste-hint">Clique em qualquer lugar no SIAFI com a aba Dedução aberta e todas as situações, pressione Ctrl+A e depois cole aqui</div>
+          </div>
+          <textarea class="paste-input" id="inputDeducao" placeholder="Cole aqui o texto copiado da aba Dedução do SIAFI (Ctrl+V)... Deixe vazio se não houver deduções."></textarea>
+          <div class="paste-filled-badge">
+            <span class="badge-check">✓</span>
+            <span class="badge-text" id="badgeDeducao">Deduções extraídas</span>
+          </div>
+          <button class="paste-clear-btn" onclick="clearPasteCard('deducao')" title="Limpar">✕</button>
         </div>
       </div>
-      <!-- Button: Preencher Automaticamente -->
-      <button class="btn-preencher-auto" id="btnPreencherAuto" onclick="preencherAutomaticamente()" style="display: none;">
-        <span class="btn-preencher-icon">⚡</span>
-        Preencher Automaticamente com PDFs Anexados
-      </button>
     </div>
 
     <!-- Form Fields -->
@@ -497,9 +503,13 @@ function resetForm() {
   document.getElementById('deductionsContainer').innerHTML = '';
   document.getElementById('deductionsSection').style.display = '';
 
-  // Reset PDFs
-  removePdfState('dadosBasicos');
-  removePdfState('deducao');
+  // Reset paste cards
+  ['dadosBasicos', 'deducao'].forEach(type => {
+    const cardId = type === 'dadosBasicos' ? 'pasteDadosBasicos' : 'pasteDeducao';
+    const inputId = type === 'dadosBasicos' ? 'inputDadosBasicos' : 'inputDeducao';
+    document.getElementById(cardId).classList.remove('active', 'filled');
+    document.getElementById(inputId).value = '';
+  });
 
   handleTipoDHChange();
 }
@@ -1424,66 +1434,82 @@ function renderTable() {
 }
 
 // ═══════════════════════════════════════════════
-// PDF EXTRACTION
+// SIAFI TEXT PASTE SYSTEM
 // ═══════════════════════════════════════════════
-const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
-if (pdfjsLib) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-}
 
-// Drag & drop setup
-// Store attached PDF files (not yet processed)
-const attachedPdfs = { dadosBasicos: null, deducao: null };
+// --- Card interaction states ---
+function initPasteCards() {
+  ['dadosBasicos', 'deducao'].forEach(type => {
+    const cardId = type === 'dadosBasicos' ? 'pasteDadosBasicos' : 'pasteDeducao';
+    const inputId = type === 'dadosBasicos' ? 'inputDadosBasicos' : 'inputDeducao';
+    const card = document.getElementById(cardId);
+    const input = document.getElementById(inputId);
 
-['dadosBasicos', 'deducao'].forEach(type => {
-  const zoneId = type === 'dadosBasicos' ? 'dropDadosBasicos' : 'dropDeducao';
-  const zone = document.getElementById(zoneId);
+    // Click on card → activate
+    card.addEventListener('click', (e) => {
+      if (card.classList.contains('filled')) return;
+      if (e.target.classList.contains('paste-clear-btn')) return;
+      card.classList.add('active');
+      input.focus();
+    });
 
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault();
-    zone.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type === 'application/pdf') {
-      attachPdf(file, type);
-    } else {
-      showToast('Apenas arquivos PDF são aceitos', 'warning');
-    }
+    // Focus on textarea → activate card
+    input.addEventListener('focus', () => {
+      if (!card.classList.contains('filled')) {
+        card.classList.add('active');
+      }
+    });
+
+    // Blur → deactivate if empty
+    input.addEventListener('blur', () => {
+      if (!input.value.trim()) {
+        card.classList.remove('active');
+      }
+    });
+
+    // Paste or input event → process
+    input.addEventListener('input', () => {
+      const text = input.value.trim();
+      if (text.length > 50) { // Minimum viable SIAFI text length
+        processPastedText(type, text);
+      }
+    });
   });
-});
-
-function handlePdfAttach(input, type) {
-  const file = input.files[0];
-  if (file) attachPdf(file, type);
 }
 
-function attachPdf(file, type) {
-  const zoneId = type === 'dadosBasicos' ? 'dropDadosBasicos' : 'dropDeducao';
-  const filenameId = type === 'dadosBasicos' ? 'filenameDadosBasicos' : 'filenameDeducao';
+function processPastedText(type, text) {
+  const cardId = type === 'dadosBasicos' ? 'pasteDadosBasicos' : 'pasteDeducao';
+  const badgeId = type === 'dadosBasicos' ? 'badgeDadosBasicos' : 'badgeDeducao';
+  const card = document.getElementById(cardId);
 
-  attachedPdfs[type] = file;
-  document.getElementById(zoneId).classList.add('loaded');
-  document.getElementById(filenameId).textContent = '📎 ' + file.name;
+  let filledCount = 0;
 
-  showToast(`PDF "${file.name}" anexado com sucesso`, 'info');
-  updatePreencherButton();
+  if (type === 'dadosBasicos') {
+    filledCount = extractDadosBasicos(text);
+  } else {
+    filledCount = extractDeducao(text);
+  }
+
+  // Transition to filled state
+  card.classList.remove('active');
+  card.classList.add('filled');
+  document.getElementById(badgeId).textContent = `${filledCount} campo${filledCount !== 1 ? 's' : ''} preenchido${filledCount !== 1 ? 's' : ''}`;
+
+  if (filledCount > 0) {
+    showToast(`${filledCount} campo${filledCount !== 1 ? 's' : ''} preenchido${filledCount !== 1 ? 's' : ''} via SIAFI`, 'success');
+  } else {
+    showToast('Texto colado, mas nenhum campo foi identificado. Verifique se copiou a aba correta.', 'warning');
+  }
 }
 
-function removePdf(event, type) {
-  event.stopPropagation();
-  removePdfState(type);
-}
+function clearPasteCard(type) {
+  const cardId = type === 'dadosBasicos' ? 'pasteDadosBasicos' : 'pasteDeducao';
+  const inputId = type === 'dadosBasicos' ? 'inputDadosBasicos' : 'inputDeducao';
+  const card = document.getElementById(cardId);
+  const input = document.getElementById(inputId);
 
-function removePdfState(type) {
-  const zoneId = type === 'dadosBasicos' ? 'dropDadosBasicos' : 'dropDeducao';
-  const filenameId = type === 'dadosBasicos' ? 'filenameDadosBasicos' : 'filenameDeducao';
-  const inputId = type === 'dadosBasicos' ? 'fileDadosBasicos' : 'fileDeducao';
-
-  attachedPdfs[type] = null;
-  document.getElementById(zoneId).classList.remove('loaded');
-  document.getElementById(filenameId).textContent = '';
-  document.getElementById(inputId).value = '';
+  card.classList.remove('active', 'filled');
+  input.value = '';
 
   if (type === 'deducao') {
     const tipoDH = document.getElementById('fieldTipoDH').value;
@@ -1493,85 +1519,36 @@ function removePdfState(type) {
     }
   }
 
-  updatePreencherButton();
+  showToast('Campo de colagem limpo', 'info');
 }
 
-function updatePreencherButton() {
-  const btn = document.getElementById('btnPreencherAuto');
-  const hasAny = attachedPdfs.dadosBasicos || attachedPdfs.deducao;
-  btn.style.display = hasAny ? 'flex' : 'none';
+// --- Visual feedback: flash filled fields ---
+function flashField(fieldId) {
+  const el = document.getElementById(fieldId);
+  if (!el) return;
+  el.classList.remove('field-flash');
+  void el.offsetWidth; // force reflow
+  el.classList.add('field-flash');
 }
 
-async function preencherAutomaticamente() {
-  const btn = document.getElementById('btnPreencherAuto');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="btn-preencher-icon">⏳</span> Processando PDFs...';
-
-  let successCount = 0;
-
-  // Process Dados Básicos first
-  if (attachedPdfs.dadosBasicos) {
-    const text = await extractTextFromPdf(attachedPdfs.dadosBasicos);
-    if (text) {
-      extractDadosBasicos(text);
-      successCount++;
-    }
-  }
-
-  // Then process Dedução
-  if (attachedPdfs.deducao) {
-    const text = await extractTextFromPdf(attachedPdfs.deducao);
-    if (text) {
-      extractDeducao(text);
-      successCount++;
-    }
-  }
-
-  btn.disabled = false;
-  btn.innerHTML = '<span class="btn-preencher-icon">⚡</span> Preencher Automaticamente com PDFs Anexados';
-
-  if (successCount > 0) {
-    showToast(`${successCount} PDF(s) processado(s) — campos preenchidos!`, 'success');
-  } else {
-    showToast('Nenhum PDF válido para processar', 'warning');
-  }
-}
-
-async function extractTextFromPdf(file) {
-  try {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let fullText = '';
-
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      const pageText = content.items.map(item => item.str).join(' ');
-      fullText += pageText + '\n';
-    }
-
-    console.log(`[PDF] Extracted text:`, fullText);
-    return fullText;
-  } catch (err) {
-    console.error('PDF parse error:', err);
-    showToast(`Erro ao ler "${file.name}". Verifique se é um PDF válido.`, 'error');
-    return null;
-  }
-}
-
+// --- Parser: Dados Básicos ---
 function extractDadosBasicos(text) {
   console.log('[PARSE] Dados Básicos text:', text);
+  let count = 0;
 
-  // UGE - "Código da UG Emitente: 160443" or "UG Pagadora 160443"
-  const ugeMatch = text.match(/(?:UG\s*(?:Emitente|Pagadora))[:\s]*(\d{6})/i);
+  // UGE - "Código da UG Emitente:\n160443"
+  const ugeMatch = text.match(/(?:C[óo]digo\s*da\s*UG\s*Emitente|UG\s*Emitente)[:\s]*\n?\s*(\d{6})/i)
+    || text.match(/(?:UG\s*(?:Emitente|Pagadora))[:\s]*(\d{6})/i);
   if (ugeMatch) {
     const uge = ugeMatch[1];
     document.getElementById('fieldUGE').value = uge;
     if (uge !== currentUGE) switchUGE(uge);
+    flashField('fieldUGE');
+    count++;
   }
 
-  // Tipo de DH - "Tipo de Documento: NP" or "* Tipo de Documento  NP"
-  const tipoMatch = text.match(/Tipo\s*(?:de\s*)?Documento[:\s]*(\w+)/i);
+  // Tipo de DH - "*Tipo de Documento:\nNP"
+  const tipoMatch = text.match(/Tipo\s*(?:de\s*)?Documento[:\s]*\n?\s*(\w+)/i);
   if (tipoMatch) {
     const tipo = tipoMatch[1].toUpperCase();
     const select = document.getElementById('fieldTipoDH');
@@ -1579,106 +1556,171 @@ function extractDadosBasicos(text) {
       if (opt.value === tipo) { select.value = tipo; break; }
     }
     handleTipoDHChange();
+    flashField('fieldTipoDH');
+    count++;
   }
 
-  // Número DH - "Número DH: 338" or "Número DH.  338"
-  const numMatch = text.match(/N[úu]mero\s*(?:DH|D\.?H\.?)[.:\s]*(\d+)/i);
+  // Número DH - "Número DH:\n348"
+  const numMatch = text.match(/N[úu]mero\s*(?:DH|D\.?H\.?)[.:\s]*\n?\s*(\d+)/i);
   if (numMatch) {
     document.getElementById('fieldNumero').value = numMatch[1];
+    flashField('fieldNumero');
+    count++;
   }
 
-  // Data Emissão Contábil - "Data de Emissão Contábil: 07/07/2026"
-  const dataMatch = text.match(/(?:Emiss[ãa]o\s*Cont[áa]bil)[:\s]*(\d{2}\/\d{2}\/\d{4})/i);
+  // Data Emissão Contábil - "*Data de Emissão Contábil:\n10/07/2026"
+  const dataMatch = text.match(/(?:Emiss[ãa]o\s*Cont[áa]bil)[:\s]*\n?\s*(\d{2}\/\d{2}\/\d{4})/i);
   if (dataMatch) {
     const [d, m, y] = dataMatch[1].split('/');
     document.getElementById('fieldDataEmissao').value = `${y}-${m}-${d}`;
+    flashField('fieldDataEmissao');
+    count++;
   }
 
-  // Valor do Documento - "Valor do Documento 6.850,00" or "Valor do Documento  6.850,00"
-  const valorMatch = text.match(/Valor\s*(?:do\s*)?Documento[:\s]*([\d.,]+)/i);
+  // Valor do Documento - "*Valor do Documento:\n957,84"
+  const valorMatch = text.match(/Valor\s*(?:do\s*)?Documento[:\s]*\n?\s*([\d.,]+)/i);
   if (valorMatch) {
     document.getElementById('fieldValorBruto').value = valorMatch[1];
+    flashField('fieldValorBruto');
+    count++;
   }
 
-  // Código do Credor (CNPJ) - we extract but store separately
-  // "Código do Credor 40713112000104"
-
-  // Document - "NF 18594" from "Número Doc. Origem"
-  const nfMatch = text.match(/(?:NF|Nota\s*Fiscal)[:\s]*(\d+)/i);
-  const docOrigemMatch = text.match(/N[úu]mero\s*Doc\.?\s*Origem\s*(NF\s*\d+)/i);
-  if (docOrigemMatch) {
-    document.getElementById('fieldDocRelacionado').value = docOrigemMatch[1];
-  } else if (nfMatch) {
-    document.getElementById('fieldDocRelacionado').value = 'NF ' + nfMatch[1];
+  // CNPJ do Credor - "*Código do Credor\n18136904000104"
+  const cnpjMatch = text.match(/C[óo]digo\s*(?:do\s*)?Credor[:\s]*\n?\s*(\d{11,14})/i);
+  if (cnpjMatch) {
+    const cnpjField = document.getElementById('fieldCNPJ');
+    if (cnpjField) {
+      cnpjField.value = cnpjMatch[1];
+      flashField('fieldCNPJ');
+      count++;
+    }
   }
 
-  // Observação
-  const obsMatch = text.match(/Observa[çc][ãa]o[:\s]*([^\n]+)/i);
+  // Document Related - From origin table row: "18136904000104\t06/07/2026\tNF 21984\t957,84"
+  // Or from Observação: "CONF NF 21984"
+  const originRowMatch = text.match(/\t\d{11,14}\t\d{2}\/\d{2}\/\d{4}\t(NF\s*\d+)/i);
+  const confNfMatch = text.match(/(?:CONF|CONFORME)\s+(NF\s*\d+)/i);
+  const genericNfMatch = text.match(/(?:NF|Nota\s*Fiscal)\s+(\d+)/i);
+  
+  if (originRowMatch) {
+    document.getElementById('fieldDocRelacionado').value = originRowMatch[1];
+    flashField('fieldDocRelacionado');
+    count++;
+  } else if (confNfMatch) {
+    document.getElementById('fieldDocRelacionado').value = confNfMatch[1];
+    flashField('fieldDocRelacionado');
+    count++;
+  } else if (genericNfMatch) {
+    document.getElementById('fieldDocRelacionado').value = 'NF ' + genericNfMatch[1];
+    flashField('fieldDocRelacionado');
+    count++;
+  }
+
+  // Observação - "*Observação\nINCDH PARA PAGAMENTO..."
+  const obsMatch = text.match(/\*?Observa[çc][ãa]o\s*\n([^\n]+)/i);
   if (obsMatch && obsMatch[1].trim().length > 5) {
     document.getElementById('fieldObservacao').value = obsMatch[1].trim();
+    flashField('fieldObservacao');
+    count++;
   }
 
-  // Check if optante pelo simples is mentioned in observação
-  const obsText = (document.getElementById('fieldObservacao').value || '') + ' ' + text;
-  if (/optante\s*pelo\s*simples/i.test(obsText)) {
-    if (/n[ãa]o\s*optante/i.test(obsText)) {
+  // Check if optante pelo simples is mentioned
+  const fullText = (document.getElementById('fieldObservacao').value || '') + ' ' + text;
+  if (/optante\s*pelo\s*simples/i.test(fullText)) {
+    if (/n[ãa]o\s*optante/i.test(fullText)) {
       document.getElementById('fieldOptante').value = 'Não';
     } else {
       document.getElementById('fieldOptante').value = 'Sim';
     }
     handleOptanteChange();
+    flashField('fieldOptante');
+    count++;
   }
 
   calcularLiquido();
+  return count;
 }
 
+// --- Parser: Dedução ---
 function extractDeducao(text) {
   console.log('[PARSE] Dedução text:', text);
+  let count = 0;
 
-  // If deduction PDF is provided, the company is NOT optante pelo Simples
+  // If deduction text is provided, the company is NOT optante pelo Simples
   const tipoDH = document.getElementById('fieldTipoDH').value;
   if (tipoDH === 'NP') {
     document.getElementById('fieldOptante').value = 'Não';
     handleOptanteChange();
   }
 
-  // Extract deduction code - "Código de Recolhimento DARF 8767"
-  const codMatch = text.match(/C[óo]digo\s*(?:de\s*)?Recolhimento\s*(?:DARF\s*)?(\d+)/i);
+  // Parse ALL situations from the text
+  // Pattern: "Situação:DDF055 - RETENÇÃO..." followed by details for each
+  // Split by "Situação:" blocks to find multiple deductions
 
-  // Extract Natureza do Rendimento - "Natureza do Rendimento (1XXXX)" or number
-  const natMatch = text.match(/Natureza\s*(?:do\s*)?Rendimento\s*\(?\s*(\d+)/i);
-  if (natMatch) {
-    document.getElementById('fieldCodNatureza').value = natMatch[1];
+  // First, try to find all "Código de Recolhimento DARF\n6147" patterns
+  const allCodMatches = [...text.matchAll(/C[óo]digo\s*(?:de\s*)?Recolhimento\s*(?:DARF)?\s*\n?\s*(\d+)/gi)];
+  const allNatMatches = [...text.matchAll(/Natureza\s*(?:de?\s*)?Rendimento\s*\(?[^)]*\)?\s*\n?\s*(\d+)/gi)];
+  const allValorMatches = [...text.matchAll(/Valor\s*(?:do\s*)?Item[:\s]*\n?\s*([\d.,]+)/gi)];
+  
+  // Try to extract base de cálculo from recolhedores table rows
+  // Pattern: "\t1\t18136904000104\t957,84\t56,03\t0,00\t0,00"
+  const allBaseMatches = [...text.matchAll(/\t\d+\t\d{11,14}\t([\d.,]+)\t([\d.,]+)/g)];
+
+  // Natureza de Rendimento (first found → global field)
+  if (allNatMatches.length > 0) {
+    document.getElementById('fieldCodNatureza').value = allNatMatches[0][1];
+    flashField('fieldCodNatureza');
+    count++;
   }
 
-  // Extract base de cálculo - "Base de Cálculo 6.850,00"
-  const baseMatch = text.match(/Base\s*(?:de\s*)?C[áa]lculo\s*([\d.,]+)/i);
-
-  // Extract valor da receita - "Valor da Receita 150,70"
-  const valorMatch = text.match(/Valor\s*(?:da\s*)?Receita\s*([\d.,]+)/i);
-
-  // Extract valor do item - "Valor do Item: 150,70"
-  const itemMatch = text.match(/Valor\s*(?:do\s*)?Item[:\s]*([\d.,]+)/i);
-
-  // Clear existing deductions and add the extracted one
+  // Determine number of deductions
+  const numDeductions = Math.max(allCodMatches.length, allValorMatches.length, 1);
+  
+  // Clear existing deductions and rebuild
   const container = document.getElementById('deductionsContainer');
   container.innerHTML = '';
-  addDeductionRow();
+
+  for (let i = 0; i < numDeductions; i++) {
+    addDeductionRow();
+  }
 
   const rows = container.querySelectorAll('.deduction-row');
-  if (rows.length > 0) {
-    const row = rows[0];
-    if (codMatch) row.querySelector('.ded-cod').value = codMatch[1];
-    if (baseMatch) row.querySelector('.ded-base').value = baseMatch[1];
-    if (valorMatch) {
-      row.querySelector('.ded-valor').value = valorMatch[1];
-    } else if (itemMatch) {
-      row.querySelector('.ded-valor').value = itemMatch[1];
+  
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    
+    // Código de retenção
+    if (allCodMatches[i]) {
+      row.querySelector('.ded-cod').value = allCodMatches[i][1];
+      count++;
+    }
+    
+    // Base de cálculo and valor from table row
+    if (allBaseMatches[i]) {
+      row.querySelector('.ded-base').value = allBaseMatches[i][1];
+      row.querySelector('.ded-valor').value = allBaseMatches[i][2];
+      count += 2;
+    } else {
+      // Fallback: try individual matches
+      const baseFallback = text.match(/Base\s*(?:de\s*)?C[áa]lculo\s*\n?\s*([\d.,]+)/i);
+      if (baseFallback && i === 0) {
+        row.querySelector('.ded-base').value = baseFallback[1];
+        count++;
+      }
+      if (allValorMatches[i]) {
+        row.querySelector('.ded-valor').value = allValorMatches[i][1];
+        count++;
+      }
     }
   }
 
   calcularLiquido();
+  return count;
 }
+
+// Initialize paste cards
+initPasteCards();
+
 
 // ═══════════════════════════════════════════════
 // TOAST NOTIFICATIONS

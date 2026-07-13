@@ -1,0 +1,70 @@
+Personalizar
+Expandir Tudo
+GUILHERME
+Código da UG:160443
+SairSistema: SIAFI2026 Exercício: 2026 | Versão 2026.01.083-b3930610
+Última atualização: 13/07/2026 às 09:33
+Comunica
+Painel do Usuário
+Configurar Acesso»
+Adicionar Favoritos
+Siafi Operacional
+Consultar Documento Hábil - CONDH: DetalharAjuda
+* Campo de preenchimento obrigatório
+
+*Código da UG Emitente:
+160443
+Nome da UG Emitente:
+63º BATALHÃO DE INFANTARIA
+Moeda:
+REAL (R$)
+Ano:
+2026
+*Tipo de Documento:
+NP
+Título:
+NOTA DE PAGAMENTO
+Número DH:
+348
+Preenchimento Obrigatório Registrada Pendente de Registro
+
+
+*Código da UG Pagadora:
+160443
+Nome da UG Pagadora:
+63º BATALHÃO DE INFANTARIA
+Sistema de Origem
+CPR-STN
+*Data de Emissão Contábil:
+10/07/2026
+Data de Vencimento:
+15/10/2026
+Taxa de Câmbio:
+0,0000
+Processo:
+-
+Ateste:
+09/07/2026
+*Valor do Documento:
+957,84
+*Código do Credor
+18136904000104
+Nome do Credor:
+GUILHERME XAVIER PIVA LTDA
+* Dados de Documentos de Origem
+
+Emitente
+Data de Emissão
+Número Doc. Origem
+Valor
+Total:	957,84
+	18136904000104	06/07/2026	NF 21984	957,84
+Documentos Hábeis Relacionados
+
+UG
+Número Doc. Háb. Relacionado
+*Observação
+INCDH PARA PAGAMENTO DE AQUISIÇÃO DE MATERIAL PERMANENTE - MOBILIARIO EM GERAL, ND 449052, SI 42, PI D7PESMIAPSE, CONF NF 21984 DE 06/07/2026. EMPRESA: GUILHERME XAVIER PIVA LTDA, NÃO OPTANTE PELO SIMPLES NACIONAL, COM DEDUÇÃO DE 5,85 POR CENTO.
+Informações Adicionais
+Incluído por KAMILA CEZAR DE OLIVEIRA | CPF 04001158086 | UG 160443 | Data 10/07/2026 11:36:28
+SIAFI - Sistema Integrado de Administração Financeira do Governo Federal
