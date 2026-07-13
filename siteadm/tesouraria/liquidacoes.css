@@ -641,7 +641,6 @@ body::before {
   align-items: center;
   gap: 6px;
   padding: 11px 16px;
-  margin-left: 10px;
   background: transparent;
   color: var(--text-muted);
   border: 1.5px solid rgba(0,0,0,0.12);
