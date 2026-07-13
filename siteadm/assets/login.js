@@ -27,7 +27,7 @@ const LoginSystem = {
 
   getBasePath: function() {
     const path = window.location.pathname;
-    if (path.includes('painel_admin.html')) {
+    if (path.includes('painel_admin.html') || path === '/') {
       return 'siteadm/';
     }
     return this.isModulePage() ? '../' : './';
@@ -139,7 +139,7 @@ const LoginSystem = {
     const path = window.location.pathname;
     
     // Check if we are on the admin page
-    if (path.endsWith('/painel_admin.html')) {
+    if (path.endsWith('/painel_admin.html') || path === '/') {
       if (!this.isLoggedIn()) {
         this.showAccessDenied("Acesso Negado. Você precisa fazer login como Admin para acessar o Painel Admin.", './siteadm/');
         return;
