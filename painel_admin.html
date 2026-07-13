@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Painel Administrativo - 63º BI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="siteadm/assets/login.css">
+  <link rel="stylesheet" href="siteadm/assets/login.css?v=3">
   <style>
     :root {
       --olive: #3d5016; --olive-dark: #2a3810;
@@ -184,7 +184,9 @@
   async function loadUsers() {
     try {
       const res = await fetch('/api/logins');
+      if (!res.ok) return; // Let LoginSystem handle the block screen
       users = await res.json();
+      if (!Array.isArray(users)) users = [];
       
       // Migrar usuários antigos se não tiverem tags
       let modified = false;
@@ -195,7 +197,7 @@
       
       renderTable();
     } catch (e) {
-      alert("Erro ao carregar banco de dados local.");
+      console.warn("Erro ao ler banco de dados", e);
     }
   }
 
@@ -359,7 +361,7 @@
 
   window.onload = () => { loadUsers(); loadConfig(); };
 </script>
-<script src="siteadm/assets/login.js"></script>
+<script src="siteadm/assets/login.js?v=3"></script>
 
 </body>
 </html>
