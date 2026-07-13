@@ -1,0 +1,2362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setor Financeiro — Controle de Liquidações | 63º BI</title>
+  <meta name="description" content="Sistema de controle de liquidações do Setor Financeiro - 63º Batalhão de Infantaria">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- PDF.js for PDF extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <link rel="stylesheet" href="liquidacoes.css">
+  
+  <!-- Login System -->
+  <link rel="stylesheet" href="../assets/login.css">
+  <script src="../assets/login.js"></script>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+<div class="selection-tooltip" id="selectionTooltip"></div>
+
+<!-- Floating Column Filter Popup -->
+<div class="column-filter-popup" id="columnFilterPopup">
+  <div class="filter-popup-search">
+    <input type="text" id="filterPopupSearchInput" placeholder="Pesquisar itens..." oninput="filterPopupItems()">
+  </div>
+  <div class="filter-popup-options-container" id="filterPopupOptions"></div>
+  <div class="filter-popup-actions">
+    <button class="btn-filter-clear" onclick="clearActiveColumnFilter()">Limpar</button>
+    <button class="btn-filter-apply" onclick="applyActiveColumnFilter()">OK</button>
+  </div>
+</div>
+
+<!-- Duplicate Warning Modal -->
+<div class="modal-overlay" id="duplicateModal">
+  <div class="modal-content">
+    <h3>⚠️ Possível Duplicidade Detectada</h3>
+    <p id="duplicateMsg"></p>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="closeDuplicateModal()">Cancelar</button>
+      <button class="modal-btn-confirm" onclick="confirmDuplicate()">Incluir Mesmo Assim</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sync Confirmation Modal -->
+<div class="modal-overlay" id="syncConfirmModal">
+  <div class="modal-content" style="max-width: 400px; text-align: center;">
+    <h3>🔄 Confirmar Sincronização?</h3>
+    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 13px;">
+      Esta ação irá fazer o download dos dados da planilha do Google Sheets, sobrescrevendo o cache local com os registros mais recentes.
+    </p>
+    <div class="modal-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+      <button class="modal-btn-cancel" onclick="closeSyncConfirmModal()" style="min-width: 100px;">Cancelar</button>
+      <button class="modal-btn-confirm" onclick="executeSincronizarPlanilha()" style="min-width: 100px; background: var(--accent-amber); border-color: var(--accent-amber); color: var(--olive-dark);">Sincronizar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Doc Related Duplicate Modal -->
+<div class="modal-overlay" id="docDuplicateModal">
+  <div class="modal-content" style="max-width: 480px; text-align: left;">
+    <h3 style="color: var(--accent-red); display: flex; align-items: center; gap: 8px; font-size: 18px; border-bottom: 1px solid var(--border-default); padding-bottom: 10px; margin-bottom: 15px;">
+      ⚠️ Documento Relacionado Duplicado
+    </h3>
+    <p style="margin-top: 10px; font-size: 13px; color: var(--text-secondary);">
+      O documento relacionado inserido já existe no banco de dados. Veja os detalhes do registro existente abaixo:
+    </p>
+    <div id="docDuplicateDetails" style="background: rgba(0,0,0,0.02); border-left: 4px solid var(--accent-red); padding: 12px 16px; margin: 15px 0; border-radius: var(--radius-sm); font-size: 13px; line-height: 1.5; color: var(--text-primary);">
+      <!-- Populated dynamically -->
+    </div>
+    <p style="font-weight: 600; font-size: 13px; margin-bottom: 15px; color: var(--text-primary);">
+      Deseja registrar/salvar esta liquidação mesmo assim?
+    </p>
+    <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button class="modal-btn-cancel" onclick="closeDocDuplicateModal(true)">Voltar e Corrigir</button>
+      <button class="modal-btn-confirm" id="btnConfirmDocDuplicate" style="background: var(--accent-red); border-color: var(--accent-red); color: white;">Prosseguir Mesmo Assim</button>
+    </div>
+  </div>
+</div>
+
+<!-- Deductions Edit Modal -->
+<div class="modal-overlay" id="deductionsEditModal">
+  <div class="modal-content" style="max-width: 600px;">
+    <h3 style="color: var(--olive); border-bottom: 1px solid var(--border-default); padding-bottom: 10px; margin-bottom: 15px;">
+      📊 Editar Deduções da Liquidação
+    </h3>
+    <div class="deductions-container" id="modalDeductionsContainer">
+      <!-- Populated dynamically -->
+    </div>
+    <button class="btn-add-deduction" id="modalBtnAddDeduction" onclick="addModalDeductionRow()">
+      ＋ Adicionar Dedução
+    </button>
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button class="modal-btn-cancel" onclick="closeDeductionsEditModal()">Cancelar</button>
+      <button class="modal-btn-confirm" onclick="saveInlineDeductions()" style="background: var(--olive); border: none;">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Edit Save Modal -->
+<div class="modal-overlay" id="confirmEditModal">
+  <div class="modal-content">
+    <h3>💾 Confirmar Alterações?</h3>
+    <p>Deseja salvar as alterações feitas nesta liquidação?</p>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="closeConfirmEditModal()">Cancelar</button>
+      <button class="modal-btn-confirm" id="confirmEditSaveBtn" onclick="confirmSaveRowEdition()" style="background: var(--olive); border: none;">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal-overlay" id="confirmDeleteModal">
+  <div class="modal-content">
+    <h3 style="color: var(--accent-red);">🗑️ Excluir Registro?</h3>
+    <p>Deseja realmente excluir esta liquidação de forma permanente?</p>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="closeConfirmDeleteModal()">Cancelar</button>
+      <button class="modal-btn-confirm" id="confirmDeleteBtn" onclick="confirmDeleteRecord()" style="background: var(--accent-red); border: none;">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-container">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-left">
+      <img src="../assets/logo.png" alt="Logo 63º BI" class="header-logo"
+           onerror="this.style.display='none'">
+      <div class="header-info">
+        <h1>Setor Financeiro — Liquidações</h1>
+        <div class="header-subtitle">Controle de Documentos Hábeis • 63º Batalhão de Infantaria</div>
+      </div>
+    </div>
+    <div class="header-right" style="display: flex; align-items: center; gap: 12px;">
+      <a href="../" class="btn-voltar" style="background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; padding: 10px 16px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.2s; margin-right: 48px;">← Menu</a>
+    </div>
+  </header>
+
+  <!-- UGE TABS -->
+  <div class="uge-tabs">
+    <button class="uge-tab active" data-uge="160443" onclick="switchUGE('160443')">
+      UGE 160443 <span class="tab-count" id="count-160443">0</span>
+    </button>
+    <button class="uge-tab" data-uge="167443" onclick="switchUGE('167443')">
+      UGE 167443 <span class="tab-count" id="count-167443">0</span>
+    </button>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Total de Liquidações</div>
+      <div class="stat-value" id="stat-total">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Valor Bruto Total</div>
+      <div class="stat-value money" id="stat-bruto">R$ 0,00</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Deduções</div>
+      <div class="stat-value money" id="stat-deducoes">R$ 0,00</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Valor Líquido Total</div>
+      <div class="stat-value money" id="stat-liquido">R$ 0,00</div>
+    </div>
+  </div>
+
+  <!-- ACTION BAR -->
+  <div class="action-bar">
+    <button class="btn-incluir" id="btnIncluir" onclick="toggleForm()">
+      <span class="icon">＋</span> Incluir Liquidação
+    </button>
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Buscar por nº, documento, observação..." oninput="renderTable()">
+    </div>
+  </div>
+
+  <!-- FORM PANEL -->
+  <div class="form-panel" id="formPanel">
+    <div class="form-panel-header">
+      <h2 id="formTitle">📋 Inclusão de Liquidação</h2>
+      <button class="btn-close-form" onclick="toggleForm()">✕</button>
+    </div>
+
+    <!-- PDF Upload Section -->
+    <div class="pdf-upload-section">
+      <div class="pdf-upload-label">Preenchimento automático via PDF</div>
+      <div class="pdf-upload-grid">
+        <div class="pdf-drop-zone" id="dropDadosBasicos" onclick="document.getElementById('fileDadosBasicos').click()">
+          <span class="drop-icon">📄</span>
+          <div class="drop-title">Aba Dados Básicos</div>
+          <div class="drop-hint">Arraste o PDF ou clique para enviar</div>
+          <div class="drop-filename" id="filenameDadosBasicos"></div>
+          <button class="btn-remove-pdf" onclick="removePdf(event, 'dadosBasicos')" title="Remover PDF">✕</button>
+          <input type="file" id="fileDadosBasicos" accept=".pdf" onchange="handlePdfAttach(this, 'dadosBasicos')">
+        </div>
+        <div class="pdf-drop-zone" id="dropDeducao" onclick="document.getElementById('fileDeducao').click()">
+          <span class="drop-icon">📄</span>
+          <div class="drop-title">Aba Dedução</div>
+          <div class="drop-hint">Arraste o PDF ou clique para enviar</div>
+          <div class="drop-filename" id="filenameDeducao"></div>
+          <button class="btn-remove-pdf" onclick="removePdf(event, 'deducao')" title="Remover PDF">✕</button>
+          <input type="file" id="fileDeducao" accept=".pdf" onchange="handlePdfAttach(this, 'deducao')">
+        </div>
+      </div>
+      <!-- Button: Preencher Automaticamente -->
+      <button class="btn-preencher-auto" id="btnPreencherAuto" onclick="preencherAutomaticamente()" style="display: none;">
+        <span class="btn-preencher-icon">⚡</span>
+        Preencher Automaticamente com PDFs Anexados
+      </button>
+    </div>
+
+    <!-- Form Fields -->
+    <div class="form-body">
+      <div class="form-section-title">
+        <span>📌</span> Dados do Documento Hábil
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>UGE <span class="required">*</span></label>
+          <select id="fieldUGE">
+            <option value="160443">160443</option>
+            <option value="167443">167443</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de DH <span class="required">*</span></label>
+          <select id="fieldTipoDH" onchange="handleTipoDHChange()">
+            <option value="NP">NP — Nota de Pagamento</option>
+            <option value="OB">OB — Ordem Bancária</option>
+            <option value="GPS">GPS</option>
+            <option value="DARF">DARF</option>
+            <option value="GRU">GRU</option>
+            <option value="NS">NS — Nota de Sistema</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nº do DH <span class="required">*</span></label>
+          <input type="text" id="fieldNumero" placeholder="Ex: 338">
+        </div>
+        <div class="form-group">
+          <label>Data de Emissão Contábil <span class="required">*</span></label>
+          <input type="date" id="fieldDataEmissao">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Optante pelo Simples</label>
+          <select id="fieldOptante" onchange="handleOptanteChange()">
+            <option value="Não">Não</option>
+            <option value="Sim">Sim</option>
+            <option value="N/A">Não se aplica</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Valor Bruto <span class="required">*</span></label>
+          <input type="text" id="fieldValorBruto" placeholder="0,00" oninput="calcularLiquido()">
+        </div>
+        <div class="form-group">
+          <label>Código de Natureza</label>
+          <input type="text" id="fieldCodNatureza" placeholder="Ex: 17028">
+        </div>
+        <div class="form-group">
+          <label>Valor Líquido</label>
+          <input type="text" id="fieldValorLiquido" class="computed" readonly placeholder="Calculado automaticamente">
+        </div>
+      </div>
+
+      <!-- Deductions Section (only when not Simples) -->
+      <div id="deductionsSection">
+        <div class="form-section-title">
+          <span>📊</span> Deduções
+          <span style="font-weight: 400; font-size: 10px; color: var(--text-muted); text-transform: none; letter-spacing: 0;">
+            (visível apenas para não optantes pelo Simples)
+          </span>
+        </div>
+        <div class="deductions-container" id="deductionsContainer">
+          <!-- Deduction rows will be added dynamically -->
+        </div>
+        <button class="btn-add-deduction" id="btnAddDeduction" onclick="addDeductionRow()">
+          ＋ Adicionar Dedução
+        </button>
+      </div>
+
+      <div class="form-section-title" style="margin-top: 24px;">
+        <span>📎</span> Informações Complementares
+      </div>
+      <div class="form-grid">
+        <div class="form-group" style="display: none;">
+          <label>CNPJ da Empresa</label>
+          <input type="text" id="fieldCNPJ" placeholder="Ex: 00.000.000/0000-00">
+        </div>
+        <div class="form-group" style="display: none;">
+          <label>Data de Emissão da OB</label>
+          <input type="date" id="fieldDataOB">
+        </div>
+        <div class="form-group" style="display: none;">
+          <label>Incluído no E-cac</label>
+          <select id="fieldECac">
+            <option value="Não">Não</option>
+            <option value="Sim">Sim</option>
+          </select>
+        </div>
+        <div class="form-group span-2">
+          <label>Documento Relacionado</label>
+          <input type="text" id="fieldDocRelacionado" placeholder="Ex: NF 18594">
+        </div>
+        <div class="form-group span-2">
+          <label>Observação</label>
+          <textarea id="fieldObservacao" placeholder="Observações adicionais..."></textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="toggleForm()">Cancelar</button>
+        <button class="btn-submit" onclick="submitLiquidacao()">
+          ✓ Registrar Liquidação
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA TABLE -->
+  <div class="table-section">
+    <div class="table-header">
+      <h3>📋 Liquidações Registradas <span class="record-count" id="recordCount">0 registros</span></h3>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table" id="dataTable">
+        <thead>
+          <tr>
+            <th data-col="tipoDH" class="filterable-header"><div class="header-content"><span>Tipo</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'tipoDH')">▼</span></div></th>
+            <th data-col="numero" class="filterable-header"><div class="header-content"><span>Nº</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'numero')">▼</span></div></th>
+            <th data-col="dataEmissao" class="filterable-header"><div class="header-content"><span>Data Emissão</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'dataEmissao')">▼</span></div></th>
+            <th data-col="optante" class="filterable-header"><div class="header-content"><span>Optante</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'optante')">▼</span></div></th>
+            <th data-col="valorBruto" class="filterable-header"><div class="header-content"><span>Valor Bruto</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'valorBruto')">▼</span></div></th>
+            <th data-col="baseCalculo" class="filterable-header"><div class="header-content"><span>Base de Cálculo</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'baseCalculo')">▼</span></div></th>
+            <th data-col="codigoRetencao" class="filterable-header"><div class="header-content"><span>Cód. Retenção</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'codigoRetencao')">▼</span></div></th>
+            <th data-col="valorRetencao" class="filterable-header"><div class="header-content"><span>Valor Retido</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'valorRetencao')">▼</span></div></th>
+            <th data-col="valorLiquido" class="filterable-header"><div class="header-content"><span>Valor Líquido</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'valorLiquido')">▼</span></div></th>
+            <th data-col="codNatureza" class="filterable-header"><div class="header-content"><span>Cód. Natureza</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'codNatureza')">▼</span></div></th>
+            <th data-col="docRelacionado" class="filterable-header"><div class="header-content"><span>Doc. Relacionado</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'docRelacionado')">▼</span></div></th>
+            <th data-col="cnpj" class="filterable-header"><div class="header-content"><span>CNPJ</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'cnpj')">▼</span></div></th>
+            <th data-col="dataOB" class="filterable-header"><div class="header-content"><span>Data OB</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'dataOB')">▼</span></div></th>
+            <th data-col="gercomp" class="filterable-header"><div class="header-content"><span>GERCOMP/GEROP</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'gercomp')">▼</span></div></th>
+            <th data-col="eCac" class="filterable-header"><div class="header-content"><span>E-CAC</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'eCac')">▼</span></div></th>
+            <th data-col="observacao" class="filterable-header"><div class="header-content"><span>Observação</span> <span class="filter-icon-btn" onclick="toggleColumnFilter(event, 'observacao')">▼</span></div></th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+        </tbody>
+      </table>
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📂</div>
+        <div class="empty-text">Nenhuma liquidação registrada para esta UGE</div>
+        <div class="empty-hint">Clique em "Incluir Liquidação" para começar</div>
+      </div>
+    </div>
+    <!-- Bottom Toolbar / Actions -->
+    <div class="table-footer-actions" style="display: flex; justify-content: flex-end; margin-top: 15px; padding-right: 10px;">
+      <button class="btn-sync-bottom" id="btnSincronizar" onclick="openSyncConfirmModal()">
+        <span id="btnSincronizarIcon" style="display: inline-block;">🔄</span>
+        <span class="btn-text">Sincronizar da Planilha</span>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA STORE
+// ═══════════════════════════════════════════════
+const STORAGE_KEY = 'liquidacoes_63bi';
+let currentUGE = '160443';
+let editingId = null;
+let pendingDuplicateData = null;
+var columnFilters = {};
+let editingRowId = null;
+let lastConfirmedDuplicateDoc = "";
+
+let cachedLiquidacoes = [];
+
+function loadData() {
+  return cachedLiquidacoes;
+}
+
+function saveData(data) {
+  cachedLiquidacoes = data;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function syncRecordToBackend(record) {
+  const user = localStorage.getItem('adm_auth_nome') || sessionStorage.getItem('adm_auth_nome') || 'Acesso Livre';
+  record.usuario = user;
+  fetch('/api/liquidacoes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(record)
+  }).catch(err => console.error('[DB] Erro de sincronização com Sheets:', err));
+}
+
+function getFilteredData() {
+  const all = loadData();
+  return all.filter(r => r.uge === currentUGE);
+}
+
+// ═══════════════════════════════════════════════
+// UGE TABS
+// ═══════════════════════════════════════════════
+function switchUGE(uge) {
+  currentUGE = uge;
+  document.querySelectorAll('.uge-tab').forEach(t => t.classList.toggle('active', t.dataset.uge === uge));
+  document.getElementById('fieldUGE').value = uge;
+  renderTable();
+  updateStats();
+  updateCounts();
+}
+
+function updateCounts() {
+  const all = loadData();
+  document.getElementById('count-160443').textContent = all.filter(r => r.uge === '160443').length;
+  document.getElementById('count-167443').textContent = all.filter(r => r.uge === '167443').length;
+}
+
+// ═══════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════
+function updateStats() {
+  const searchInput = document.getElementById('searchInput');
+  if (!searchInput) return;
+  const data = getFilteredData();
+  const search = searchInput.value.toLowerCase().trim();
+  const filtered = search ? data.filter(r => matchesSearch(r, search)) : data;
+
+  const totalBruto = filtered.reduce((s, r) => s + (r.valorBruto || 0), 0);
+  const totalDeducoes = filtered.reduce((s, r) => s + (r.totalDeducoes || 0), 0);
+  const totalLiquido = filtered.reduce((s, r) => s + (r.valorLiquido || 0), 0);
+
+  document.getElementById('stat-total').textContent = filtered.length;
+  document.getElementById('stat-bruto').textContent = formatMoney(totalBruto);
+  document.getElementById('stat-deducoes').textContent = formatMoney(totalDeducoes);
+  document.getElementById('stat-liquido').textContent = formatMoney(totalLiquido);
+}
+
+// ═══════════════════════════════════════════════
+// FORM PANEL
+// ═══════════════════════════════════════════════
+function toggleForm() {
+  lastConfirmedDuplicateDoc = "";
+  const panel = document.getElementById('formPanel');
+  const isOpen = panel.classList.contains('open');
+
+  if (isOpen) {
+    panel.classList.remove('open');
+    editingId = null;
+    document.getElementById('formTitle').textContent = '📋 Inclusão de Liquidação';
+    resetForm();
+  } else {
+    panel.classList.add('open');
+    if (!editingId) {
+      // Set default date to today
+      document.getElementById('fieldDataEmissao').value = new Date().toISOString().split('T')[0];
+      document.getElementById('fieldUGE').value = currentUGE;
+      addDeductionRow(); // Start with one deduction row
+    }
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function resetForm() {
+  document.getElementById('fieldUGE').value = currentUGE;
+  document.getElementById('fieldTipoDH').value = 'NP';
+  document.getElementById('fieldNumero').value = '';
+  document.getElementById('fieldDataEmissao').value = '';
+  document.getElementById('fieldOptante').value = 'Não';
+  document.getElementById('fieldValorBruto').value = '';
+  document.getElementById('fieldCodNatureza').value = '';
+  document.getElementById('fieldValorLiquido').value = '';
+  document.getElementById('fieldDocRelacionado').value = '';
+  document.getElementById('fieldCNPJ').value = '';
+  document.getElementById('fieldDataOB').value = '';
+  document.getElementById('fieldECac').value = 'Não';
+  document.getElementById('fieldObservacao').value = '';
+  document.getElementById('deductionsContainer').innerHTML = '';
+  document.getElementById('deductionsSection').style.display = '';
+
+  // Reset PDFs
+  removePdfState('dadosBasicos');
+  removePdfState('deducao');
+
+  handleTipoDHChange();
+}
+
+function handleTipoDHChange() {
+  const tipo = document.getElementById('fieldTipoDH').value;
+  const optanteSelect = document.getElementById('fieldOptante');
+
+  if (tipo !== 'NP') {
+    optanteSelect.value = 'N/A';
+    handleOptanteChange();
+  } else {
+    if (optanteSelect.value === 'N/A') {
+      optanteSelect.value = 'Não';
+      handleOptanteChange();
+    }
+  }
+}
+
+function handleOptanteChange() {
+  const optante = document.getElementById('fieldOptante').value;
+  const section = document.getElementById('deductionsSection');
+
+  if (optante === 'Sim' || optante === 'N/A') {
+    section.style.display = 'none';
+  } else {
+    section.style.display = '';
+    // Ensure at least one row exists
+    if (document.getElementById('deductionsContainer').children.length === 0) {
+      addDeductionRow();
+    }
+  }
+  calcularLiquido();
+}
+
+// ═══════════════════════════════════════════════
+// DEDUCTIONS
+// ═══════════════════════════════════════════════
+let deductionCounter = 0;
+
+function addDeductionRow() {
+  const container = document.getElementById('deductionsContainer');
+  if (container.children.length >= 4) {
+    showToast('Máximo de 4 deduções permitido', 'warning');
+    return;
+  }
+
+  deductionCounter++;
+  const id = deductionCounter;
+
+  // Get current Gross Value to default the Base de Cálculo
+  const valorBrutoVal = document.getElementById('fieldValorBruto').value.trim();
+
+  const row = document.createElement('div');
+  row.className = 'deduction-row';
+  row.id = `deduction-${id}`;
+  row.innerHTML = `
+    <div class="form-group">
+      <label>Código de Retenção</label>
+      <input type="text" class="ded-cod" placeholder="Ex: 6190">
+    </div>
+    <div class="form-group">
+      <label>Base de Cálculo</label>
+      <input type="text" class="ded-base" value="${valorBrutoVal}" placeholder="0,00" oninput="calcularLiquido()">
+    </div>
+    <div class="form-group">
+      <label>Valor da Dedução</label>
+      <input type="text" class="ded-valor" placeholder="0,00" oninput="calcularLiquido()">
+    </div>
+    <button class="btn-remove-deduction" onclick="removeDeductionRow(${id})" title="Remover dedução">✕</button>
+  `;
+  container.appendChild(row);
+
+  // Update add button visibility
+  if (container.children.length >= 4) {
+    document.getElementById('btnAddDeduction').style.display = 'none';
+  }
+}
+
+function removeDeductionRow(id) {
+  const row = document.getElementById(`deduction-${id}`);
+  if (row) {
+    row.remove();
+    document.getElementById('btnAddDeduction').style.display = '';
+    calcularLiquido();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// CALCULATIONS
+// ═══════════════════════════════════════════════
+function parseMoney(str) {
+  if (!str) return 0;
+  // Handle "R$ 1.234,56" or "1234,56" or "1234.56"
+  let cleaned = str.replace(/[R$\s]/g, '');
+  // If has both . and , assume Brazilian format
+  if (cleaned.includes(',')) {
+    cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+  }
+  const val = parseFloat(cleaned);
+  return isNaN(val) ? 0 : val;
+}
+
+function formatMoney(value) {
+  return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function calcularLiquido() {
+  const brutoStr = document.getElementById('fieldValorBruto').value;
+  const bruto = parseMoney(brutoStr);
+  let totalDeducoes = 0;
+
+  const optante = document.getElementById('fieldOptante').value;
+  if (optante === 'Não') {
+    // Fill Base de Cálculo if it is empty
+    document.querySelectorAll('.deduction-row').forEach(row => {
+      const baseInput = row.querySelector('.ded-base');
+      if (baseInput && !baseInput.value.trim()) {
+        baseInput.value = brutoStr;
+      }
+    });
+
+    document.querySelectorAll('.ded-valor').forEach(input => {
+      totalDeducoes += parseMoney(input.value);
+    });
+  }
+
+  const liquido = bruto - totalDeducoes;
+  document.getElementById('fieldValorLiquido').value = liquido > 0 ? formatMoney(liquido) : (bruto > 0 ? formatMoney(liquido) : '');
+}
+
+// ═══════════════════════════════════════════════
+// DUPLICATE DETECTION
+// ═══════════════════════════════════════════════
+function checkDuplicate(data) {
+  const all = loadData();
+  const sameUGE = all.filter(r => r.uge === data.uge);
+  const warnings = [];
+
+  // Check NP number duplicate within same UGE
+  if (data.numero) {
+    const numDup = sameUGE.find(r => r.tipoDH === data.tipoDH && r.numero === data.numero && r.id !== editingId);
+    if (numDup) {
+      warnings.push(`Já existe ${data.tipoDH} nº ${data.numero} na UGE ${data.uge} (registrada em ${numDup.dataEmissao}).`);
+    }
+  }
+
+  // Check NF duplicate in doc related
+  if (data.docRelacionado) {
+    const docNorm = data.docRelacionado.trim().toUpperCase();
+    const docDup = sameUGE.find(r =>
+      r.docRelacionado &&
+      r.docRelacionado.trim().toUpperCase() === docNorm &&
+      r.id !== editingId
+    );
+    if (docDup) {
+      warnings.push(`O documento "${data.docRelacionado}" já foi vinculado ao ${docDup.tipoDH} nº ${docDup.numero}.`);
+    }
+  }
+
+  return warnings;
+}
+
+function closeDuplicateModal() {
+  document.getElementById('duplicateModal').classList.remove('open');
+  pendingDuplicateData = null;
+}
+
+function confirmDuplicate() {
+  if (pendingDuplicateData) {
+    saveLiquidacao(pendingDuplicateData);
+    pendingDuplicateData = null;
+    editingRowId = null;
+    editingId = null;
+  }
+  closeDuplicateModal();
+}
+
+// ═══════════════════════════════════════════════
+// SUBMIT / SAVE
+// ═══════════════════════════════════════════════
+function submitLiquidacao() {
+  // Gather data
+  const data = gatherFormData();
+
+  // Validate required fields
+  if (!data.numero) { showToast('Informe o nº do documento hábil', 'error'); return; }
+  if (!data.valorBruto) { showToast('Informe o valor bruto', 'error'); return; }
+
+  // If user already confirmed this duplicate on blur, bypass warning
+  if (data.docRelacionado && data.docRelacionado.trim() === lastConfirmedDuplicateDoc) {
+    proceedAfterDocDuplicateCheck(data);
+    return;
+  }
+
+  // Check docRelacionado duplicates specifically with detailed popup
+  const duplicate = findDocRelacionadoDuplicate(data.docRelacionado, editingId);
+  if (duplicate) {
+    showDocDuplicatePopup(duplicate, () => {
+      // Mark as confirmed so subsequent actions don't show the duplicate dialog again
+      lastConfirmedDuplicateDoc = data.docRelacionado.trim();
+      // If confirmed, proceed to standard checks and save
+      proceedAfterDocDuplicateCheck(data);
+    });
+    return;
+  }
+
+  proceedAfterDocDuplicateCheck(data);
+}
+
+function proceedAfterDocDuplicateCheck(data) {
+  // Check standard warnings (NP number duplicate within same UGE)
+  const warnings = checkDuplicate(data);
+  // Remove the docRelacionado duplicate warning from standard check since we handle it in detailed modal
+  const filteredWarnings = warnings.filter(w => !w.includes('vinculado ao'));
+  
+  if (filteredWarnings.length > 0) {
+    pendingDuplicateData = data;
+    document.getElementById('duplicateMsg').innerHTML = filteredWarnings.join('<br><br>') +
+      '<br><br><strong>Deseja incluir mesmo assim?</strong>';
+    document.getElementById('duplicateModal').classList.add('open');
+    return;
+  }
+
+  saveLiquidacao(data);
+}
+
+function gatherFormData() {
+  const optante = document.getElementById('fieldOptante').value;
+  const bruto = parseMoney(document.getElementById('fieldValorBruto').value);
+
+  // Gather deductions
+  const deducoes = [];
+  let totalDeducoes = 0;
+
+  if (optante === 'Não') {
+    document.querySelectorAll('.deduction-row').forEach(row => {
+      const cod = row.querySelector('.ded-cod').value.trim();
+      const base = parseMoney(row.querySelector('.ded-base').value);
+      const valor = parseMoney(row.querySelector('.ded-valor').value);
+      if (cod || base || valor) {
+        deducoes.push({ codigo: cod, base, valor });
+        totalDeducoes += valor;
+      }
+    });
+  }
+
+  const original = editingId ? loadData().find(r => r.id === editingId) : null;
+
+  return {
+    id: editingId || Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+    uge: document.getElementById('fieldUGE').value,
+    tipoDH: document.getElementById('fieldTipoDH').value,
+    numero: document.getElementById('fieldNumero').value.trim(),
+    dataEmissao: document.getElementById('fieldDataEmissao').value,
+    optante,
+    valorBruto: bruto,
+    codNatureza: document.getElementById('fieldCodNatureza').value.trim(),
+    deducoes,
+    totalDeducoes,
+    valorLiquido: bruto - totalDeducoes,
+    cnpj: original ? (original.cnpj || '') : '',
+    dataOB: original ? (original.dataOB || '') : '',
+    eCac: original ? (original.eCac || 'Não') : 'Não',
+    docRelacionado: document.getElementById('fieldDocRelacionado').value.trim(),
+    observacao: document.getElementById('fieldObservacao').value.trim(),
+    fase: 1,
+    createdAt: original ? original.createdAt : new Date().toISOString()
+  };
+}
+
+function saveLiquidacao(data) {
+  const all = loadData();
+
+  if (editingId) {
+    const idx = all.findIndex(r => r.id === editingId);
+    if (idx >= 0) {
+      data.id = editingId;
+      data.updatedAt = new Date().toISOString();
+      data.createdAt = all[idx].createdAt;
+      all[idx] = data;
+    }
+    showToast('Liquidação atualizada com sucesso!', 'success');
+  } else {
+    all.push(data);
+    showToast('Liquidação registrada com sucesso!', 'success');
+  }
+
+  saveData(all);
+  syncRecordToBackend(data);
+  
+  const panel = document.getElementById('formPanel');
+  if (panel.classList.contains('open') && !editingRowId) {
+    toggleForm();
+  }
+  
+  editingId = null;
+  editingRowId = null;
+  renderTable();
+  updateStats();
+  updateCounts();
+}
+
+// ═══════════════════════════════════════════════
+// EDIT / DELETE
+// ═══════════════════════════════════════════════
+function editRecord(id) {
+  const all = loadData();
+  const record = all.find(r => r.id === id);
+  if (!record) return;
+
+  editingId = id;
+
+  // Populate form
+  document.getElementById('fieldUGE').value = record.uge;
+  document.getElementById('fieldTipoDH').value = record.tipoDH;
+  document.getElementById('fieldNumero').value = record.numero;
+  document.getElementById('fieldDataEmissao').value = record.dataEmissao;
+  document.getElementById('fieldOptante').value = record.optante;
+  document.getElementById('fieldValorBruto').value = formatMoney(record.valorBruto).replace('R$ ', '');
+  document.getElementById('fieldCodNatureza').value = record.codNatureza || '';
+  document.getElementById('fieldCNPJ').value = record.cnpj || '';
+  document.getElementById('fieldDataOB').value = record.dataOB || '';
+  document.getElementById('fieldECac').value = record.eCac || 'Não';
+  document.getElementById('fieldDocRelacionado').value = record.docRelacionado || '';
+  document.getElementById('fieldObservacao').value = record.observacao || '';
+
+  // Populate deductions
+  document.getElementById('deductionsContainer').innerHTML = '';
+  handleOptanteChange();
+
+  if (record.deducoes && record.deducoes.length > 0) {
+    record.deducoes.forEach(ded => {
+      addDeductionRow();
+      const rows = document.querySelectorAll('.deduction-row');
+      const lastRow = rows[rows.length - 1];
+      lastRow.querySelector('.ded-cod').value = ded.codigo;
+      lastRow.querySelector('.ded-base').value = ded.base ? ded.base.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '';
+      lastRow.querySelector('.ded-valor').value = ded.valor ? ded.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '';
+    });
+  }
+
+  calcularLiquido();
+
+  document.getElementById('formTitle').textContent = `✏️ Editando ${record.tipoDH} nº ${record.numero}`;
+  const panel = document.getElementById('formPanel');
+  if (!panel.classList.contains('open')) {
+    panel.classList.add('open');
+  }
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+let pendingDeleteRowId = null;
+
+function openConfirmDeleteModal(id) {
+  pendingDeleteRowId = id;
+  document.getElementById('confirmDeleteModal').classList.add('open');
+  setTimeout(() => {
+    const btn = document.getElementById('confirmDeleteBtn');
+    if (btn) btn.focus();
+  }, 50);
+}
+
+function closeConfirmDeleteModal() {
+  document.getElementById('confirmDeleteModal').classList.remove('open');
+  pendingDeleteRowId = null;
+}
+
+function confirmDeleteRecord() {
+  if (pendingDeleteRowId) {
+    let all = loadData();
+    const record = all.find(r => r.id === pendingDeleteRowId);
+    if (record) {
+      fetch('/api/liquidacoes/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: pendingDeleteRowId, uge: record.uge })
+      }).catch(err => console.error('[DB] Erro ao excluir na planilha:', err));
+    }
+
+    all = all.filter(r => r.id !== pendingDeleteRowId);
+    saveData(all);
+    renderTable();
+    updateStats();
+    updateCounts();
+    showToast('Liquidação excluída', 'info');
+    closeConfirmDeleteModal();
+  }
+}
+
+function deleteRecord(id) {
+  openConfirmDeleteModal(id);
+}
+
+// ═══════════════════════════════════════════════
+// INLINE EDITING
+// ═══════════════════════════════════════════════
+function updateRecordField(id, field, value) {
+  let all = loadData();
+  const idx = all.findIndex(r => r.id === id);
+  if (idx >= 0) {
+    all[idx][field] = value;
+    saveData(all);
+    syncRecordToBackend(all[idx]);
+    updateStats();
+    updateCounts();
+  }
+}
+
+function updateOBDateField(id, value) {
+  let all = loadData();
+  const idx = all.findIndex(r => r.id === id);
+  if (idx >= 0) {
+    all[idx].dataOB = value;
+    saveData(all);
+    syncRecordToBackend(all[idx]);
+    
+    // Dynamically update the GERCOMP/GEROP badge inside the DOM for instant feedback
+    const tr = document.querySelector(`tr[data-id="${id}"]`);
+    if (tr) {
+      const badge = tr.querySelector('.gercomp-badge');
+      if (badge) {
+        if (value) {
+          badge.classList.add('active');
+          badge.textContent = 'GERCOMP/GEROP';
+        } else {
+          badge.classList.remove('active');
+          badge.textContent = '—';
+        }
+      }
+    }
+    updateStats();
+    updateCounts();
+  }
+}
+
+function updateOptanteField(id, value) {
+  let all = loadData();
+  const idx = all.findIndex(r => r.id === id);
+  if (idx >= 0) {
+    all[idx].optante = value;
+    if (value === 'Sim' || value === 'N/A') {
+      all[idx].deducoes = [];
+      all[idx].totalDeducoes = 0;
+      all[idx].valorLiquido = all[idx].valorBruto;
+    }
+    saveData(all);
+    syncRecordToBackend(all[idx]);
+    renderTable();
+  }
+}
+
+function updateBrutoField(id, value) {
+  let all = loadData();
+  const idx = all.findIndex(r => r.id === id);
+  if (idx >= 0) {
+    const bruto = parseMoney(value);
+    all[idx].valorBruto = bruto;
+    all[idx].valorLiquido = bruto - (all[idx].totalDeducoes || 0);
+    saveData(all);
+    syncRecordToBackend(all[idx]);
+    renderTable();
+  }
+}
+
+// Inline Row Edition Toggles & Save
+function startRowEdition(id) {
+  editingRowId = id;
+  renderTable();
+}
+
+function cancelRowEdition() {
+  editingRowId = null;
+  renderTable();
+}
+
+function toggleEditRowDeductions(id, value) {
+  const container = document.getElementById(`edit-deducoes-container-${id}`);
+  if (container) {
+    if (value === 'Não') {
+      const all = loadData();
+      const r = all.find(rec => rec.id === id) || { totalDeducoes: 0, deducoes: [] };
+      const deducoesSummary = r.deducoes && r.deducoes.length > 0
+        ? r.deducoes.map(d => `${d.codigo}: ${formatMoney(d.valor)}`).join(' | ')
+        : (r.totalDeducoes ? formatMoney(r.totalDeducoes) : '—');
+      container.innerHTML = `<button class="btn-inline-deducoes" onclick="openInlineDeductionsModal('${id}')" title="Editar Deduções">✏️ ${deducoesSummary}</button>`;
+    } else {
+      container.innerHTML = `<span style="color: var(--text-muted); font-size: 11px;">N/A</span>`;
+    }
+  }
+}
+
+let pendingConfirmRowId = null;
+
+function openConfirmEditModal(id) {
+  pendingConfirmRowId = id;
+  document.getElementById('confirmEditModal').classList.add('open');
+  setTimeout(() => {
+    const btn = document.getElementById('confirmEditSaveBtn');
+    if (btn) btn.focus();
+  }, 50);
+}
+
+function closeConfirmEditModal() {
+  document.getElementById('confirmEditModal').classList.remove('open');
+  pendingConfirmRowId = null;
+}
+
+function confirmSaveRowEdition() {
+  if (pendingConfirmRowId) {
+    const id = pendingConfirmRowId;
+    closeConfirmEditModal();
+    saveRowEdition(id, true);
+  }
+}
+
+function saveRowEdition(id, forceSaveWithoutPrompt = false) {
+  let all = loadData();
+  const idx = all.findIndex(r => r.id === id);
+  if (idx < 0) return;
+
+  const original = all[idx];
+
+  const tipoDH = document.getElementById(`edit-tipo-${id}`).value;
+  const numero = document.getElementById(`edit-numero-${id}`).value.trim();
+  const dataEmissao = document.getElementById(`edit-dataEmissao-${id}`).value;
+  const optante = document.getElementById(`edit-optante-${id}`).value;
+  const bruto = parseMoney(document.getElementById(`edit-valorBruto-${id}`).value);
+  const codNatureza = document.getElementById(`edit-codNatureza-${id}`).value.trim();
+  const docRelacionado = document.getElementById(`edit-docRelacionado-${id}`).value.trim();
+  const cnpj = document.getElementById(`edit-cnpj-${id}`).value.trim();
+  const dataOB = document.getElementById(`edit-dataOB-${id}`).value;
+  const eCac = document.getElementById(`edit-eCac-${id}`).value;
+  const observacao = document.getElementById(`edit-observacao-${id}`).value.trim();
+
+  // Check if anything changed
+  const hasChanged = 
+    tipoDH !== original.tipoDH ||
+    numero !== original.numero ||
+    dataEmissao !== original.dataEmissao ||
+    optante !== original.optante ||
+    bruto !== original.valorBruto ||
+    codNatureza !== (original.codNatureza || '') ||
+    docRelacionado !== (original.docRelacionado || '') ||
+    cnpj !== (original.cnpj || '') ||
+    dataOB !== (original.dataOB || '') ||
+    eCac !== (original.eCac || 'Não') ||
+    observacao !== (original.observacao || '');
+
+  // If no change occurred, exit edit mode directly without warning prompt
+  if (!hasChanged) {
+    editingRowId = null;
+    renderTable();
+    return;
+  }
+
+  if (!forceSaveWithoutPrompt) {
+    openConfirmEditModal(id);
+    return;
+  }
+  if (idx >= 0) {
+    if (!numero) { showToast('Informe o nº do documento hábil', 'error'); return; }
+    if (!bruto) { showToast('Informe o valor bruto', 'error'); return; }
+
+    // Update
+    all[idx].tipoDH = tipoDH;
+    all[idx].numero = numero;
+    all[idx].dataEmissao = dataEmissao;
+    all[idx].optante = optante;
+    all[idx].valorBruto = bruto;
+    all[idx].codNatureza = codNatureza;
+    all[idx].docRelacionado = docRelacionado;
+    all[idx].cnpj = cnpj;
+    all[idx].dataOB = dataOB;
+    all[idx].eCac = eCac;
+    all[idx].observacao = observacao;
+
+    if (optante === 'Sim' || optante === 'N/A') {
+      all[idx].deducoes = [];
+      all[idx].totalDeducoes = 0;
+    }
+    all[idx].valorLiquido = bruto - (all[idx].totalDeducoes || 0);
+
+    // Duplicate check
+    const sameUGE = all.filter(r => r.uge === all[idx].uge && r.id !== id);
+    const warnings = [];
+    const numDup = sameUGE.find(r => r.tipoDH === tipoDH && r.numero === numero);
+    if (numDup) {
+      warnings.push(`Já existe ${tipoDH} nº ${numero} na UGE ${all[idx].uge} (registrada em ${numDup.dataEmissao}).`);
+    }
+    if (docRelacionado) {
+      const docNorm = docRelacionado.toUpperCase();
+      const docDup = sameUGE.find(r => r.docRelacionado && r.docRelacionado.trim().toUpperCase() === docNorm);
+      if (docDup) {
+        warnings.push(`O documento "${docRelacionado}" já foi vinculado ao ${docDup.tipoDH} nº ${docDup.numero}.`);
+      }
+    }
+
+    if (warnings.length > 0) {
+      pendingDuplicateData = all[idx];
+      editingId = id;
+      document.getElementById('duplicateMsg').innerHTML = warnings.join('<br><br>') +
+        '<br><br><strong>Deseja alterar mesmo assim?</strong>';
+      document.getElementById('duplicateModal').classList.add('open');
+      return;
+    }
+
+    saveData(all);
+    syncRecordToBackend(all[idx]);
+    editingRowId = null;
+    renderTable();
+    updateStats();
+    updateCounts();
+    showToast('Liquidação atualizada com sucesso!', 'success');
+  }
+}
+
+// Inline deductions popup logic
+let modalEditingRecordId = null;
+let modalDeductionsList = [];
+
+function openInlineDeductionsModal(id) {
+  modalEditingRecordId = id;
+  const all = loadData();
+  const record = all.find(r => r.id === id);
+  if (!record) return;
+
+  modalDeductionsList = record.deducoes ? JSON.parse(JSON.stringify(record.deducoes)) : [];
+  renderModalDeductions();
+  document.getElementById('deductionsEditModal').classList.add('open');
+}
+
+function closeDeductionsEditModal() {
+  document.getElementById('deductionsEditModal').classList.remove('open');
+  modalEditingRecordId = null;
+}
+
+function renderModalDeductions() {
+  const container = document.getElementById('modalDeductionsContainer');
+  container.innerHTML = '';
+
+  if (modalDeductionsList.length === 0) {
+    modalDeductionsList.push({ codigo: '', base: 0, valor: 0 });
+  }
+
+  modalDeductionsList.forEach((ded, idx) => {
+    const row = document.createElement('div');
+    row.className = 'deduction-row';
+    row.innerHTML = `
+      <div class="form-group">
+        <label>Código de Retenção</label>
+        <input type="text" class="modal-ded-cod" value="${ded.codigo || ''}" placeholder="Ex: 6190" onchange="updateModalDeduction(${idx}, 'codigo', this.value)">
+      </div>
+      <div class="form-group">
+        <label>Base de Cálculo</label>
+        <input type="text" class="modal-ded-base" value="${ded.base ? ded.base.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}" placeholder="0,00" onchange="updateModalDeduction(${idx}, 'base', this.value)">
+      </div>
+      <div class="form-group">
+        <label>Valor da Dedução</label>
+        <input type="text" class="modal-ded-valor" value="${ded.valor ? ded.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}" placeholder="0,00" onchange="updateModalDeduction(${idx}, 'valor', this.value)">
+      </div>
+      <button class="btn-remove-deduction" onclick="removeModalDeductionRow(${idx})" title="Remover dedução" style="margin-bottom: 2px;">✕</button>
+    `;
+    container.appendChild(row);
+  });
+
+  const addBtn = document.getElementById('modalBtnAddDeduction');
+  if (modalDeductionsList.length >= 4) {
+    addBtn.style.display = 'none';
+  } else {
+    addBtn.style.display = '';
+  }
+}
+
+function updateModalDeduction(idx, field, value) {
+  if (field === 'codigo') {
+    modalDeductionsList[idx].codigo = value.trim();
+  } else {
+    modalDeductionsList[idx][field] = parseMoney(value);
+  }
+}
+
+function addModalDeductionRow() {
+  if (modalDeductionsList.length >= 4) return;
+  modalDeductionsList.push({ codigo: '', base: 0, valor: 0 });
+  renderModalDeductions();
+}
+
+function removeModalDeductionRow(idx) {
+  modalDeductionsList.splice(idx, 1);
+  renderModalDeductions();
+}
+
+function saveInlineDeductions() {
+  if (!modalEditingRecordId) return;
+  let all = loadData();
+  const idx = all.findIndex(r => r.id === modalEditingRecordId);
+  if (idx >= 0) {
+    const validDeductions = modalDeductionsList.filter(d => d.codigo || d.base || d.valor);
+    let total = 0;
+    validDeductions.forEach(d => total += d.valor);
+
+    all[idx].deducoes = validDeductions;
+    all[idx].totalDeducoes = total;
+    all[idx].valorLiquido = all[idx].valorBruto - total;
+
+    saveData(all);
+    syncRecordToBackend(all[idx]);
+    renderTable();
+    closeDeductionsEditModal();
+    showToast('Deduções atualizadas com sucesso!', 'success');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// TABLE RENDERING
+// ═══════════════════════════════════════════════
+function matchesSearch(record, search) {
+  const fields = [
+    record.tipoDH, record.numero, record.docRelacionado,
+    record.observacao, record.codNatureza, record.dataEmissao
+  ];
+  return fields.some(f => f && f.toLowerCase().includes(search));
+}
+
+function renderTable() {
+  const searchInput = document.getElementById('searchInput');
+  if (!searchInput) return;
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  const search = searchInput.value.toLowerCase().trim();
+
+  let data = getFilteredData();
+  if (search) {
+    data = data.filter(r => matchesSearch(r, search));
+  }
+
+  // Apply column filters
+  Object.keys(columnFilters).forEach(col => {
+    const allowedVals = columnFilters[col];
+    if (allowedVals) {
+      if (col === 'codigoRetencao') {
+        data = data.filter(r => {
+          if (r.optante === 'Não' && r.deducoes && r.deducoes.length > 0) {
+            return r.deducoes.some(d => allowedVals.includes(d.codigo));
+          } else {
+            return allowedVals.includes('—');
+          }
+        });
+      } else if (col === 'valorRetencao') {
+        data = data.filter(r => {
+          if (r.optante === 'Não' && r.deducoes && r.deducoes.length > 0) {
+            return r.deducoes.some(d => allowedVals.includes(formatMoney(d.valor)));
+          } else {
+            const fallback = r.totalDeducoes ? formatMoney(r.totalDeducoes) : '—';
+            return allowedVals.includes(fallback);
+          }
+        });
+      } else {
+        data = data.filter(r => allowedVals.includes(getColumnTextValue(r, col)));
+      }
+    }
+  });
+
+  // Sort by date desc (newest first), placing empty dates at the bottom, then by number desc
+  data.sort((a, b) => {
+    if (!a.dataEmissao && b.dataEmissao) return 1;
+    if (a.dataEmissao && !b.dataEmissao) return -1;
+    if (!a.dataEmissao && !b.dataEmissao) {
+      return parseInt(b.numero || 0) - parseInt(a.numero || 0);
+    }
+    const dateCompare = b.dataEmissao.localeCompare(a.dataEmissao);
+    if (dateCompare !== 0) return dateCompare;
+    return parseInt(b.numero || 0) - parseInt(a.numero || 0);
+  });
+
+  if (data.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    document.getElementById('recordCount').textContent = '0 registros';
+    updateStats();
+    return;
+  }
+
+  empty.style.display = 'none';
+  document.getElementById('recordCount').textContent = `${data.length} registro${data.length > 1 ? 's' : ''}`;
+
+  tbody.innerHTML = data.map(r => {
+    const tipoCls = r.tipoDH.toLowerCase();
+    const optanteCls = r.optante === 'Sim' ? 'sim' : (r.optante === 'N/A' ? 'na' : 'nao');
+    const dateFormatted = r.dataEmissao ? new Date(r.dataEmissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const obDateFormatted = r.dataOB ? new Date(r.dataOB + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+
+    const basesSummary = r.deducoes && r.deducoes.length > 0
+      ? formatMoney(r.deducoes[0].base)
+      : '—';
+
+    const isRowEditing = (r.id === editingRowId);
+
+    if (isRowEditing) {
+      return `<tr data-id="${r.id}" class="row-editing" onclick="event.stopPropagation()">
+        <td>
+          <select class="table-inline-select editing-input inline-tipo" id="edit-tipo-${r.id}" onkeydown="if(event.key === 'Enter') { saveRowEdition('${r.id}', false); event.stopPropagation(); }">
+            <option value="NP" ${r.tipoDH === 'NP' ? 'selected' : ''}>NP</option>
+            <option value="OB" ${r.tipoDH === 'OB' ? 'selected' : ''}>OB</option>
+            <option value="GPS" ${r.tipoDH === 'GPS' ? 'selected' : ''}>GPS</option>
+            <option value="DARF" ${r.tipoDH === 'DARF' ? 'selected' : ''}>DARF</option>
+            <option value="GRU" ${r.tipoDH === 'GRU' ? 'selected' : ''}>GRU</option>
+            <option value="NS" ${r.tipoDH === 'NS' ? 'selected' : ''}>NS</option>
+          </select>
+        </td>
+        <td>
+          <input type="text" class="table-inline-input editing-input inline-numero" id="edit-numero-${r.id}" value="${r.numero || ''}" onkeydown="if(event.key === 'Enter') { saveRowEdition('${r.id}', false); event.stopPropagation(); }">
+        </td>
+        <td>
+          <input type="date" class="table-inline-input editing-input inline-data-emissao" id="edit-dataEmissao-${r.id}" value="${r.dataEmissao || ''}" onkeydown="if(event.key === 'Enter') { saveRowEdition('${r.id}', false); event.stopPropagation(); }">
+        </td>
+        <td>
+          <select class="table-inline-select editing-input inline-optante" id="edit-optante-${r.id}" onchange="toggleEditRowDeductions('${r.id}', this.value)" onkeydown="if(event.key === 'Enter') { saveRowEdition('${r.id}', false); event.stopPropagation(); }">
+            <option value="Não" ${r.optante === 'Não' ? 'selected' : ''}>Não</option>
+            <option value="Sim" ${r.optante === 'Sim' ? 'selected' : ''}>Sim</option>
+            <option value="N/A" ${r.optante === 'N/A' ? 'selected' : ''}>N/A</option>
+          </select>
+        </td>
+        <td class="valor-cell selectable-val" data-val="${r.valorBruto}">
+          <input type="text" class="table-inline-input editing-input inline-money" id="edit-valorBruto-${r.id}" value="${formatMoney(r.valorBruto).replace('R$ ', '')}" onkeydown="if(event.key === 'Enter') { saveRowEdition('${r.id}', false); event.stopPropagation(); }">
+        </td>
+        <td class="valor-cell selectable-val" style="color: var(--text-muted); font-size: 11px;">
+          ${r.optante === 'Não' ? basesSummary : 'N/A'}
+        </td>
+        <td style="font-size: 11px; color: var(--text-muted);">
+          ${r.optante === 'Não' ? (r.deducoes || []).map(d => d.codigo).join(', ') || '—' : 'N/A'}
+        </td>
+        <td class="valor-cell negative selectable-val" data-val="${r.totalDeducoes}" data-deducoes="${(r.deducoes || []).length > 0 ? encodeURIComponent(JSON.stringify(r.deducoes)) : ''}">
+          <div id="edit-deducoes-container-${r.id}">
+            ${r.optante === 'Não' 
+              ? `<button class="btn-inline-deducoes" onclick="openInlineDeductionsModal('${r.id}'); event.stopPropagation();" title="Editar Deduções">✏️ ${r.totalDeducoes ? formatMoney(r.totalDeducoes) : 'R$ 0,00'}</button>`
+              : `<span style="color: var(--text-muted); font-size: 11px;">N/A</span>`
+            }
+          </div>
+        </td>
+        <td class="valor-cell positive selectable-val" data-val="${r.valorLiquido}" style="font-weight: 700;">
+          ${formatMoney(r.valorLiquido)}
+        </td>
+        <td>
+          <input type="text" class="table-inline-input editing-input inline-cod-natureza" id="edit-codNatureza-${r.id}" value="${r.codNatureza || ''}" placeholder="Ex: 17028" onkeydown="if(event.key === 'Enter') { saveRowEdition('${r.id}', false); event.stopPropagation(); }">
+        </td>
+        <td>
+          <input type="text" class="table-inline-input editing-input inline-doc-relacionado" id="edit-docRelacionado-${r.id}" value="${r.docRelacionado || ''}" placeholder="NF..." onkeydown="if(event.key === 'Enter') { saveRowEdition('${r.id}', false); event.stopPropagation(); }">
+        </td>
+        <td><input type="text" class="table-inline-input editing-input inline-cnpj" id="edit-cnpj-${r.id}" value="${r.cnpj || ''}" placeholder="CNPJ..." onkeydown="if(event.key === 'Enter') { saveRowEdition('${r.id}', false); event.stopPropagation(); }"></td>
+        <td><input type="date" class="table-inline-input editing-input inline-data-ob" id="edit-dataOB-${r.id}" value="${r.dataOB || ''}" onkeydown="if(event.key === 'Enter') { saveRowEdition('${r.id}', false); event.stopPropagation(); }"></td>
+        <td><span class="gercomp-badge ${r.dataOB ? 'active' : ''}">${r.dataOB ? 'GERCOMP/GEROP' : '—'}</span></td>
+        <td>
+          <select class="table-inline-select editing-input inline-e-cac" id="edit-eCac-${r.id}" onkeydown="if(event.key === 'Enter') { saveRowEdition('${r.id}', false); event.stopPropagation(); }">
+            <option value="Não" ${r.eCac === 'Sim' ? '' : 'selected'}>❌ NÃO</option>
+            <option value="Sim" ${r.eCac === 'Sim' ? 'selected' : ''}>✅ SIM</option>
+          </select>
+        </td>
+        <td>
+          <input type="text" class="table-inline-input editing-input inline-observacao" id="edit-observacao-${r.id}" value="${r.observacao || ''}" placeholder="Obs..." onkeydown="if(event.key === 'Enter') { saveRowEdition('${r.id}', false); event.stopPropagation(); }">
+        </td>
+        <td>
+          <div class="row-actions">
+            <button onclick="saveRowEdition('${r.id}', true); event.stopPropagation();" title="Confirmar Alterações" style="background: var(--accent-green); color: white; border: none; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 11px; cursor: pointer;">✓</button>
+            <button onclick="cancelRowEdition(); event.stopPropagation();" title="Cancelar" style="background: var(--accent-red); color: white; border: none; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 11px; cursor: pointer;">✕</button>
+          </div>
+        </td>
+      </tr>`;
+    } else {
+      return `<tr data-id="${r.id}">
+        <td><span class="tipo-badge ${tipoCls}">${r.tipoDH}</span></td>
+        <td style="font-weight: 700;">${r.numero}</td>
+        <td>${dateFormatted}</td>
+        <td><span class="optante-badge ${optanteCls}">${r.optante === 'Sim' ? '✅ SIM' : (r.optante === 'N/A' ? 'N/A' : '❌ NÃO')}</span></td>
+        <td class="valor-cell selectable-val" data-val="${r.valorBruto}">${formatMoney(r.valorBruto)}</td>
+        <td class="valor-cell selectable-val" data-val="${r.deducoes && r.deducoes.length > 0 ? r.deducoes[0].base : 0}">
+          ${r.optante === 'Não' ? basesSummary : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
+        </td>
+        <td class="selectable-val ${r.optante === 'Não' && r.deducoes && r.deducoes.length > 1 ? 'has-sub-rows' : ''}" 
+            style="font-size: 12px; color: var(--text-muted);"
+            ${r.optante === 'Não' && r.deducoes && r.deducoes.length === 1 ? `data-type="codigo" data-codigo="${r.deducoes[0].codigo}" data-val="0"` : ''}>
+          ${r.optante === 'Não' 
+            ? (r.deducoes && r.deducoes.length > 0 
+                ? (r.deducoes.length > 1 
+                    ? r.deducoes.map(d => `<div class="deduction-sub-row center" data-type="codigo" data-codigo="${d.codigo}" data-val="0">${d.codigo}</div>`).join('')
+                    : r.deducoes[0].codigo)
+                : '—')
+            : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
+        </td>
+        <td class="valor-cell negative selectable-val ${r.optante === 'Não' && r.deducoes && r.deducoes.length > 1 ? 'has-sub-rows' : ''}" 
+            data-val="${r.optante === 'Não' && r.deducoes && r.deducoes.length === 1 ? r.deducoes[0].valor : r.totalDeducoes}" 
+            data-deducoes="${(r.deducoes || []).length > 0 ? encodeURIComponent(JSON.stringify(r.deducoes)) : ''}"
+            ${r.optante === 'Não' && r.deducoes && r.deducoes.length === 1 ? `data-type="valor" data-codigo="${r.deducoes[0].codigo}"` : ''}>
+          ${r.optante === 'Não' 
+            ? (r.deducoes && r.deducoes.length > 0 
+                ? (r.deducoes.length > 1 
+                    ? r.deducoes.map(d => `<div class="deduction-sub-row right" data-type="valor" data-codigo="${d.codigo}" data-val="${d.valor}">${formatMoney(d.valor)}</div>`).join('')
+                    : formatMoney(r.deducoes[0].valor))
+                : '—')
+            : '<span style="color: var(--text-muted); font-size: 11px;">N/A</span>'}
+        </td>
+        <td class="valor-cell positive selectable-val" data-val="${r.valorLiquido}">${formatMoney(r.valorLiquido)}</td>
+        <td>${r.codNatureza || '—'}</td>
+        <td>${r.docRelacionado || '—'}</td>
+        <td>${r.cnpj || '—'}</td>
+        <td>${obDateFormatted}</td>
+        <td><span class="gercomp-badge ${r.dataOB ? 'active' : ''}">${r.dataOB ? 'GERCOMP/GEROP' : '—'}</span></td>
+        <td><span class="optante-badge ${r.eCac === 'Sim' ? 'sim' : 'nao'}">${r.eCac === 'Sim' ? '✅ SIM' : '❌ NÃO'}</span></td>
+        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="${(r.observacao || '').replace(/"/g, '&quot;')}">${r.observacao || '—'}</td>
+        <td>
+          <div class="row-actions">
+            <button onclick="startRowEdition('${r.id}'); event.stopPropagation();" title="Editar na linha">✏️</button>
+            <button onclick="deleteRecord('${r.id}'); event.stopPropagation();" title="Excluir">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    }
+  }).join('');
+
+  updateStats();
+}
+
+// ═══════════════════════════════════════════════
+// PDF EXTRACTION
+// ═══════════════════════════════════════════════
+const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+if (pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+// Drag & drop setup
+// Store attached PDF files (not yet processed)
+const attachedPdfs = { dadosBasicos: null, deducao: null };
+
+['dadosBasicos', 'deducao'].forEach(type => {
+  const zoneId = type === 'dadosBasicos' ? 'dropDadosBasicos' : 'dropDeducao';
+  const zone = document.getElementById(zoneId);
+
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') {
+      attachPdf(file, type);
+    } else {
+      showToast('Apenas arquivos PDF são aceitos', 'warning');
+    }
+  });
+});
+
+function handlePdfAttach(input, type) {
+  const file = input.files[0];
+  if (file) attachPdf(file, type);
+}
+
+function attachPdf(file, type) {
+  const zoneId = type === 'dadosBasicos' ? 'dropDadosBasicos' : 'dropDeducao';
+  const filenameId = type === 'dadosBasicos' ? 'filenameDadosBasicos' : 'filenameDeducao';
+
+  attachedPdfs[type] = file;
+  document.getElementById(zoneId).classList.add('loaded');
+  document.getElementById(filenameId).textContent = '📎 ' + file.name;
+
+  showToast(`PDF "${file.name}" anexado com sucesso`, 'info');
+  updatePreencherButton();
+}
+
+function removePdf(event, type) {
+  event.stopPropagation();
+  removePdfState(type);
+}
+
+function removePdfState(type) {
+  const zoneId = type === 'dadosBasicos' ? 'dropDadosBasicos' : 'dropDeducao';
+  const filenameId = type === 'dadosBasicos' ? 'filenameDadosBasicos' : 'filenameDeducao';
+  const inputId = type === 'dadosBasicos' ? 'fileDadosBasicos' : 'fileDeducao';
+
+  attachedPdfs[type] = null;
+  document.getElementById(zoneId).classList.remove('loaded');
+  document.getElementById(filenameId).textContent = '';
+  document.getElementById(inputId).value = '';
+
+  if (type === 'deducao') {
+    const tipoDH = document.getElementById('fieldTipoDH').value;
+    if (tipoDH === 'NP') {
+      document.getElementById('fieldOptante').value = 'Não';
+      handleOptanteChange();
+    }
+  }
+
+  updatePreencherButton();
+}
+
+function updatePreencherButton() {
+  const btn = document.getElementById('btnPreencherAuto');
+  const hasAny = attachedPdfs.dadosBasicos || attachedPdfs.deducao;
+  btn.style.display = hasAny ? 'flex' : 'none';
+}
+
+async function preencherAutomaticamente() {
+  const btn = document.getElementById('btnPreencherAuto');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="btn-preencher-icon">⏳</span> Processando PDFs...';
+
+  let successCount = 0;
+
+  // Process Dados Básicos first
+  if (attachedPdfs.dadosBasicos) {
+    const text = await extractTextFromPdf(attachedPdfs.dadosBasicos);
+    if (text) {
+      extractDadosBasicos(text);
+      successCount++;
+    }
+  }
+
+  // Then process Dedução
+  if (attachedPdfs.deducao) {
+    const text = await extractTextFromPdf(attachedPdfs.deducao);
+    if (text) {
+      extractDeducao(text);
+      successCount++;
+    }
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span class="btn-preencher-icon">⚡</span> Preencher Automaticamente com PDFs Anexados';
+
+  if (successCount > 0) {
+    showToast(`${successCount} PDF(s) processado(s) — campos preenchidos!`, 'success');
+  } else {
+    showToast('Nenhum PDF válido para processar', 'warning');
+  }
+}
+
+async function extractTextFromPdf(file) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = '';
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(item => item.str).join(' ');
+      fullText += pageText + '\n';
+    }
+
+    console.log(`[PDF] Extracted text:`, fullText);
+    return fullText;
+  } catch (err) {
+    console.error('PDF parse error:', err);
+    showToast(`Erro ao ler "${file.name}". Verifique se é um PDF válido.`, 'error');
+    return null;
+  }
+}
+
+function extractDadosBasicos(text) {
+  console.log('[PARSE] Dados Básicos text:', text);
+
+  // UGE - "Código da UG Emitente: 160443" or "UG Pagadora 160443"
+  const ugeMatch = text.match(/(?:UG\s*(?:Emitente|Pagadora))[:\s]*(\d{6})/i);
+  if (ugeMatch) {
+    const uge = ugeMatch[1];
+    document.getElementById('fieldUGE').value = uge;
+    if (uge !== currentUGE) switchUGE(uge);
+  }
+
+  // Tipo de DH - "Tipo de Documento: NP" or "* Tipo de Documento  NP"
+  const tipoMatch = text.match(/Tipo\s*(?:de\s*)?Documento[:\s]*(\w+)/i);
+  if (tipoMatch) {
+    const tipo = tipoMatch[1].toUpperCase();
+    const select = document.getElementById('fieldTipoDH');
+    for (let opt of select.options) {
+      if (opt.value === tipo) { select.value = tipo; break; }
+    }
+    handleTipoDHChange();
+  }
+
+  // Número DH - "Número DH: 338" or "Número DH.  338"
+  const numMatch = text.match(/N[úu]mero\s*(?:DH|D\.?H\.?)[.:\s]*(\d+)/i);
+  if (numMatch) {
+    document.getElementById('fieldNumero').value = numMatch[1];
+  }
+
+  // Data Emissão Contábil - "Data de Emissão Contábil: 07/07/2026"
+  const dataMatch = text.match(/(?:Emiss[ãa]o\s*Cont[áa]bil)[:\s]*(\d{2}\/\d{2}\/\d{4})/i);
+  if (dataMatch) {
+    const [d, m, y] = dataMatch[1].split('/');
+    document.getElementById('fieldDataEmissao').value = `${y}-${m}-${d}`;
+  }
+
+  // Valor do Documento - "Valor do Documento 6.850,00" or "Valor do Documento  6.850,00"
+  const valorMatch = text.match(/Valor\s*(?:do\s*)?Documento[:\s]*([\d.,]+)/i);
+  if (valorMatch) {
+    document.getElementById('fieldValorBruto').value = valorMatch[1];
+  }
+
+  // Código do Credor (CNPJ) - we extract but store separately
+  // "Código do Credor 40713112000104"
+
+  // Document - "NF 18594" from "Número Doc. Origem"
+  const nfMatch = text.match(/(?:NF|Nota\s*Fiscal)[:\s]*(\d+)/i);
+  const docOrigemMatch = text.match(/N[úu]mero\s*Doc\.?\s*Origem\s*(NF\s*\d+)/i);
+  if (docOrigemMatch) {
+    document.getElementById('fieldDocRelacionado').value = docOrigemMatch[1];
+  } else if (nfMatch) {
+    document.getElementById('fieldDocRelacionado').value = 'NF ' + nfMatch[1];
+  }
+
+  // Observação
+  const obsMatch = text.match(/Observa[çc][ãa]o[:\s]*([^\n]+)/i);
+  if (obsMatch && obsMatch[1].trim().length > 5) {
+    document.getElementById('fieldObservacao').value = obsMatch[1].trim();
+  }
+
+  // Check if optante pelo simples is mentioned in observação
+  const obsText = (document.getElementById('fieldObservacao').value || '') + ' ' + text;
+  if (/optante\s*pelo\s*simples/i.test(obsText)) {
+    if (/n[ãa]o\s*optante/i.test(obsText)) {
+      document.getElementById('fieldOptante').value = 'Não';
+    } else {
+      document.getElementById('fieldOptante').value = 'Sim';
+    }
+    handleOptanteChange();
+  }
+
+  calcularLiquido();
+}
+
+function extractDeducao(text) {
+  console.log('[PARSE] Dedução text:', text);
+
+  // If deduction PDF is provided, the company is NOT optante pelo Simples
+  const tipoDH = document.getElementById('fieldTipoDH').value;
+  if (tipoDH === 'NP') {
+    document.getElementById('fieldOptante').value = 'Não';
+    handleOptanteChange();
+  }
+
+  // Extract deduction code - "Código de Recolhimento DARF 8767"
+  const codMatch = text.match(/C[óo]digo\s*(?:de\s*)?Recolhimento\s*(?:DARF\s*)?(\d+)/i);
+
+  // Extract Natureza do Rendimento - "Natureza do Rendimento (1XXXX)" or number
+  const natMatch = text.match(/Natureza\s*(?:do\s*)?Rendimento\s*\(?\s*(\d+)/i);
+  if (natMatch) {
+    document.getElementById('fieldCodNatureza').value = natMatch[1];
+  }
+
+  // Extract base de cálculo - "Base de Cálculo 6.850,00"
+  const baseMatch = text.match(/Base\s*(?:de\s*)?C[áa]lculo\s*([\d.,]+)/i);
+
+  // Extract valor da receita - "Valor da Receita 150,70"
+  const valorMatch = text.match(/Valor\s*(?:da\s*)?Receita\s*([\d.,]+)/i);
+
+  // Extract valor do item - "Valor do Item: 150,70"
+  const itemMatch = text.match(/Valor\s*(?:do\s*)?Item[:\s]*([\d.,]+)/i);
+
+  // Clear existing deductions and add the extracted one
+  const container = document.getElementById('deductionsContainer');
+  container.innerHTML = '';
+  addDeductionRow();
+
+  const rows = container.querySelectorAll('.deduction-row');
+  if (rows.length > 0) {
+    const row = rows[0];
+    if (codMatch) row.querySelector('.ded-cod').value = codMatch[1];
+    if (baseMatch) row.querySelector('.ded-base').value = baseMatch[1];
+    if (valorMatch) {
+      row.querySelector('.ded-valor').value = valorMatch[1];
+    } else if (itemMatch) {
+      row.querySelector('.ded-valor').value = itemMatch[1];
+    }
+  }
+
+  calcularLiquido();
+}
+
+// ═══════════════════════════════════════════════
+// TOAST NOTIFICATIONS
+// ═══════════════════════════════════════════════
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+  toast.innerHTML = `<span>${icons[type] || 'ℹ'}</span> ${message}`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('removing');
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  // Wait for login system to initialize
+  if (window.LoginSystem) {
+    while (!window.LoginSystem.initialized) {
+      await new Promise(r => setTimeout(r, 20));
+    }
+  }
+  // Load data from backend
+  try {
+    const response = await fetch('/api/liquidacoes');
+    if (response.ok) {
+      cachedLiquidacoes = await response.json();
+      console.log('[DB] Dados carregados do backend:', cachedLiquidacoes.length);
+    } else {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      cachedLiquidacoes = raw ? JSON.parse(raw) : [];
+      console.log('[DB] Fallback localStorage ativo:', cachedLiquidacoes.length);
+    }
+  } catch (e) {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    cachedLiquidacoes = raw ? JSON.parse(raw) : [];
+    console.log('[DB] Falha de conexão. Fallback localStorage ativo:', cachedLiquidacoes.length);
+  }
+
+  // Auto-import pre-existing CSV backup records on local load if not done yet
+  if (!localStorage.getItem('imported_backup_v1') && cachedLiquidacoes.length === 0) {
+    try {
+      const response = await fetch('../dados/liquidacoes_import.json');
+      if (response.ok) {
+        const importData = await response.json();
+        saveData(importData);
+        // Sync each to backend to populate Sheets
+        for (let r of importData) {
+          syncRecordToBackend(r);
+        }
+        localStorage.setItem('imported_backup_v1', 'true');
+        console.log('Importação de backups concluída com sucesso!');
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar dados do backup:', e);
+    }
+  }
+
+  renderTable();
+  updateStats();
+  updateCounts();
+  initColumnResizers();
+
+
+// Keyboard shortcut: Ctrl+N = new record
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'n') {
+      e.preventDefault();
+      if (!document.getElementById('formPanel').classList.contains('open')) {
+        toggleForm();
+      }
+    }
+    // Escape to close form and clear selection
+    if (e.key === 'Escape') {
+      const panel = document.getElementById('formPanel');
+      if (panel.classList.contains('open')) toggleForm();
+      closeDuplicateModal();
+      clearCellSelection();
+    }
+  });
+
+  // Excel-like selection events
+  let isSelecting = false;
+
+  function getSelectableTarget(el) {
+    if (!el) return null;
+    const sub = el.closest('.deduction-sub-row');
+    if (sub) return sub;
+    return el.closest('.selectable-val');
+  }
+
+  document.addEventListener('mousedown', (e) => {
+    const cell = getSelectableTarget(e.target);
+    if (cell) {
+      isSelecting = true;
+      e.preventDefault();
+      // If ctrl, cmd or shift is not pressed, clear other selections
+      if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+        clearCellSelection();
+      }
+      cell.classList.toggle('selected-cell');
+      updateSelectionSummary(e);
+    } else {
+      // Clear selection if clicking outside table elements
+      if (!e.target.closest('.table-section') && !e.target.closest('#selectionTooltip')) {
+        clearCellSelection();
+      }
+    }
+  });
+
+  document.addEventListener('mouseover', (e) => {
+    if (isSelecting) {
+      const cell = getSelectableTarget(e.target);
+      if (cell) {
+        cell.classList.add('selected-cell');
+        updateSelectionSummary(e);
+      }
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    isSelecting = false;
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    const tooltip = document.getElementById('selectionTooltip');
+    if (tooltip && tooltip.classList.contains('show')) {
+      tooltip.style.left = e.pageX + 'px';
+      tooltip.style.top = e.pageY + 'px';
+    }
+  });
+
+  function clearCellSelection() {
+    document.querySelectorAll('.selected-cell').forEach(c => c.classList.remove('selected-cell'));
+    const tooltip = document.getElementById('selectionTooltip');
+    if (tooltip) tooltip.classList.remove('show');
+  }
+
+  function updateSelectionSummary(e) {
+    const selectedCells = document.querySelectorAll('.selected-cell');
+    const tooltip = document.getElementById('selectionTooltip');
+    if (!tooltip) return;
+
+    if (selectedCells.length === 0) {
+      tooltip.classList.remove('show');
+      return;
+    }
+
+    let sum = 0;
+    let count = selectedCells.length;
+    let deducoesPorCodigo = {};
+
+    selectedCells.forEach(cell => {
+      const val = parseFloat(cell.getAttribute('data-val') || '0');
+      sum += val;
+
+      if (cell.classList.contains('deduction-sub-row')) {
+        const cod = cell.getAttribute('data-codigo');
+        const type = cell.getAttribute('data-type');
+        if (cod) {
+          const valor = type === 'valor' ? val : 0;
+          if (!deducoesPorCodigo[cod]) {
+            deducoesPorCodigo[cod] = 0;
+          }
+          if (valor > 0) {
+            deducoesPorCodigo[cod] += valor;
+          }
+        }
+      } else {
+        // Standard td cell
+        const dedsAttr = cell.getAttribute('data-deducoes');
+        if (dedsAttr) {
+          try {
+            const deds = JSON.parse(decodeURIComponent(dedsAttr));
+            deds.forEach(d => {
+              const cod = d.codigo || 'Não especificado';
+              const valor = parseFloat(d.valor || '0');
+              if (!deducoesPorCodigo[cod]) {
+                deducoesPorCodigo[cod] = 0;
+              }
+              deducoesPorCodigo[cod] += valor;
+            });
+          } catch (err) {
+            console.error('Erro ao ler data-deducoes:', err);
+          }
+        }
+      }
+    });
+
+    const avg = sum / count;
+
+    let breakdownHtml = '';
+    const cods = Object.keys(deducoesPorCodigo);
+    if (cods.length > 0) {
+      breakdownHtml = `
+        <div style="font-size: 10px; color: var(--accent-amber-light); margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 4px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 2px;">📋 Por Cód. Recolhimento</div>
+      `;
+      cods.forEach(cod => {
+        breakdownHtml += `
+          <div style="display: flex; justify-content: space-between; gap: 15px; font-size: 11px; opacity: 0.9; margin-bottom: 1px;">
+            <span>Código ${cod}:</span>
+            <span style="font-weight: 600;">${formatMoney(deducoesPorCodigo[cod])}</span>
+          </div>
+        `;
+      });
+    }
+
+    tooltip.innerHTML = `
+      <div style="font-size: 10px; color: var(--accent-amber-light); margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 2px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">📊 Resumo da Seleção</div>
+      <div style="display: flex; justify-content: space-between; gap: 15px; margin-bottom: 2px;"><span>Soma:</span><span style="font-weight: 700; color: #fff;">${formatMoney(sum)}</span></div>
+      <div style="display: flex; justify-content: space-between; gap: 15px; font-size: 11px; opacity: 0.85; margin-bottom: 2px;"><span>Média:</span><span>${formatMoney(avg)}</span></div>
+      <div style="display: flex; justify-content: space-between; gap: 15px; font-size: 11px; opacity: 0.85;"><span>Contagem:</span><span>${count}</span></div>
+      ${breakdownHtml}
+    `;
+
+    tooltip.classList.add('show');
+    if (e) {
+      tooltip.style.left = e.pageX + 'px';
+      tooltip.style.top = e.pageY + 'px';
+    }
+  }
+
+  // Event listeners for Document Related Duplicate Check
+  const fieldDocRel = document.getElementById('fieldDocRelacionado');
+  if (fieldDocRel) {
+    fieldDocRel.addEventListener('blur', checkDocRelacionadoDuplicateOnBlur);
+    fieldDocRel.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        checkDocRelacionadoDuplicateOnBlur();
+      }
+    });
+  }
+});
+
+// ═══════════════════════════════════════════════
+// COLUMN HEADERS FILTERS
+// ═══════════════════════════════════════════════
+let activeFilterCol = null;
+
+function toggleColumnFilter(event, col) {
+  event.stopPropagation();
+  const popup = document.getElementById('columnFilterPopup');
+  
+  if (activeFilterCol === col && popup.classList.contains('show')) {
+    popup.classList.remove('show');
+    activeFilterCol = null;
+    return;
+  }
+  
+  activeFilterCol = col;
+  
+  // Position popup
+  const icon = event.currentTarget;
+  const rect = icon.getBoundingClientRect();
+  popup.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+  
+  let left = rect.left + window.scrollX - 160;
+  if (left < 10) left = 10;
+  popup.style.left = left + 'px';
+  
+  // Reset search
+  document.getElementById('filterPopupSearchInput').value = '';
+  
+  // Build check list
+  generateFilterOptions(col);
+  
+  popup.classList.add('show');
+}
+
+function getColumnTextValue(r, col) {
+  switch (col) {
+    case 'tipoDH': return r.tipoDH || '';
+    case 'numero': return r.numero || '';
+    case 'dataEmissao': return r.dataEmissao ? new Date(r.dataEmissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    case 'optante': return r.optante === 'Sim' ? '✅ SIM' : (r.optante === 'N/A' ? 'N/A' : '❌ NÃO');
+    case 'valorBruto': return formatMoney(r.valorBruto);
+    case 'baseCalculo':
+      return r.deducoes && r.deducoes.length > 0
+        ? formatMoney(r.deducoes[0].base)
+        : '—';
+    case 'codigoRetencao': 
+      return r.deducoes && r.deducoes.length > 0
+        ? r.deducoes.map(d => d.codigo).join(', ')
+        : '—';
+    case 'valorRetencao': 
+      return r.deducoes && r.deducoes.length > 0
+        ? r.deducoes.map(d => formatMoney(d.valor)).join(', ')
+        : (r.totalDeducoes ? formatMoney(r.totalDeducoes) : '—');
+    case 'valorLiquido': return formatMoney(r.valorLiquido);
+    case 'codNatureza': return r.codNatureza || '—';
+    case 'docRelacionado': return r.docRelacionado || '—';
+    case 'cnpj': return r.cnpj || '—';
+    case 'dataOB': return r.dataOB ? new Date(r.dataOB + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    case 'gercomp': return r.dataOB ? 'GERCOMP/GEROP' : '—';
+    case 'eCac': return r.eCac || 'Não';
+    case 'observacao': return r.observacao || '—';
+    default: return '';
+  }
+}
+
+function generateFilterOptions(col) {
+  const container = document.getElementById('filterPopupOptions');
+  container.innerHTML = '';
+  
+  // Get unique values for current active UGE
+  const rawData = getFilteredData();
+  let uniqueVals;
+  if (col === 'codigoRetencao') {
+    const codes = [];
+    rawData.forEach(r => {
+      if (r.optante === 'Não' && r.deducoes && r.deducoes.length > 0) {
+        r.deducoes.forEach(d => {
+          if (d.codigo) codes.push(d.codigo);
+        });
+      } else {
+        codes.push('—');
+      }
+    });
+    uniqueVals = [...new Set(codes)];
+  } else if (col === 'valorRetencao') {
+    const vals = [];
+    rawData.forEach(r => {
+      if (r.optante === 'Não' && r.deducoes && r.deducoes.length > 0) {
+        r.deducoes.forEach(d => {
+          vals.push(formatMoney(d.valor));
+        });
+      } else {
+        vals.push(r.totalDeducoes ? formatMoney(r.totalDeducoes) : '—');
+      }
+    });
+    uniqueVals = [...new Set(vals)];
+  } else {
+    uniqueVals = [...new Set(rawData.map(r => getColumnTextValue(r, col)))];
+  }
+  
+  uniqueVals.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  
+  const currentFilter = columnFilters[col];
+  const allChecked = !currentFilter || uniqueVals.every(v => currentFilter.includes(v));
+  
+  // Select all row
+  const selectAllRow = document.createElement('label');
+  selectAllRow.className = 'filter-option-row';
+  selectAllRow.style.fontWeight = '700';
+  selectAllRow.style.borderBottom = '1px solid rgba(0,0,0,0.06)';
+  selectAllRow.style.paddingBottom = '6px';
+  selectAllRow.style.marginBottom = '6px';
+  selectAllRow.innerHTML = `
+    <input type="checkbox" id="filter-all-checkbox" ${allChecked ? 'checked' : ''} onchange="toggleSelectAllFilters(this)">
+    <span>(Selecionar Tudo)</span>
+  `;
+  container.appendChild(selectAllRow);
+  
+  // Option items
+  uniqueVals.forEach(val => {
+    const isChecked = !currentFilter || currentFilter.includes(val);
+    const row = document.createElement('label');
+    row.className = 'filter-option-row option-item';
+    row.innerHTML = `
+      <input type="checkbox" class="filter-item-checkbox" data-value="${val.replace(/"/g, '&quot;')}" ${isChecked ? 'checked' : ''} onchange="updateSelectAllCheckboxState()">
+      <span class="option-text">${val}</span>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function toggleSelectAllFilters(checkbox) {
+  const isChecked = checkbox.checked;
+  document.querySelectorAll('.filter-item-checkbox').forEach(cb => {
+    cb.checked = isChecked;
+  });
+}
+
+function updateSelectAllCheckboxState() {
+  const allCheckbox = document.getElementById('filter-all-checkbox');
+  const itemCheckboxes = document.querySelectorAll('.filter-item-checkbox');
+  const allChecked = [...itemCheckboxes].every(cb => cb.checked);
+  allCheckbox.checked = allChecked;
+}
+
+function filterPopupItems() {
+  const query = document.getElementById('filterPopupSearchInput').value.toLowerCase().trim();
+  document.querySelectorAll('.filter-option-row.option-item').forEach(row => {
+    const text = row.querySelector('.option-text').textContent.toLowerCase();
+    if (text.includes(query)) {
+      row.style.display = 'flex';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+}
+
+function clearActiveColumnFilter() {
+  if (!activeFilterCol) return;
+  delete columnFilters[activeFilterCol];
+  updateFilterIconState(activeFilterCol, false);
+  document.getElementById('columnFilterPopup').classList.remove('show');
+  activeFilterCol = null;
+  renderTable();
+}
+
+function applyActiveColumnFilter() {
+  if (!activeFilterCol) return;
+  
+  const itemCheckboxes = document.querySelectorAll('.filter-item-checkbox');
+  const allCheckbox = document.getElementById('filter-all-checkbox');
+  
+  if (allCheckbox.checked) {
+    delete columnFilters[activeFilterCol];
+    updateFilterIconState(activeFilterCol, false);
+  } else {
+    const checkedVals = [...itemCheckboxes].filter(cb => cb.checked).map(cb => cb.getAttribute('data-value'));
+    columnFilters[activeFilterCol] = checkedVals;
+    updateFilterIconState(activeFilterCol, true);
+  }
+  
+  document.getElementById('columnFilterPopup').classList.remove('show');
+  activeFilterCol = null;
+  renderTable();
+}
+
+function updateFilterIconState(col, isActive) {
+  const th = document.querySelector(`th[data-col="${col}"]`);
+  if (th) {
+    const icon = th.querySelector('.filter-icon-btn');
+    if (icon) {
+      icon.classList.toggle('active-filter', isActive);
+    }
+  }
+}
+
+// Close filter popups or save editing row when clicking outside
+document.addEventListener('click', (e) => {
+  const popup = document.getElementById('columnFilterPopup');
+  if (popup && popup.classList.contains('show')) {
+    if (!popup.contains(e.target) && !e.target.classList.contains('filter-icon-btn')) {
+      popup.classList.remove('show');
+      activeFilterCol = null;
+    }
+  }
+
+  if (editingRowId) {
+    const clickedRow = e.target.closest('tr.row-editing');
+    const clickedModal = e.target.closest('.modal-overlay');
+    const clickedFilter = e.target.closest('.column-filter-popup');
+    const clickedToast = e.target.closest('.toast');
+    
+    // If click is outside the editing row and not inside a modal, filter popup, or toast
+    if (!clickedRow && !clickedModal && !clickedFilter && !clickedToast) {
+      saveRowEdition(editingRowId, false);
+    }
+  }
+});
+
+// Capture Enter keypress globally when confirmation modals are open
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const confirmModal = document.getElementById('confirmEditModal');
+    if (confirmModal && confirmModal.classList.contains('open')) {
+      confirmSaveRowEdition();
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    const deleteModal = document.getElementById('confirmDeleteModal');
+    if (deleteModal && deleteModal.classList.contains('open')) {
+      confirmDeleteRecord();
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+  }
+});
+
+// Document Related Duplicate Detection
+function getDocDigits(doc) {
+  if (!doc) return "";
+  return doc.toString().replace(/\D/g, "");
+}
+
+function findDocRelacionadoDuplicate(docVal, excludeId) {
+  if (!docVal) return null;
+  const cleanVal = getDocDigits(docVal);
+  if (!cleanVal) return null;
+
+  const all = loadData();
+  const sameUGE = all.filter(r => r.uge === document.getElementById('fieldUGE').value && r.id !== excludeId);
+  
+  return sameUGE.find(r => {
+    if (!r.docRelacionado) return false;
+    const recordDigits = getDocDigits(r.docRelacionado);
+    return recordDigits === cleanVal;
+  });
+}
+
+function showDocDuplicatePopup(duplicate, onConfirm) {
+  let deductionsHtml = 'Nenhuma';
+  if (duplicate.deducoes && duplicate.deducoes.length > 0) {
+    deductionsHtml = duplicate.deducoes.map(d => `<div>• Código <strong>${d.codigo}</strong>: ${formatMoney(d.valor)}</div>`).join('');
+  }
+  
+  const detailsHtml = `
+    <div style="margin-bottom: 8px;"><strong>DH:</strong> ${duplicate.tipoDH} nº ${duplicate.numero}</div>
+    <div style="margin-bottom: 8px;"><strong>Doc. Relacionado (Nota):</strong> ${duplicate.docRelacionado}</div>
+    <div style="margin-bottom: 8px;"><strong>Valor Bruto:</strong> ${formatMoney(duplicate.valorBruto)}</div>
+    <div style="margin-bottom: 8px;"><strong>Valor Líquido:</strong> ${formatMoney(duplicate.valorLiquido)}</div>
+    <div style="margin-bottom: 8px;"><strong>CNPJ:</strong> ${duplicate.cnpj || '—'}</div>
+    <div style="margin-bottom: 8px;"><strong>Ordem Bancária (OB):</strong> ${duplicate.dataOB || '—'}</div>
+    <div><strong>Deduções:</strong><div style="padding-left: 10px; margin-top: 4px;">${deductionsHtml}</div></div>
+  `;
+  
+  document.getElementById('docDuplicateDetails').innerHTML = detailsHtml;
+  document.getElementById('docDuplicateModal').classList.add('open');
+  
+  const confirmBtn = document.getElementById('btnConfirmDocDuplicate');
+  const newConfirmBtn = confirmBtn.cloneNode(true);
+  confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+  
+  newConfirmBtn.addEventListener('click', () => {
+    closeDocDuplicateModal();
+    onConfirm();
+  });
+}
+
+function closeDocDuplicateModal(shouldFocusInput = false) {
+  document.getElementById('docDuplicateModal').classList.remove('open');
+  if (shouldFocusInput) {
+    document.getElementById('fieldDocRelacionado').focus();
+  }
+}
+
+function checkDocRelacionadoDuplicateOnBlur(event) {
+  // If focus shifted directly to submit button, skip blur warning to let submit event handle validation
+  if (event && event.relatedTarget && event.relatedTarget.classList.contains('btn-submit')) {
+    return;
+  }
+
+  const input = document.getElementById('fieldDocRelacionado');
+  const docVal = input.value.trim();
+  if (!docVal) return;
+  
+  if (docVal === lastConfirmedDuplicateDoc) return;
+  
+  const duplicate = findDocRelacionadoDuplicate(docVal, editingId);
+  if (duplicate) {
+    showDocDuplicatePopup(duplicate, () => {
+      // User clicked "Prosseguir Mesmo Assim"
+      lastConfirmedDuplicateDoc = docVal;
+    });
+  }
+}
+
+// Sync Planilha popup wrappers
+function openSyncConfirmModal() {
+  document.getElementById('syncConfirmModal').classList.add('open');
+}
+
+function closeSyncConfirmModal() {
+  document.getElementById('syncConfirmModal').classList.remove('open');
+}
+
+async function executeSincronizarPlanilha() {
+  closeSyncConfirmModal();
+  const btn = document.getElementById('btnSincronizar');
+  const icon = document.getElementById('btnSincronizarIcon');
+  if (!btn) return;
+
+  btn.disabled = true;
+  if (icon) icon.style.animation = 'spin 1s linear infinite';
+
+  try {
+    const response = await fetch('/api/liquidacoes/sincronizar_planilha', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || `HTTP ${response.status}`);
+    }
+
+    const resData = await response.json();
+    
+    // Reload local data from backend
+    const dataResponse = await fetch('/api/liquidacoes');
+    if (dataResponse.ok) {
+      cachedLiquidacoes = await dataResponse.json();
+    }
+    
+    renderTable();
+    updateStats();
+    updateCounts();
+    
+    showToast(`Sincronização concluída! ${resData.count} registros carregados.`, 'success');
+  } catch (err) {
+    console.error('Erro ao sincronizar com a planilha:', err);
+    showToast('Erro ao sincronizar: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    if (icon) icon.style.animation = '';
+  }
+}
+
+function initColumnResizers() {
+  const table = document.getElementById('dataTable');
+  if (!table) return;
+  const ths = table.querySelectorAll('thead th');
+  
+  // Load saved column widths from localStorage
+  const savedWidths = localStorage.getItem('liquidacoes_col_widths');
+  if (savedWidths) {
+    try {
+      const widths = JSON.parse(savedWidths);
+      ths.forEach((th, idx) => {
+        if (widths[idx]) {
+          th.style.width = widths[idx];
+          th.style.minWidth = widths[idx];
+          th.style.maxWidth = widths[idx];
+        }
+      });
+    } catch (e) {
+      console.warn('Failed to load column widths:', e);
+    }
+  }
+
+  ths.forEach((th, idx) => {
+    // Don't add resizer to the last column (Ações)
+    if (idx === ths.length - 1) return;
+
+    if (!th.querySelector('.col-resizer')) {
+      const resizer = document.createElement('div');
+      resizer.className = 'col-resizer';
+      th.appendChild(resizer);
+
+      resizer.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const startX = e.pageX;
+        const startWidth = th.offsetWidth;
+        resizer.classList.add('resizing');
+
+        function onMouseMove(moveEvent) {
+          const currentWidth = startWidth + (moveEvent.pageX - startX);
+          if (currentWidth > 50) {
+            const widthStr = currentWidth + 'px';
+            th.style.width = widthStr;
+            th.style.minWidth = widthStr;
+            th.style.maxWidth = widthStr;
+          }
+        }
+
+        function onMouseUp() {
+          resizer.classList.remove('resizing');
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+
+          // Save new widths to localStorage
+          const currentWidths = Array.from(ths).map(t => t.style.width || (t.offsetWidth + 'px'));
+          localStorage.setItem('liquidacoes_col_widths', JSON.stringify(currentWidths));
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+    }
+  });
+}
+</script>
+
+</body>
+</html>

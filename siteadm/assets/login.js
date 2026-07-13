@@ -1,21 +1,47 @@
 // ── LOGIN SYSTEM ──
 // Requires modern browser for crypto.subtle (SHA-256)
 
+// Global fetch override to automatically append authentication token
+(function() {
+  const originalFetch = window.fetch;
+  window.fetch = function(input, init) {
+    const token = localStorage.getItem('adm_auth_token') || sessionStorage.getItem('adm_auth_token');
+    if (token) {
+      init = init || {};
+      init.headers = init.headers || {};
+      if (init.headers instanceof Headers) {
+        init.headers.set('X-Session-Token', token);
+      } else if (Array.isArray(init.headers)) {
+        init.headers.push(['X-Session-Token', token]);
+      } else {
+        init.headers['X-Session-Token'] = token;
+      }
+    }
+    return originalFetch(input, init);
+  };
+})();
+
 const LoginSystem = {
-  loginsUrl: '/dados/logins.json',
-  loginsData: null,
   pendingUrl: null,
   loginRequired: true, // default, overridden by config.json
 
+  getBasePath: function() {
+    const path = window.location.pathname;
+    if (path.includes('painel_admin.html')) {
+      return 'siteadm/';
+    }
+    return this.isModulePage() ? '../' : './';
+  },
+
   isModulePage: function() {
     const path = window.location.pathname;
-    return path.includes('/projecao/') || path.includes('/comex/') || path.includes('/scirpt_teouraria/');
+    return path.includes('/projecao/') || path.includes('/comex/') || path.includes('/tesouraria/');
   },
 
   init: async function() {
     // 0. Check if login is required
     try {
-      const rootPath = this.isModulePage() ? '../' : './';
+      const rootPath = this.getBasePath();
       const configRes = await fetch(rootPath + 'dados/config.json?_t=' + Date.now());
       if (configRes.ok) {
         const config = await configRes.json();
@@ -29,48 +55,27 @@ const LoginSystem = {
       sessionStorage.setItem('adm_auth_perfil', 'acesso_livre');
       sessionStorage.setItem('adm_auth_nome', 'Acesso Livre');
       sessionStorage.setItem('adm_auth_tags', JSON.stringify(['admin']));
-      // Set a dummy master key for data decryption — need the real one
-      if (!sessionStorage.getItem('adm_master_key') && !localStorage.getItem('adm_master_key')) {
-        try {
-          const rootPath2 = this.isModulePage() ? '../' : './';
-          const loginsRes = await fetch(rootPath2 + 'dados/logins.json?_t=' + Date.now());
-          if (loginsRes.ok) {
-            const logins = await loginsRes.json();
-            // Use first admin user's wrapped key with default password
-            const adminUser = logins.find(u => u.tags && u.tags.includes('admin'));
-            if (adminUser && adminUser.wrapped_key) {
-              const defaultPwd = adminUser.perfil + '123';
-              const mk = await this.decryptMasterKey(adminUser.wrapped_key, defaultPwd);
-              if (mk) sessionStorage.setItem('adm_master_key', mk);
-            }
-          }
-        } catch(e) { console.warn('Auto-key failed:', e); }
-      }
     }
 
     // 1. Create Modal HTML
     this.createModal();
-    
-    // 2. Load users
-    this.loadLogins();
 
-    // 3. Intercept module clicks (only if login required)
+    // 2. Intercept module clicks (only if login required)
     if (this.loginRequired) {
       this.interceptLinks();
     }
     
-    // 4. Check if current page is protected and we are not logged in
+    // 3. Check if current page is protected and we are not logged in
     if (this.loginRequired) {
       this.checkCurrentPage();
     }
 
-    // 5. Render user badge if logged in
+    // 4. Render user badge if logged in
     if (this.isLoggedIn()) {
       this.renderUserBadge();
-      if (this.loginRequired) {
-        this.hideUnauthorizedModules();
-      }
     }
+    
+    this.updateLoginStateUI();
     this.initialized = true;
   },
 
@@ -114,20 +119,7 @@ const LoginSystem = {
     document.getElementById('login-close').addEventListener('click', () => this.closeModal());
   },
 
-  loadLogins: function() {
-    // Tentamos achar a raiz (caso estejamos em um módulo)
-    const rootPath = this.isModulePage() ? '../' : './';
-    const url = rootPath + 'dados/logins.json?_t=' + new Date().getTime();
-    
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        this.loginsData = data;
-      })
-      .catch(err => {
-        console.error('Erro ao carregar banco de logins', err);
-      });
-  },
+
 
   interceptLinks: function() {
     // Interceptar cliques no index.html
@@ -144,9 +136,22 @@ const LoginSystem = {
   },
 
   checkCurrentPage: function() {
-    // Se a página atual NÃO for o index (menu raiz), e não estiver logado, bloqueia
     const path = window.location.pathname;
     
+    // Check if we are on the admin page
+    if (path.endsWith('/painel_admin.html')) {
+      if (!this.isLoggedIn()) {
+        this.showAccessDenied("Acesso Negado. Você precisa fazer login como Admin para acessar o Painel Admin.", './siteadm/');
+        return;
+      }
+      const tagsStr = localStorage.getItem('adm_auth_tags') || sessionStorage.getItem('adm_auth_tags') || "[]";
+      const tags = JSON.parse(tagsStr);
+      if (!tags.includes('admin')) {
+        this.showAccessDenied("Acesso Negado. Apenas administradores podem acessar o Painel Admin.", './siteadm/');
+        return;
+      }
+    }
+
     if (this.isModulePage()) {
       if (!this.isLoggedIn()) {
         this.showAccessDenied("Acesso Negado. Você precisa fazer login para acessar este módulo.", '../');
@@ -169,12 +174,16 @@ const LoginSystem = {
         this.showAccessDenied("Acesso Negado. Seu perfil não tem permissão para o módulo COMEX.", '../');
         return;
       }
+      if (path.includes('/tesouraria/') && !tags.includes('setfinliq')) {
+        this.showAccessDenied("Acesso Negado. Seu perfil não tem permissão para o Controle de Liquidações.", '../');
+        return;
+      }
     }
   },
 
   isLoggedIn: function() {
     const token = localStorage.getItem('adm_auth_token') || sessionStorage.getItem('adm_auth_token');
-    return token === 'authenticated';
+    return !!token;
   },
 
   openModal: function(msg = "") {
@@ -203,47 +212,47 @@ const LoginSystem = {
       return;
     }
 
-    if (!this.loginsData) {
-      errorEl.textContent = "Banco de logins indisponível. Tente novamente.";
-      return;
-    }
-
-    const user = this.loginsData.find(u => u.perfil.toLowerCase() === perfil);
-    if (!user) {
-      errorEl.textContent = "Perfil não encontrado ou senha inválida.";
-      return;
-    }
-
-    // Calcula SHA-256 da senha digitada
-    const hash = await this.sha256(senha);
-    
-    if (hash === user.hash) {
-      // Descriptografar a chave mestra usando a senha digitada
-      const masterKeyHex = await this.decryptMasterKey(user.wrapped_key, senha);
+    try {
+      const response = await fetch(this.getBasePath() + 'api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ perfil, senha })
+      });
+      
+      const resData = await response.json();
+      if (!response.ok) {
+        errorEl.textContent = resData.error || "Erro ao efetuar login.";
+        errorEl.style.color = "var(--red)";
+        return;
+      }
+      
+      // Decrypt the master key using the typed password
+      const masterKeyHex = await this.decryptMasterKey(resData.wrapped_key, senha);
       if (!masterKeyHex) {
         errorEl.textContent = "Erro de autenticação interna (chave inválida).";
         errorEl.style.color = "var(--red)";
         return;
       }
       
-      // Salvar sessão
-      const tagsStr = JSON.stringify(user.tags || []);
+      // Save session
+      const token = resData.token;
+      const tagsStr = JSON.stringify(resData.tags || []);
       
       if (remember) {
-        localStorage.setItem('adm_auth_token', 'authenticated');
-        localStorage.setItem('adm_auth_perfil', user.perfil);
-        localStorage.setItem('adm_auth_nome', user.nome || user.perfil);
+        localStorage.setItem('adm_auth_token', token);
+        localStorage.setItem('adm_auth_perfil', resData.perfil);
+        localStorage.setItem('adm_auth_nome', resData.nome || resData.perfil);
         localStorage.setItem('adm_auth_tags', tagsStr);
         localStorage.setItem('adm_master_key', masterKeyHex);
       } else {
-        sessionStorage.setItem('adm_auth_token', 'authenticated');
-        sessionStorage.setItem('adm_auth_perfil', user.perfil);
-        sessionStorage.setItem('adm_auth_nome', user.nome || user.perfil);
+        sessionStorage.setItem('adm_auth_token', token);
+        sessionStorage.setItem('adm_auth_perfil', resData.perfil);
+        sessionStorage.setItem('adm_auth_nome', resData.nome || resData.perfil);
         sessionStorage.setItem('adm_auth_tags', tagsStr);
         sessionStorage.setItem('adm_master_key', masterKeyHex);
       }
       
-      // Efeito de sucesso
+      // Success visual effects
       document.querySelector('.login-header').style.display = 'none';
       document.querySelectorAll('.login-group').forEach(el => el.style.display = 'none');
       document.querySelector('.login-options').style.display = 'none';
@@ -258,12 +267,11 @@ const LoginSystem = {
       setTimeout(() => {
         this.closeModal();
         
-        // Renderiza o badge imediatamente sem recarregar se estiver no index
         if (!this.pendingUrl) {
           this.renderUserBadge();
+          this.updateLoginStateUI();
         }
 
-        // Restaura o modal para a próxima vez se necessário
         setTimeout(() => {
           document.querySelector('.login-header').style.display = 'block';
           document.querySelectorAll('.login-group').forEach(el => el.style.display = 'block');
@@ -281,9 +289,10 @@ const LoginSystem = {
         }
       }, 1200);
       
-    } else {
-      errorEl.textContent = "Perfil não encontrado ou senha inválida.";
+    } catch(err) {
+      errorEl.textContent = "Erro de conexão com o servidor.";
       errorEl.style.color = "var(--red)";
+      console.error(err);
     }
   },
 
@@ -310,6 +319,12 @@ const LoginSystem = {
     document.body.insertAdjacentHTML('beforeend', html);
     
     document.getElementById('btn-logout').addEventListener('click', () => {
+      const token = localStorage.getItem('adm_auth_token') || sessionStorage.getItem('adm_auth_token');
+      if (token) {
+        fetch(this.getBasePath() + 'api/logout', {
+          method: 'POST'
+        }).catch(() => {});
+      }
       localStorage.removeItem('adm_auth_token');
       localStorage.removeItem('adm_auth_perfil');
       localStorage.removeItem('adm_auth_nome');
@@ -324,26 +339,136 @@ const LoginSystem = {
     });
   },
 
+  updateLoginStateUI: function() {
+    const isIndex = !this.isModulePage();
+    if (!isIndex) return;
+
+    // 1. Hide/remove any existing login button in the header
+    const loginBtn = document.getElementById('btn-login-header');
+    if (loginBtn) {
+      loginBtn.remove();
+    }
+    
+    // 2. Remove any existing header badge to avoid duplicates
+    const existingHeaderInfo = document.getElementById('user-header-info');
+    if (existingHeaderInfo) {
+      existingHeaderInfo.remove();
+    }
+
+    // 3. Render header badge
+    const headerInner = document.querySelector('.header-inner');
+    if (headerInner) {
+      document.body.classList.add('index-page-active');
+      if (this.isLoggedIn()) {
+        let nomeVisivel = localStorage.getItem('adm_auth_nome') || sessionStorage.getItem('adm_auth_nome') || 'Usuário';
+        if (nomeVisivel === 'Usuário' || nomeVisivel === localStorage.getItem('adm_auth_perfil')) {
+           let perfil = localStorage.getItem('adm_auth_perfil') || sessionStorage.getItem('adm_auth_perfil') || 'teste';
+           nomeVisivel = perfil.charAt(0).toUpperCase() + perfil.slice(1);
+        }
+        const headerBadge = `
+          <div id="user-header-info" class="user-header-info">
+            <span>Logado como: <b>${nomeVisivel}</b></span>
+            <button id="btn-logout-header" class="btn-logout-header" title="Sair do sistema">Sair</button>
+          </div>
+        `;
+        headerInner.insertAdjacentHTML('beforeend', headerBadge);
+        
+        document.getElementById('btn-logout-header').addEventListener('click', () => {
+          const logoutBtn = document.getElementById('btn-logout');
+          if (logoutBtn) {
+            logoutBtn.click();
+          } else {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.reload();
+          }
+        });
+      } else {
+        const loginBtnHtml = `
+          <button id="btn-login-header" class="btn-login-header">Entrar</button>
+        `;
+        headerInner.insertAdjacentHTML('beforeend', loginBtnHtml);
+        document.getElementById('btn-login-header').addEventListener('click', () => {
+          this.openModal();
+        });
+      }
+    }
+
+    // 4. Update modules visual states
+    if (this.isLoggedIn() && this.loginRequired) {
+      this.hideUnauthorizedModules();
+    }
+  },
+
   hideUnauthorizedModules: function() {
-    // Esconde os cartões do index.html se não tiver tag
     const isIndex = !this.isModulePage();
     if (!isIndex) return;
     
     const tagsStr = localStorage.getItem('adm_auth_tags') || sessionStorage.getItem('adm_auth_tags') || "[]";
     const tags = JSON.parse(tagsStr);
     
-    if (tags.includes('admin')) return; // Admin bypass
+    const isAdmin = tags.includes('admin');
     
-    const links = document.querySelectorAll('a.module-card.active, a.btn-acesso-restrito');
-    links.forEach(link => {
-      const href = link.getAttribute('href') || '';
-      if (href.includes('projecao') && !tags.includes('projecao') && !tags.includes('auditor')) {
-        link.style.display = 'none';
+    // Check projecao and comex module cards
+    const projCard = document.getElementById('module-projecao');
+    if (projCard) {
+      if (!isAdmin && !tags.includes('projecao') && !tags.includes('auditor')) {
+        projCard.classList.add('unauthorized');
+        projCard.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.showTabDeniedModal("Acesso Negado. Seu perfil não tem permissão para o módulo de Gestão Orçamentária.");
+        }, true);
+      } else {
+        projCard.classList.remove('unauthorized');
       }
-      if (href.includes('comex') && !tags.includes('comex')) {
-        link.style.display = 'none';
+    }
+
+    const comexCard = document.getElementById('module-comex');
+    if (comexCard) {
+      if (!isAdmin && !tags.includes('comex')) {
+        comexCard.classList.add('unauthorized');
+        comexCard.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.showTabDeniedModal("Acesso Negado. Seu perfil não tem permissão para o módulo COMEX.");
+        }, true);
+      } else {
+        comexCard.classList.remove('unauthorized');
       }
-    });
+    }
+
+    // Check Setor Financeiro buttons inside module-financeiro card
+    const finLiqBtn = document.querySelector('#module-financeiro .primary-btn');
+    const finDashBtn = document.querySelector('#module-financeiro .secondary-btn');
+    const finCard = document.getElementById('module-financeiro');
+    
+    if (!isAdmin) {
+      const hasLiq = tags.includes('setfinliq');
+      const hasDash = tags.includes('setfindashboard');
+      
+      if (finLiqBtn && !hasLiq) {
+        finLiqBtn.classList.add('unauthorized');
+        finLiqBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.showTabDeniedModal("Acesso Negado. Seu perfil não tem permissão para o Controle de Liquidações.");
+        }, true);
+      }
+      if (finDashBtn && !hasDash) {
+        finDashBtn.classList.add('unauthorized');
+        finDashBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.showTabDeniedModal("Acesso Negado. Seu perfil não tem permissão para o Dashboard do Setor Financeiro.");
+        }, true);
+      }
+      
+      // If both actions are unauthorized, fade the whole card
+      if (finCard && finLiqBtn && finDashBtn && finLiqBtn.classList.contains('unauthorized') && finDashBtn.classList.contains('unauthorized')) {
+        finCard.classList.add('unauthorized');
+      }
+    }
   },
   
   showAccessDenied: function(message, redirectUrl) {

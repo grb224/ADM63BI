@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Painel Administrativo - 63º BI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="siteadm/assets/login.css">
   <style>
     :root {
       --olive: #3d5016; --olive-dark: #2a3810;
@@ -166,6 +167,8 @@
       <div class="checkbox-group"><input type="checkbox" id="tag-comex" value="comex"> <label for="tag-comex" style="margin:0;">COMEX</label></div>
       <div class="checkbox-group"><input type="checkbox" id="tag-projecao" value="projecao"> <label for="tag-projecao" style="margin:0;">Gestão Orçamentária (Acesso Completo)</label></div>
       <div class="checkbox-group"><input type="checkbox" id="tag-auditor" value="auditor"> <label for="tag-auditor" style="margin:0;">Auditor (Acesso restrito em Gestão Orç.)</label></div>
+      <div class="checkbox-group"><input type="checkbox" id="tag-setfinliq" value="setfinliq"> <label for="tag-setfinliq" style="margin:0;">Setor Financeiro (Liquidações)</label></div>
+      <div class="checkbox-group"><input type="checkbox" id="tag-setfindashboard" value="setfindashboard"> <label for="tag-setfindashboard" style="margin:0;">Setor Financeiro (Dashboard)</label></div>
     </div>
     
     <div style="display:flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
@@ -231,6 +234,8 @@
     document.getElementById('tag-comex').checked = false;
     document.getElementById('tag-projecao').checked = false;
     document.getElementById('tag-auditor').checked = false;
+    document.getElementById('tag-setfinliq').checked = false;
+    document.getElementById('tag-setfindashboard').checked = false;
   }
   
   function closeModal() {
@@ -249,6 +254,8 @@
     document.getElementById('tag-comex').checked = u.tags && u.tags.includes('comex');
     document.getElementById('tag-projecao').checked = u.tags && u.tags.includes('projecao');
     document.getElementById('tag-auditor').checked = u.tags && u.tags.includes('auditor');
+    document.getElementById('tag-setfinliq').checked = u.tags && u.tags.includes('setfinliq');
+    document.getElementById('tag-setfindashboard').checked = u.tags && u.tags.includes('setfindashboard');
   }
   
   async function saveUser() {
@@ -264,6 +271,8 @@
     if(document.getElementById('tag-comex').checked) tags.push('comex');
     if(document.getElementById('tag-projecao').checked) tags.push('projecao');
     if(document.getElementById('tag-auditor').checked) tags.push('auditor');
+    if(document.getElementById('tag-setfinliq').checked) tags.push('setfinliq');
+    if(document.getElementById('tag-setfindashboard').checked) tags.push('setfindashboard');
     
     let hash = "";
     
@@ -350,6 +359,7 @@
 
   window.onload = () => { loadUsers(); loadConfig(); };
 </script>
+<script src="siteadm/assets/login.js"></script>
 
 </body>
 </html>

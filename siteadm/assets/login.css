@@ -288,3 +288,95 @@
   opacity: 1;
   padding: 4px 8px;
 }
+
+/* ── UNAUTHORIZED MODULES ── */
+.module-card.unauthorized,
+.module-card.active.unauthorized {
+  opacity: 0.45;
+  filter: grayscale(80%) blur(0.3px);
+  cursor: not-allowed !important;
+  transition: all 0.3s ease;
+}
+.module-card.unauthorized:hover,
+.module-card.active.unauthorized:hover {
+  transform: none !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+  opacity: 0.55;
+  filter: grayscale(60%);
+}
+
+.module-action-btn.unauthorized,
+.module-action-btn.unauthorized.primary-btn,
+.module-action-btn.unauthorized.secondary-btn {
+  opacity: 0.45;
+  filter: grayscale(80%);
+  cursor: not-allowed !important;
+  pointer-events: auto !important;
+  background: #e8e4d3 !important;
+  color: #4b5563 !important;
+  border: 1px solid #e8e4d3 !important;
+}
+.module-action-btn.unauthorized:hover {
+  transform: none !important;
+  background: #e8e4d3 !important;
+  box-shadow: none !important;
+}
+
+/* ── HEADER USER ACTIONS ── */
+.btn-login-header {
+  background: #c39c4d !important; /* Gold tone for header matching */
+  color: #2a3810 !important; /* Olive dark for contrast */
+  border: none !important;
+  padding: 8px 18px !important;
+  border-radius: 20px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+  margin-left: auto !important;
+  font-family: 'Inter', sans-serif !important;
+}
+.btn-login-header:hover {
+  background: #d4ae5e !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25) !important;
+}
+.btn-login-header:active {
+  transform: translateY(0) !important;
+}
+
+.user-header-info {
+  margin-left: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  font-family: 'Inter', sans-serif !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 13px !important;
+}
+.user-header-info b {
+  color: #fce79a !important; /* Light gold for username */
+}
+
+.btn-logout-header {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
+  padding: 5px 12px !important;
+  border-radius: 15px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+.btn-logout-header:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #ff9999 !important;
+}
+
+/* Override fixed badge layout to be hidden if we use header display on index */
+body.index-page-active #adm-user-badge {
+  display: none !important;
+}
