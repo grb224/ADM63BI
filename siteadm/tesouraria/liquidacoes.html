@@ -1749,6 +1749,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       await new Promise(r => setTimeout(r, 20));
     }
   }
+
+  // Hide btnSincronizar if not admin
+  const tagsStr = localStorage.getItem('adm_auth_tags') || sessionStorage.getItem('adm_auth_tags') || "[]";
+  const tags = JSON.parse(tagsStr);
+  const btnSincronizar = document.getElementById('btnSincronizar');
+  if (btnSincronizar) {
+    if (!tags.includes('admin')) {
+      btnSincronizar.style.display = 'none';
+    } else {
+      btnSincronizar.style.display = '';
+    }
+  }
   // Load data from backend
   try {
     const response = await fetch('/api/liquidacoes');
