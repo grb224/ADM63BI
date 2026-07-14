@@ -26,10 +26,6 @@ const LoginSystem = {
   loginRequired: true, // default, overridden by config.json
 
   getBasePath: function() {
-    const path = window.location.pathname;
-    if (path.includes('painel_admin.html') || path === '/') {
-      return 'siteadm/';
-    }
     return this.isModulePage() ? '../' : './';
   },
 
@@ -139,15 +135,15 @@ const LoginSystem = {
     const path = window.location.pathname;
     
     // Check if we are on the admin page
-    if (path.endsWith('/painel_admin.html') || path === '/') {
+    if (path.endsWith('/painel_admin.html')) {
       if (!this.isLoggedIn()) {
-        this.showAccessDenied("Acesso Negado. Você precisa fazer login como Admin para acessar o Painel Admin.", './siteadm/');
+        this.showAccessDenied("Acesso Negado. Você precisa fazer login como Admin para acessar o Painel Admin.", '/');
         return;
       }
       const tagsStr = localStorage.getItem('adm_auth_tags') || sessionStorage.getItem('adm_auth_tags') || "[]";
       const tags = JSON.parse(tagsStr);
       if (!tags.includes('admin')) {
-        this.showAccessDenied("Acesso Negado. Apenas administradores podem acessar o Painel Admin.", './siteadm/');
+        this.showAccessDenied("Acesso Negado. Apenas administradores podem acessar o Painel Admin.", '/');
         return;
       }
     }
