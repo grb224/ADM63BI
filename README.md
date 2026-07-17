@@ -25,13 +25,23 @@ O painel central (`siteadm/index.html`) dá acesso a diferentes ferramentas, div
 - **Armazenamento:** Funciona de maneira estática lendo arquivos de carga (CSV) submetidos localmente no navegador pelo operador. O script de carregamento processa grandes massas de dados de fiscalização e mostra os indicadores.
 - **Recursos:** Filtros dinâmicos cruzados por cidade, CNPJ, fiscalização e período temporal. Acesso restrito a usuários com a tag `comex`.
 
-### 3. 💵 Setor Financeiro / Tesouraria (`siteadm/scirpt_teouraria/`)
-- **Função:** Gerenciamento das liquidações de documentos hábeis (NP, OB, DARF, GRU).
+### 3. 💵 Setor Financeiro / Tesouraria (`siteadm/tesouraria/`)
+- **Função:** Gerenciamento das liquidações de documentos hábeis (NP, AV, DT, FL).
 - **Armazenamento (Híbrido):** 
   - **Frontend:** Salva instantaneamente via `localStorage` (chave `liquidacoes_63bi`) para manter a experiência rápida sem atrasos de rede, servindo de fallback.
   - **Backend:** Envia o registro via requisição `POST /api/liquidacoes` (e `/api/liquidacoes/delete` para exclusões).
   - **Google Sheets:** O backend em Python usa o serviço `gspread` para localizar, atualizar e organizar (ordenando por data de emissão decrescente) as planilhas do Google no Drive do 63º BI, organizadas por abas (UGE 160443 e UGE 167443).
-- **Recursos:** Leitura automática de PDFs gerados pelo SIAFI para preenchimento ágil. Tabela dinâmica com filtros de colunas, ordenação, e suporte a múltiplos descontos (deduções).
+- **Preenchimento Automático Inteligente (SIAFI):** 
+  - Cartões interativos que ativam ao passar o mouse para receber a colagem direta de texto (Ctrl+A e Ctrl+V) da aba "Dados Básicos" e "Dedução" do SIAFI.
+  - Botão dourado de preenchimento automático ⚡ (`Realizar preenchimento automático`) que executa o parse dos dados copiados.
+  - Se a empresa for optante pelo Simples, as deduções e o código de natureza são automaticamente bloqueados e marcados com visual hachurado de "Não se aplica" (`.field-na`).
+  - Destaque dourado (`.field-autofilled`) nos campos preenchidos com sucesso via parser.
+  - Validação ativa de notas fiscais (NF) duplicadas no momento do preenchimento automático para evitar lançamentos repetidos.
+- **Validações e Controles:**
+  - Campo UGE bloqueado para edição direta (readonly), sendo determinado dinamicamente pela aba ativa do painel.
+  - Restrição rígida aos tipos de DH: **NP** (Nota de Pagamento), **AV** (Autorização de Viagem), **DT** (Documento de Transferência) e **FL** (Folha).
+  - Botão de limpeza rápida integrado à barra de ações do formulário.
+  - Tabela dinâmica com filtros de colunas persistentes no estilo Excel e seleção de sublinhas de deduções.
 
 ### 4. 📑 Planilhas Externas
 - A tela inicial possui um acordeão que redireciona o usuário (caso logado) para planilhas diretas no Google Drive (RPCM, Projetos, Metas, Pregões).
