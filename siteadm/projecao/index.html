@@ -396,6 +396,54 @@
         justify-content: center;
       }
     }
+    .btn-salvar-empenho {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+      border: none;
+      color: var(--olive-dark);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-salvar-empenho:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(201,162,39,0.3);
+    }
+    .btn-salvar-empenho:disabled {
+      background: var(--gray-600);
+      color: var(--gray-400);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .select-prev {
+      background: var(--bg-dark);
+      color: var(--text-light);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 6px;
+      font-size: 11px;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+    }
+    .input-parc {
+      background: var(--bg-dark);
+      color: var(--text-light);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 6px;
+      font-size: 11px;
+      width: 100px;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+    }
+    .active-filter-btn {
+      border: 2px solid var(--gold) !important;
+      box-shadow: 0 0 10px rgba(201,162,39,0.5) !important;
+    }
   </style>
 </head>
 <body>
@@ -432,6 +480,8 @@
   <div class="tabs-nav">
     <button class="tab-btn active" id="btn-tab-metas" onclick="openTab(event, 'tab-metas')">🎯 METAS E PROJEÇÕES</button>
     <button class="tab-btn" id="btn-tab-empenhos40" onclick="openTab(event, 'tab-empenhos40')">⏱️ EMPENHOS 40D+</button>
+    <button class="tab-btn" id="btn-tab-emp-corrente" onclick="openTab(event, 'tab-emp-corrente')">💵 EMPENHOS CORRENTE</button>
+    <button class="tab-btn" id="btn-tab-emp-rpnp" onclick="openTab(event, 'tab-emp-rpnp')">⏳ EMPENHOS RPNP</button>
     <button class="tab-btn" id="btn-tab-controle" onclick="openTab(event, 'tab-controle')">📊 CONTROLE DAS PREVISÕES</button>
     <button class="tab-btn" id="btn-tab-auditoria" onclick="openTab(event, 'tab-auditoria')">🕵️ AUDITORIA</button>
   </div>
@@ -777,15 +827,117 @@
   </div>
 </div>
 
+<!-- ========================================== -->
+<!-- ABA 5: EMPENHOS CORRENTE                    -->
+<!-- ========================================== -->
+<div id="tab-emp-corrente" class="tab-content">
+  <div class="main">
+    <div class="section animate-up">
+      <div class="section-title"><span class="icon">💵</span>CONTROLE DE EMPENHOS DO EXERCÍCIO CORRENTE</div>
+      <p style="font-size:12px;color:#666;margin-bottom:16px">
+        Visualize e altere as previsões e valores parciais de liquidação dos empenhos do Exercício Corrente salvos no Supabase.
+      </p>
+      <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+        <button class="btn-atualizar" onclick="carregarEmpenhosCorrente('160443')" id="btn-emp-corr-160">UG 160443</button>
+        <button class="btn-atualizar" onclick="carregarEmpenhosCorrente('167443')" id="btn-emp-corr-167">UG 167443</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>UG</th>
+              <th>NE (Empenho)</th>
+              <th>Tipo NE</th>
+              <th>Data Emissão</th>
+              <th>PI</th>
+              <th class="num">Saldo A Liquidar</th>
+              <th>Previsão</th>
+              <th>Valor Parcial</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyEmpCorrente">
+            <tr><td colspan="9" style="text-align:center;color:#999">Selecione uma UG para visualizar os empenhos.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- ABA 6: EMPENHOS RPNP                        -->
+<!-- ========================================== -->
+<div id="tab-emp-rpnp" class="tab-content">
+  <div class="main">
+    <div class="section animate-up">
+      <div class="section-title"><span class="icon">⏳</span>CONTROLE DE EMPENHOS RPNP (Exercício Anterior)</div>
+      <p style="font-size:12px;color:#666;margin-bottom:16px">
+        Visualize e altere as previsões e valores parciais de liquidação dos empenhos de Restos a Pagar salvos no Supabase.
+      </p>
+      <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+        <button class="btn-atualizar" onclick="carregarEmpenhosRpnp('160443')" id="btn-emp-rpnp-160">UG 160443</button>
+        <button class="btn-atualizar" onclick="carregarEmpenhosRpnp('167443')" id="btn-emp-rpnp-167">UG 167443</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>UG</th>
+              <th>NE (Empenho)</th>
+              <th>Tipo NE</th>
+              <th>Data Emissão</th>
+              <th>PI</th>
+              <th class="num">Saldo ALIQ</th>
+              <th>Previsão</th>
+              <th>Valor Parcial</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyEmpRpnp">
+            <tr><td colspan="9" style="text-align:center;color:#999">Selecione uma UG para visualizar os empenhos.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===================== CARREGAMENTO DINÂMICO =====================
 let DADOS = {};
 
 async function carregarDados() {
   try {
-    const response = await fetch('../dados/projecao.json?_t=' + new Date().getTime());
-    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    const rawData = await response.json();
+    let rawData = null;
+    
+    // Tenta buscar do Supabase primeiro
+    if (LoginSystem.useSupabase && LoginSystem.supabase) {
+      try {
+        console.log("[DB] Buscando dados de projeção no Supabase...");
+        const { data, error } = await LoginSystem.supabase
+          .from('projecoes')
+          .select('encrypted_data')
+          .eq('uge', 'geral')
+          .single();
+        if (data && data.encrypted_data) {
+          rawData = { encrypted: data.encrypted_data };
+          console.log("[DB] Projeção carregada com sucesso do Supabase.");
+        } else if (error) {
+          console.warn("[DB] Erro no Supabase:", error);
+        }
+      } catch (err) {
+        console.warn("[DB] Falha ao ler projeção do Supabase. Tentando local...", err);
+      }
+    }
+    
+    // Fallback: se falhou Supabase ou não está ativado, lê o arquivo estático
+    if (!rawData) {
+      console.log("[DB] Carregando arquivo estático local projecao.json...");
+      const response = await fetch('../dados/projecao.json?_t=' + new Date().getTime());
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      rawData = await response.json();
+    }
     
     if (rawData.encrypted) {
       const masterKeyHex = sessionStorage.getItem('adm_master_key') || localStorage.getItem('adm_master_key');
@@ -1453,6 +1605,182 @@ function showNotification(message, type = 'success') {
     toast.style.transform = 'translateY(-20px)';
     setTimeout(() => toast.remove(), 300);
   }, 4000);
+}
+
+// ===================== CONTROLE DE EMPENHOS (SUPABASE) =====================
+async function carregarEmpenhosCorrente(ug) {
+  document.getElementById('btn-emp-corr-160').classList.toggle('active-filter-btn', ug === '160443');
+  document.getElementById('btn-emp-corr-167').classList.toggle('active-filter-btn', ug === '167443');
+  
+  const tbody = document.getElementById('tbodyEmpCorrente');
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#999"><span class="loading-spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px"></span> Carregando empenhos do Supabase...</td></tr>`;
+  
+  const tableName = ug === '160443' ? 'emp_corrente_160443' : 'emp_corrente_167443';
+  
+  if (!LoginSystem.useSupabase || !LoginSystem.supabase) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger)">Supabase não conectado. Não é possível ler os empenhos online.</td></tr>`;
+    return;
+  }
+  
+  try {
+    const { data, error } = await LoginSystem.supabase
+      .from(tableName)
+      .select('*')
+      .order('ne', { ascending: true });
+      
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#999">Nenhum empenho encontrado para a UG ${ug}.</td></tr>`;
+      return;
+    }
+    
+    tbody.innerHTML = '';
+    data.forEach(row => {
+      const ne = row.ne || '';
+      const tipo = row.tipo_ne || '';
+      const dataEmissao = row.data_emissao || '';
+      const pi = row.pi || '';
+      const aLiquidar = parseFloat(row.a_liquidar || 0);
+      const previsao = row.previsao || 'NÃO';
+      const parcial = parseFloat(row.parcial || 0);
+      
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${ug}</td>
+        <td><strong>${ne}</strong></td>
+        <td>${tipo}</td>
+        <td>${dataEmissao}</td>
+        <td><span class="badge" style="background:#222;color:#eee">${pi}</span></td>
+        <td class="num font-mono">${R$(aLiquidar)}</td>
+        <td>
+          <select class="select-prev" id="prev-corr-${ne}" onchange="document.getElementById('btn-save-corr-${ne}').disabled = false">
+            <option value="SIM" ${previsao === 'SIM' ? 'selected' : ''}>SIM</option>
+            <option value="PARCIAL" ${previsao === 'PARCIAL' ? 'selected' : ''}>PARCIAL</option>
+            <option value="NÃO" ${previsao === 'NÃO' ? 'selected' : ''}>NÃO</option>
+          </select>
+        </td>
+        <td>
+          <input type="number" step="0.01" class="input-parc font-mono" id="parc-corr-${ne}" value="${parcial || ''}" placeholder="0.00" oninput="document.getElementById('btn-save-corr-${ne}').disabled = false">
+        </td>
+        <td>
+          <button class="btn-salvar-empenho" id="btn-save-corr-${ne}" disabled onclick="salvarPrevisaoEmpenho('${tableName}', '${ne}', 'prev-corr-${ne}', 'parc-corr-${ne}', this)">Salvar</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error("Erro ao buscar empenhos corrente:", err);
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger)">Erro ao carregar dados: ${err.message || err}</td></tr>`;
+  }
+}
+
+async function carregarEmpenhosRpnp(ug) {
+  document.getElementById('btn-emp-rpnp-160').classList.toggle('active-filter-btn', ug === '160443');
+  document.getElementById('btn-emp-rpnp-167').classList.toggle('active-filter-btn', ug === '167443');
+  
+  const tbody = document.getElementById('tbodyEmpRpnp');
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#999"><span class="loading-spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px"></span> Carregando empenhos do Supabase...</td></tr>`;
+  
+  const tableName = ug === '160443' ? 'emp_rpnp_160443' : 'emp_rpnp_167443';
+  
+  if (!LoginSystem.useSupabase || !LoginSystem.supabase) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger)">Supabase não conectado. Não é possível ler os empenhos online.</td></tr>`;
+    return;
+  }
+  
+  try {
+    const { data, error } = await LoginSystem.supabase
+      .from(tableName)
+      .select('*')
+      .order('ne', { ascending: true });
+      
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#999">Nenhum empenho encontrado para a UG ${ug}.</td></tr>`;
+      return;
+    }
+    
+    tbody.innerHTML = '';
+    data.forEach(row => {
+      const ne = row.ne || '';
+      const tipo = row.tipo_ne || '';
+      const dataEmissao = row.data_emissao || '';
+      const pi = row.pi || '';
+      const aliq = parseFloat(row.aliq || 0);
+      const previsao = row.previsao || 'NÃO';
+      const parcial = parseFloat(row.parcial || 0);
+      
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${ug}</td>
+        <td><strong>${ne}</strong></td>
+        <td>${tipo}</td>
+        <td>${dataEmissao}</td>
+        <td><span class="badge" style="background:#222;color:#eee">${pi}</span></td>
+        <td class="num font-mono">${R$(aliq)}</td>
+        <td>
+          <select class="select-prev" id="prev-rpnp-${ne}" onchange="document.getElementById('btn-save-rpnp-${ne}').disabled = false">
+            <option value="SIM" ${previsao === 'SIM' ? 'selected' : ''}>SIM</option>
+            <option value="PARCIAL" ${previsao === 'PARCIAL' ? 'selected' : ''}>PARCIAL</option>
+            <option value="NÃO" ${previsao === 'NÃO' ? 'selected' : ''}>NÃO</option>
+          </select>
+        </td>
+        <td>
+          <input type="number" step="0.01" class="input-parc font-mono" id="parc-rpnp-${ne}" value="${parcial || ''}" placeholder="0.00" oninput="document.getElementById('btn-save-rpnp-${ne}').disabled = false">
+        </td>
+        <td>
+          <button class="btn-salvar-empenho" id="btn-save-rpnp-${ne}" disabled onclick="salvarPrevisaoEmpenho('${tableName}', '${ne}', 'prev-rpnp-${ne}', 'parc-rpnp-${ne}', this)">Salvar</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error("Erro ao buscar empenhos rpnp:", err);
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger)">Erro ao carregar dados: ${err.message || err}</td></tr>`;
+  }
+}
+
+async function salvarPrevisaoEmpenho(tableName, ne, selectId, inputId, buttonEl) {
+  const selectEl = document.getElementById(selectId);
+  const inputEl = document.getElementById(inputId);
+  
+  if (!selectEl || !inputEl) return;
+  
+  const prevVal = selectEl.value;
+  const parcVal = parseFloat(inputEl.value) || 0;
+  
+  buttonEl.disabled = true;
+  buttonEl.innerText = "Salvando...";
+  
+  try {
+    const { error } = await LoginSystem.supabase
+      .from(tableName)
+      .update({ previsao: prevVal, parcial: parcVal })
+      .eq('ne', ne);
+      
+    if (error) throw error;
+    
+    buttonEl.innerText = "Salvo!";
+    buttonEl.style.background = "var(--success)";
+    buttonEl.style.color = "#fff";
+    showToast(`Empenho ${ne} atualizado com sucesso!`, 'success');
+    
+    setTimeout(() => {
+      buttonEl.innerText = "Salvar";
+      buttonEl.style.background = "";
+      buttonEl.style.color = "";
+      buttonEl.disabled = true;
+    }, 2000);
+  } catch (err) {
+    console.error("Erro ao salvar previsão do empenho:", err);
+    showToast("Erro ao salvar no Supabase: " + (err.message || err), "error");
+    buttonEl.innerText = "Erro";
+    buttonEl.style.background = "var(--danger)";
+    buttonEl.style.color = "#fff";
+    buttonEl.disabled = false;
+  }
 }
 </script>
 </body>

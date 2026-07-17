@@ -67,35 +67,53 @@ const LoginSystem = {
 
   init: async function() {
     // 0. Check if login is required
+    let config = null;
+    const rootPath = this.getBasePath();
     try {
-      const rootPath = this.getBasePath();
       const configRes = await fetch(rootPath + 'api/config?_t=' + Date.now());
       if (configRes.ok) {
-        const config = await configRes.json();
-        this.loginRequired = config.login_required !== false; // default true
-        
-        // Dynamically initialize Supabase if keys are provided
-        if (config.supabase_url && config.supabase_anon_key) {
-          try {
-            if (!window.supabase) {
-              await new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-              });
-            }
-            this.supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
-            this.useSupabase = true;
-            console.log("[SUPABASE] Cliente inicializado com sucesso no frontend.");
-          } catch (err) {
-            console.error("[SUPABASE] Falha ao inicializar o Supabase SDK. Usando fallback local.", err);
-            this.useSupabase = false;
+        config = await configRes.json();
+      }
+    } catch (e) {
+      console.log("[CONFIG] Falha ao carregar api/config local. Tentando fallback estático...");
+    }
+
+    if (!config) {
+      try {
+        const publicRes = await fetch(rootPath + 'dados/config_public.json?_t=' + Date.now());
+        if (publicRes.ok) {
+          config = await publicRes.json();
+          console.log("[CONFIG] Configurações públicas do Supabase carregadas.");
+        }
+      } catch (err) {
+        console.warn("[CONFIG] Não foi possível carregar config_public.json", err);
+      }
+    }
+
+    if (config) {
+      this.loginRequired = config.login_required !== false; // default true
+      
+      // Dynamically initialize Supabase if keys are provided
+      if (config.supabase_url && config.supabase_anon_key) {
+        try {
+          if (!window.supabase) {
+            await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+              script.onload = resolve;
+              script.onerror = reject;
+              document.head.appendChild(script);
+            });
           }
+          this.supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
+          this.useSupabase = true;
+          console.log("[SUPABASE] Cliente inicializado com sucesso no frontend.");
+        } catch (err) {
+          console.error("[SUPABASE] Falha ao inicializar o Supabase SDK. Usando fallback local.", err);
+          this.useSupabase = false;
         }
       }
-    } catch(e) { /* config missing = login required */ }
+    }
 
     // If login is disabled, auto-authenticate silently
     if (!this.loginRequired) {
