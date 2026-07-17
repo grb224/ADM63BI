@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <title>Painel Administrativo - 63º BI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/login.css?v=3">
   <style>
     :root {
       --olive: #3d5016; --olive-dark: #2a3810;
       --cream: #f5f2e8; --cream-dark: #e8e4d3;
-      --gold: #c9a227; --white: #ffffff;
+      --gold: #c9a227; --gold-light: #e8bc3a;
+      --white: #ffffff;
+      --black: #1a1a1a;
       --gray: #6b7280; --red: #ef4444;
     }
     body {
@@ -19,13 +21,43 @@
       margin: 0; padding: 40px 20px;
     }
     .container {
-      max-width: 900px; margin: 0 auto;
+      max-width: 1000px; margin: 0 auto;
     }
-    .header {
+    
+    /* HEADER */
+    .admin-header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 30px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid var(--olive-dark);
+      padding-bottom: 12px;
     }
-    h1 { color: var(--olive-dark); margin: 0; font-size: 24px; }
+    .admin-header h1 {
+      color: var(--olive-dark); margin: 0; font-size: 24px; font-weight: 800;
+    }
+
+    /* TABS */
+    .tabs-nav {
+      display: flex; gap: 10px; margin-bottom: 24px;
+      border-bottom: 2px solid var(--cream-dark);
+      padding-bottom: 10px;
+    }
+    .tab-btn {
+      padding: 10px 20px; border: none; background: transparent;
+      font-size: 14px; font-weight: 700; color: var(--gray);
+      cursor: pointer; border-radius: 6px; transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      background: rgba(0,0,0,0.05); color: var(--olive);
+    }
+    .tab-btn.active {
+      background: var(--olive); color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
     
     .card {
       background: var(--white);
@@ -36,7 +68,7 @@
     }
     
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--cream-dark); }
+    th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--cream-dark); }
     th { color: var(--gray); font-size: 13px; font-weight: 600; text-transform: uppercase; }
     td { font-size: 14px; }
     .tag-badge {
@@ -50,18 +82,21 @@
     }
     .btn-primary { background: var(--olive); color: white; }
     .btn-primary:hover { background: var(--olive-dark); }
-    .btn-danger { background: var(--red); color: white; padding: 4px 8px; font-size: 12px; }
+    .btn-danger { background: var(--red); color: white; padding: 6px 10px; font-size: 12px; border-radius: 4px; }
+    .btn-secondary { background: var(--cream-dark); color: var(--olive-dark); border: 1px solid var(--olive); }
     
     /* MODAL */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center;
+      z-index: 10000;
     }
-    .modal { background: white; padding: 24px; border-radius: 12px; width: 400px; max-width: 90%; }
+    .modal { background: white; padding: 24px; border-radius: 12px; width: 440px; max-width: 90%; }
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
     .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
     .checkbox-group { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .modal h2 { margin-top: 0; margin-bottom: 20px; font-size: 18px; color: var(--olive-dark); }
 
     /* TOGGLE SWITCH */
     .toggle-card {
@@ -93,54 +128,119 @@
     /* ---------- RESPONSIVIDADE ---------- */
     @media (max-width: 768px) {
       body { padding: 20px 10px; }
-      .header { flex-direction: column; align-items: stretch; gap: 12px; text-align: center; }
-      .header h1 { font-size: 20px; }
-      .header .btn { width: 100%; }
+      .admin-header { flex-direction: column; align-items: stretch; gap: 12px; text-align: center; }
+      .admin-header h1 { font-size: 20px; }
+      .admin-header .btn { width: 100%; }
+      .tabs-nav { flex-direction: column; }
       .card { padding: 16px 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      table { min-width: 500px; }
+      table { min-width: 600px; }
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <div class="header">
-    <h1>Controle de Acessos & Permissões</h1>
-    <button class="btn btn-primary" onclick="openModal()">+ Novo Perfil</button>
-  </div>
   
-  <div class="toggle-card">
-    <div class="toggle-info">
-      <h3>🔒 Exigir Login para Acesso</h3>
-      <p>Quando desativado, qualquer pessoa pode acessar o site sem autenticação.</p>
+  <div class="admin-header">
+    <h1>Painel de Controle Administrador</h1>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" id="btn-acessos" onclick="switchAdminTab('acessos')">🔒 Acessos & Perfis</button>
+    <button class="tab-btn" id="btn-metas" onclick="switchAdminTab('metas')">🎯 Marcos de Metas</button>
+    <button class="tab-btn" id="btn-responsaveis" onclick="switchAdminTab('responsaveis')">📋 Responsáveis por PI</button>
+  </div>
+
+  <!-- TAB 1: ACESSOS E PERFIS -->
+  <div id="tab-acessos" class="tab-content active">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
+      <button class="btn btn-primary" onclick="openModal()">+ Novo Perfil</button>
     </div>
-    <div style="display:flex; align-items:center; gap:12px;">
-      <label class="toggle-switch">
-        <input type="checkbox" id="toggle-login" onchange="toggleLoginRequired()">
-        <span class="toggle-slider"></span>
-      </label>
-      <span class="toggle-status" id="toggle-status">—</span>
+    
+    <div class="toggle-card">
+      <div class="toggle-info">
+        <h3>🔒 Exigir Login para Acesso</h3>
+        <p>Quando desativado, qualquer pessoa pode acessar o site sem autenticação.</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-login" onchange="toggleLoginRequired()">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-status" id="toggle-status">—</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Perfil (Login)</th>
+            <th>Nome Visível</th>
+            <th>Permissões (Tags)</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="user-table">
+          <!-- Preenchido via JS -->
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>Perfil (Login)</th>
-          <th>Nome Visível</th>
-          <th>Permissões (Tags)</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody id="user-table">
-        <!-- Preenchido via JS -->
-      </tbody>
-    </table>
+  <!-- TAB 2: MARCOS DE METAS -->
+  <div id="tab-metas" class="tab-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <p style="font-size:13px; color:var(--gray); margin:0;">Configure abaixo os marcos de metas e porcentagens padrões do exercício.</p>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary" onclick="openNewMilestoneModal()">+ Adicionar Marco</button>
+        <button class="btn btn-secondary" onclick="saveConfigToServer()" style="border: 1px solid var(--olive); color: var(--olive); font-weight:700;">Salvar Marcos</button>
+      </div>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Data Limite</th>
+            <th>Meta Empenho Corrente</th>
+            <th>Meta Liquidação Corrente</th>
+            <th>Meta Liquidação RPNP</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="milestones-table-body">
+          <!-- Preenchido via JS -->
+        </tbody>
+      </table>
+    </div>
   </div>
+
+  <!-- TAB 3: RESPONSÁVEIS POR PI -->
+  <div id="tab-responsaveis" class="tab-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <p style="font-size:13px; color:var(--gray); margin:0;">Mapeamento dinâmico de setores responsáveis por cada PI (gravado diretamente no Banco de Dados).</p>
+      <button class="btn btn-primary" onclick="openNewPiModal()">+ Novo Mapeamento PI</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Código PI</th>
+            <th>Setor Responsável</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="pi-table-body">
+          <!-- Preenchido via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 
-<!-- Modal -->
+<!-- Modal Profile -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <h2 id="modal-title">Novo Perfil</h2>
@@ -178,17 +278,84 @@
   </div>
 </div>
 
+<!-- Modal Milestone -->
+<div class="modal-overlay" id="modal-milestone">
+  <div class="modal">
+    <h2 id="modal-milestone-title">Marco de Meta</h2>
+    <input type="hidden" id="edit-milestone-index" value="-1">
+    
+    <div class="form-group">
+      <label>Data Limite (formato DD/MM/YYYY)</label>
+      <input type="text" id="ipt-m-date" placeholder="ex: 31/08/2026">
+    </div>
+    
+    <div class="form-group">
+      <label>% Meta Empenho Corrente</label>
+      <input type="number" id="ipt-m-emp" min="0" max="100" placeholder="ex: 80">
+    </div>
+    
+    <div class="form-group">
+      <label>% Meta Liquidação Corrente</label>
+      <input type="number" id="ipt-m-liq" min="0" max="100" placeholder="ex: 50">
+    </div>
+    
+    <div class="form-group">
+      <label>% Meta Liquidação RPNP</label>
+      <input type="number" id="ipt-m-rpnp" min="0" max="100" placeholder="ex: 70">
+    </div>
+    
+    <div style="display:flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
+      <button class="btn" onclick="closeMilestoneModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMilestone()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal PI Mapping -->
+<div class="modal-overlay" id="modal-pi">
+  <div class="modal">
+    <h2 id="modal-pi-title">Mapeamento de PI</h2>
+    <input type="hidden" id="edit-pi-is-new" value="true">
+    
+    <div class="form-group">
+      <label>Código do PI (Programa de Trabalho Resumido)</label>
+      <input type="text" id="ipt-pi-code" placeholder="ex: 13DAFUNADOM">
+    </div>
+    
+    <div class="form-group">
+      <label>Setor Responsável</label>
+      <input type="text" id="ipt-pi-setor" placeholder="ex: ALMOX">
+    </div>
+    
+    <div style="display:flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
+      <button class="btn" onclick="closePiModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePiMapping()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <script>
   let users = [];
+  let configData = {};
+  let mapeamentoPI = [];
   
+  // TABS NAVIGATION
+  function switchAdminTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('btn-' + tabId).classList.add('active');
+    
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+  }
+
+  // ── CONTROL ACCESOS ──
   async function loadUsers() {
     try {
       const res = await fetch('/api/logins');
-      if (!res.ok) return; // Let LoginSystem handle the block screen
+      if (!res.ok) return;
       users = await res.json();
       if (!Array.isArray(users)) users = [];
       
-      // Migrar usuários antigos se não tiverem tags
       let modified = false;
       users.forEach(u => {
         if (!u.tags) { u.tags = []; modified = true; }
@@ -230,6 +397,7 @@
     document.getElementById('modal-title').innerText = 'Novo Perfil';
     document.getElementById('edit-index').value = '-1';
     document.getElementById('ipt-perfil').value = '';
+    document.getElementById('ipt-perfil').disabled = false;
     document.getElementById('ipt-nome').value = '';
     document.getElementById('ipt-senha').value = '';
     document.getElementById('tag-admin').checked = false;
@@ -250,6 +418,7 @@
     document.getElementById('modal-title').innerText = 'Editar Perfil';
     document.getElementById('edit-index').value = index;
     document.getElementById('ipt-perfil').value = u.perfil;
+    document.getElementById('ipt-perfil').disabled = true;
     document.getElementById('ipt-nome').value = u.nome || '';
     
     document.getElementById('tag-admin').checked = u.tags && u.tags.includes('admin');
@@ -279,12 +448,10 @@
     let hash = "";
     
     if (idx === -1) {
-      // Create new
       if(!senha) return alert("A senha é obrigatória para um novo perfil.");
       hash = await sha256(senha);
       users.push({ perfil, nome, hash, tags, senha });
     } else {
-      // Update
       users[idx].perfil = perfil;
       users[idx].nome = nome;
       users[idx].tags = tags;
@@ -326,17 +493,20 @@
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  // ── CONFIG: LOGIN TOGGLE ──
+  // ── CONFIG & MARCOS DE METAS ──
   async function loadConfig() {
     try {
       const res = await fetch('/siteadm/api/config?_t=' + Date.now());
       if (res.ok) {
-        const config = await res.json();
+        configData = await res.json();
+        
         const toggle = document.getElementById('toggle-login');
         const status = document.getElementById('toggle-status');
-        toggle.checked = config.login_required !== false;
+        toggle.checked = configData.login_required !== false;
         status.textContent = toggle.checked ? 'Ativado' : 'Desativado';
         status.style.color = toggle.checked ? 'var(--olive)' : 'var(--red)';
+        
+        renderMilestonesTable();
       }
     } catch(e) { console.warn('Config load failed', e); }
   }
@@ -348,18 +518,227 @@
     status.textContent = newValue ? 'Ativado' : 'Desativado';
     status.style.color = newValue ? 'var(--olive)' : 'var(--red)';
     
+    configData.login_required = newValue;
     try {
       await fetch('/api/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ login_required: newValue })
+        body: JSON.stringify(configData)
       });
     } catch(e) {
       alert('Erro ao salvar configuração.');
     }
   }
 
-  window.onload = () => { loadUsers(); loadConfig(); };
+  function renderMilestonesTable() {
+    const tbody = document.getElementById('milestones-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const list = configData.milestones || [];
+    list.forEach((m, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><b>${m.date}</b></td>
+        <td>${m.emp}%</td>
+        <td>${m.liq}%</td>
+        <td>${m.liq_rpnp}%</td>
+        <td>
+          <button class="btn btn-primary" style="padding:4px 8px; font-size:12px;" onclick="editMilestone(${idx})">Editar</button>
+          <button class="btn btn-danger" onclick="deleteMilestone(${idx})">Excluir</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function editMilestone(idx) {
+    const list = configData.milestones || [];
+    const m = list[idx];
+    
+    document.getElementById('modal-milestone').style.display = 'flex';
+    document.getElementById('modal-milestone-title').innerText = 'Editar Marco de Meta';
+    document.getElementById('edit-milestone-index').value = idx;
+    
+    document.getElementById('ipt-m-date').value = m.date;
+    document.getElementById('ipt-m-emp').value = m.emp;
+    document.getElementById('ipt-m-liq').value = m.liq;
+    document.getElementById('ipt-m-rpnp').value = m.liq_rpnp;
+  }
+  
+  function openNewMilestoneModal() {
+    document.getElementById('modal-milestone').style.display = 'flex';
+    document.getElementById('modal-milestone-title').innerText = 'Novo Marco de Meta';
+    document.getElementById('edit-milestone-index').value = '-1';
+    
+    document.getElementById('ipt-m-date').value = '';
+    document.getElementById('ipt-m-emp').value = '';
+    document.getElementById('ipt-m-liq').value = '';
+    document.getElementById('ipt-m-rpnp').value = '';
+  }
+  
+  function closeMilestoneModal() {
+    document.getElementById('modal-milestone').style.display = 'none';
+  }
+  
+  function saveMilestone() {
+    const idx = parseInt(document.getElementById('edit-milestone-index').value);
+    const date = document.getElementById('ipt-m-date').value.trim();
+    const emp = parseInt(document.getElementById('ipt-m-emp').value) || 0;
+    const liq = parseInt(document.getElementById('ipt-m-liq').value) || 0;
+    const liq_rpnp = parseInt(document.getElementById('ipt-m-rpnp').value) || 0;
+    
+    if (!date) return alert("A data limite é obrigatória.");
+    
+    if (!configData.milestones) configData.milestones = [];
+    
+    const milestoneObj = { date, emp, liq, liq_rpnp };
+    
+    if (idx === -1) {
+      configData.milestones.push(milestoneObj);
+    } else {
+      configData.milestones[idx] = milestoneObj;
+    }
+    
+    closeMilestoneModal();
+    renderMilestonesTable();
+  }
+  
+  function deleteMilestone(idx) {
+    if (confirm("Deseja excluir este marco de meta?")) {
+      configData.milestones.splice(idx, 1);
+      renderMilestonesTable();
+    }
+  }
+
+  async function saveConfigToServer() {
+    try {
+      await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(configData)
+      });
+      alert("Metas e Marcos salvos com sucesso!");
+    } catch(e) {
+      alert("Erro ao salvar configurações: " + e);
+    }
+  }
+
+  // ── RESPONSAIVEIS POR PI (BANCO DE DADOS) ──
+  async function loadMapeamentoPI() {
+    const tbody = document.getElementById('pi-table-body');
+    if (!tbody) return;
+    
+    if (!LoginSystem.useSupabase || !LoginSystem.supabase) {
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:red">Supabase não conectado.</td></tr>`;
+      return;
+    }
+    
+    try {
+      const { data, error } = await LoginSystem.supabase
+        .from('mapeamento_pi')
+        .select('*');
+        
+      if (error) throw error;
+      
+      mapeamentoPI = data || [];
+      mapeamentoPI.sort((a, b) => (a.pi || '').localeCompare(b.pi || ''));
+      renderPiTable();
+    } catch(e) {
+      console.error("Erro ao carregar mapeamento PI:", e);
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:red">Erro ao carregar: ${e.message || e}</td></tr>`;
+    }
+  }
+
+  function renderPiTable() {
+    const tbody = document.getElementById('pi-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    mapeamentoPI.forEach((item) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><b>${item.pi}</b></td>
+        <td><strong style="color:var(--olive)">${item.setor}</strong></td>
+        <td>
+          <button class="btn btn-primary" style="padding:4px 8px; font-size:12px;" onclick="editPiMapping('${item.pi}', '${item.setor}')">Editar</button>
+          <button class="btn btn-danger" onclick="deletePiMapping('${item.pi}')">Excluir</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function editPiMapping(pi, setor) {
+    document.getElementById('modal-pi').style.display = 'flex';
+    document.getElementById('modal-pi-title').innerText = 'Editar Mapeamento de PI';
+    document.getElementById('edit-pi-is-new').value = 'false';
+    document.getElementById('ipt-pi-code').value = pi;
+    document.getElementById('ipt-pi-code').disabled = true;
+    document.getElementById('ipt-pi-setor').value = setor;
+  }
+  
+  function openNewPiModal() {
+    document.getElementById('modal-pi').style.display = 'flex';
+    document.getElementById('modal-pi-title').innerText = 'Novo Mapeamento de PI';
+    document.getElementById('edit-pi-is-new').value = 'true';
+    document.getElementById('ipt-pi-code').value = '';
+    document.getElementById('ipt-pi-code').disabled = false;
+    document.getElementById('ipt-pi-setor').value = '';
+  }
+  
+  function closePiModal() {
+    document.getElementById('modal-pi').style.display = 'none';
+  }
+  
+  async function savePiMapping() {
+    const isNew = document.getElementById('edit-pi-is-new').value === 'true';
+    const pi = document.getElementById('ipt-pi-code').value.trim().toUpperCase();
+    const setor = document.getElementById('ipt-pi-setor').value.trim().toUpperCase();
+    
+    if (!pi || !setor) return alert("Código do PI e Setor são obrigatórios.");
+    
+    try {
+      if (isNew) {
+        const { error } = await LoginSystem.supabase
+          .from('mapeamento_pi')
+          .insert([{ pi, setor }]);
+        if (error) throw error;
+      } else {
+        const { error } = await LoginSystem.supabase
+          .from('mapeamento_pi')
+          .update({ setor })
+          .eq('pi', pi);
+        if (error) throw error;
+      }
+      
+      closePiModal();
+      loadMapeamentoPI();
+    } catch(e) {
+      alert("Erro ao salvar mapeamento: " + (e.message || e));
+    }
+  }
+  
+  async function deletePiMapping(pi) {
+    if (confirm(`Tem certeza que deseja excluir o mapeamento do PI ${pi}?`)) {
+      try {
+        const { error } = await LoginSystem.supabase
+          .from('mapeamento_pi')
+          .delete()
+          .eq('pi', pi);
+        if (error) throw error;
+        
+        loadMapeamentoPI();
+      } catch(e) {
+        alert("Erro ao excluir: " + (e.message || e));
+      }
+    }
+  }
+
+  window.onload = () => { 
+    loadUsers(); 
+    loadConfig(); 
+    setTimeout(loadMapeamentoPI, 800); 
+  };
 </script>
 <script src="../assets/login.js?v=3"></script>
 

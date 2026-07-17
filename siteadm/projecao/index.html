@@ -671,27 +671,21 @@
   <div class="controls animate-up">
     <div class="control-group">
       <label>Data Meta de Execução</label>
-      <select id="inputData" style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; outline: none;">
-        <option value="2026-04-30">30/04/2026</option>
-        <option value="2026-06-30">30/06/2026</option>
-        <option value="2026-08-31">31/08/2026</option>
-        <option value="2026-10-31">31/10/2026</option>
-        <option value="2026-12-31">31/12/2026</option>
-      </select>
+      <input type="date" id="inputData" value="2026-04-30" disabled style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 600; outline: none; width: 140px;">
     </div>
     <div class="controls-divider"></div>
     <div class="control-group">
       <label>% Meta Emp. Corrente</label>
-      <input type="number" id="inputPctEmpCorr" min="0" max="100" step="1" value="60">
+      <input type="number" id="inputPctEmpCorr" min="0" max="100" step="1" value="60" disabled style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 600; outline: none; width: 80px; text-align: center;">
     </div>
     <div class="control-group">
       <label>% Meta Liq. Corrente</label>
-      <input type="number" id="inputPctLiqCorr" min="0" max="100" step="1" value="60">
+      <input type="number" id="inputPctLiqCorr" min="0" max="100" step="1" value="60" disabled style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 600; outline: none; width: 80px; text-align: center;">
     </div>
     <div class="controls-divider"></div>
     <div class="control-group">
       <label>% Meta Liq. RPNP</label>
-      <input type="number" id="inputPctLiqRpnp" min="0" max="100" step="1" value="90">
+      <input type="number" id="inputPctLiqRpnp" min="0" max="100" step="1" value="90" disabled style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 600; outline: none; width: 80px; text-align: center;">
     </div>
     <div class="gen-info">
       Dados atualizados em<br><strong id="tsGerado">—</strong>
@@ -1149,8 +1143,21 @@ async function carregarDados() {
     const tsH = document.getElementById('tsGeradoHeader');
     if (tsH) tsH.textContent = geradoEm;
 
-    // Preenche os campos de metas de acordo com os marcos temporais dinâmicos
-    inicializarMetasPeriodo();
+    // Preenche os campos de metas de acordo com o banco de dados carregado
+    if (DADOS.data_meta) {
+      const parts = DADOS.data_meta.split('/');
+      if (parts.length === 3) {
+        const inputDataEl = document.getElementById('inputData');
+        if (inputDataEl) {
+          inputDataEl.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+      }
+    }
+    if (DADOS.metas) {
+      if (DADOS.metas.emp_corr !== undefined) document.getElementById('inputPctEmpCorr').value = DADOS.metas.emp_corr;
+      if (DADOS.metas.liq_corr !== undefined) document.getElementById('inputPctLiqCorr').value = DADOS.metas.liq_corr;
+      if (DADOS.metas.liq_rpnp !== undefined) document.getElementById('inputPctLiqRpnp').value = DADOS.metas.liq_rpnp;
+    }
 
     // Esconde loading
     document.getElementById('loadingOverlay').classList.add('hidden');
@@ -1791,52 +1798,6 @@ function showNotification(message, type = 'success') {
     toast.style.transform = 'translateY(-20px)';
     setTimeout(() => toast.remove(), 300);
   }, 4000);
-}
-
-// ===================== CONTROLE DE EMPENHOS (BANCO DE DADOS) =====================
-const METAS_MILESTONES = [
-  { date: '2026-04-30', emp: 50, liq: 20, liq_rpnp: 50 },
-  { date: '2026-06-30', emp: 70, liq: 40, liq_rpnp: 60 },
-  { date: '2026-08-31', emp: 80, liq: 50, liq_rpnp: 70 },
-  { date: '2026-10-31', emp: 100, liq: 65, liq_rpnp: 75 },
-  { date: '2026-12-31', emp: 100, liq: 75, liq_rpnp: 85 }
-];
-
-function inicializarMetasPeriodo() {
-  const inputDataEl = document.getElementById('inputData');
-  if (!inputDataEl) return;
-  
-  // Encontra a próxima meta com base no dia de hoje
-  const hoje = new Date();
-  hoje.setHours(0,0,0,0);
-  
-  let metaSelecionada = METAS_MILESTONES[METAS_MILESTONES.length - 1];
-  for (let m of METAS_MILESTONES) {
-    const metaDate = new Date(m.date + 'T00:00:00');
-    if (hoje <= metaDate) {
-      metaSelecionada = m;
-      break;
-    }
-  }
-  
-  inputDataEl.value = metaSelecionada.date;
-  
-  // Define os valores padrão nas caixas de input
-  document.getElementById('inputPctEmpCorr').value = metaSelecionada.emp;
-  document.getElementById('inputPctLiqCorr').value = metaSelecionada.liq;
-  document.getElementById('inputPctLiqRpnp').value = metaSelecionada.liq_rpnp;
-  
-  // Evento para atualizar metas ao trocar o select
-  inputDataEl.removeEventListener('change', onInput); // Evita duplo gatilho manual
-  inputDataEl.addEventListener('change', (e) => {
-    const selectedDate = e.target.value;
-    const milestone = METAS_MILESTONES.find(m => m.date === selectedDate);
-    if (milestone) {
-      document.getElementById('inputPctEmpCorr').value = milestone.emp;
-      document.getElementById('inputPctLiqCorr').value = milestone.liq;
-      document.getElementById('inputPctLiqRpnp').value = milestone.liq_rpnp;
-    }
-  });
 }
 
 let MAPA_PI_RESP = {};
