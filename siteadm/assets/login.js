@@ -62,7 +62,7 @@ const LoginSystem = {
 
   isModulePage: function() {
     const path = window.location.pathname;
-    return path.includes('/projecao/') || path.includes('/comex/') || path.includes('/tesouraria/');
+    return path.includes('/projecao/') || path.includes('/comex/') || path.includes('/tesouraria/') || path.includes('/admin/');
   },
 
   init: async function() {
