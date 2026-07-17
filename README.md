@@ -4,10 +4,12 @@ Este repositório contém o **Sistema de Gestão Financeira e Administrativa do 
 
 ## 🗂️ Arquitetura Geral
 
-O sistema é dividido nas seguintes partes principais:
-1. **Frontend (Site Adm):** Interface de usuário construída com HTML, CSS e JavaScript puros (Vanilla), desenhada para ser rápida, responsiva e com identidade visual militar/institucional premium.
-2. **Backend (Servidor Python):** O script `painel_admin.py` atua como um servidor web local e gerenciador de APIs. Ele serve os arquivos estáticos e lida com endpoints (ex: `/api/liquidacoes`) para persistir dados.
-3. **Armazenamento e Sincronização:** Dados são guardados em *caches* locais (`localStorage` no navegador ou arquivos `.json` locais) e espelhados ativamente com o **Google Sheets** na nuvem, garantindo disponibilidade, backup e auditoria colaborativa.
+O repositório é estruturado para separar o código de funcionamento do site das rotinas externas de automação de dados:
+
+1. **`siteadm/` (Funcionamento do Site e Backend API):** Agrupa todos os arquivos da interface gráfica frontend, o servidor backend `painel_admin.py` (que gerencia sessões, banco Supabase e sincronização Sheets) e o arquivo `supabase_config.json`.
+2. **`script_gestao_orcamentaria/` (Dados e Scraping):** Pasta com scripts locais que realizam raspagem no SAG e alimentam os dados consolidados do site.
+3. **`scripts/` (Utilitários):** Contém utilitários adicionais, como gerador de logins e hashes.
+4. **Executáveis na Raiz:** Arquivos `.bat` facilitadores (`iniciar_painel.bat` e `rotina_diaria.bat`).
 
 ---
 
@@ -65,9 +67,9 @@ Todos os módulos confidenciais compartilham o mesmo fluxo de autenticação e p
    pip install gspread google-auth cryptography
    ```
 2. **Iniciar o Servidor Python:**
-   Execute na raiz do projeto:
+   Você pode dar um duplo clique no arquivo `iniciar_painel.bat` na raiz do projeto, ou executar:
    ```bash
-   python painel_admin.py
+   python siteadm/painel_admin.py
    ```
 3. **Acesso:**
    Abra o navegador em: [http://localhost:5000/siteadm/](http://localhost:5000/siteadm/)

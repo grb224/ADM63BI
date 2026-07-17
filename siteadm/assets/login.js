@@ -1,10 +1,10 @@
 // ── LOGIN SYSTEM ──
 // Requires modern browser for crypto.subtle (SHA-256)
 
-// Global fetch override to automatically append authentication token
+// Global fetch override to automatically append authentication token and handle session expiration
 (function() {
   const originalFetch = window.fetch;
-  window.fetch = function(input, init) {
+  window.fetch = async function(input, init) {
     const token = localStorage.getItem('adm_auth_token') || sessionStorage.getItem('adm_auth_token');
     if (token) {
       init = init || {};
@@ -17,7 +17,38 @@
         init.headers['X-Session-Token'] = token;
       }
     }
-    return originalFetch(input, init);
+    
+    const response = await originalFetch(input, init);
+    
+    // Se o backend retornar 403 (Proibido) ou 401 (Não Autorizado), a sessão no servidor expirou ou foi reiniciada
+    if (response.status === 403 || response.status === 401) {
+      const url = typeof input === 'string' ? input : (input.url || '');
+      // Evita loops infinitos no endpoint de login
+      if (url.includes('/api/') && !url.includes('/api/login')) {
+        console.warn("[SESSÃO] Sessão expirada ou inválida (HTTP " + response.status + "). Redirecionando para login.");
+        
+        // Limpa tokens expirados
+        localStorage.removeItem('adm_auth_token');
+        localStorage.removeItem('adm_auth_perfil');
+        localStorage.removeItem('adm_auth_nome');
+        localStorage.removeItem('adm_auth_tags');
+        localStorage.removeItem('adm_master_key');
+        sessionStorage.removeItem('adm_auth_token');
+        sessionStorage.removeItem('adm_auth_perfil');
+        sessionStorage.removeItem('adm_auth_nome');
+        sessionStorage.removeItem('adm_auth_tags');
+        sessionStorage.removeItem('adm_master_key');
+        
+        // Abre o modal de login se disponível ou recarrega a página
+        if (typeof LoginSystem !== 'undefined' && typeof LoginSystem.openModal === 'function') {
+          LoginSystem.openModal("Sessão expirada. Por favor, faça login novamente.");
+        } else {
+          window.location.reload();
+        }
+      }
+    }
+    
+    return response;
   };
 })();
 
@@ -38,10 +69,31 @@ const LoginSystem = {
     // 0. Check if login is required
     try {
       const rootPath = this.getBasePath();
-      const configRes = await fetch(rootPath + 'dados/config.json?_t=' + Date.now());
+      const configRes = await fetch(rootPath + 'api/config?_t=' + Date.now());
       if (configRes.ok) {
         const config = await configRes.json();
         this.loginRequired = config.login_required !== false; // default true
+        
+        // Dynamically initialize Supabase if keys are provided
+        if (config.supabase_url && config.supabase_anon_key) {
+          try {
+            if (!window.supabase) {
+              await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+              });
+            }
+            this.supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
+            this.useSupabase = true;
+            console.log("[SUPABASE] Cliente inicializado com sucesso no frontend.");
+          } catch (err) {
+            console.error("[SUPABASE] Falha ao inicializar o Supabase SDK. Usando fallback local.", err);
+            this.useSupabase = false;
+          }
+        }
       }
     } catch(e) { /* config missing = login required */ }
 
@@ -135,15 +187,15 @@ const LoginSystem = {
     const path = window.location.pathname;
     
     // Check if we are on the admin page
-    if (path.endsWith('/painel_admin.html')) {
+    if (path.includes('/siteadm/admin/')) {
       if (!this.isLoggedIn()) {
-        this.showAccessDenied("Acesso Negado. Você precisa fazer login como Admin para acessar o Painel Admin.", '/');
+        this.showAccessDenied("Acesso Negado. Você precisa fazer login como Admin para acessar o Painel Admin.", '../');
         return;
       }
       const tagsStr = localStorage.getItem('adm_auth_tags') || sessionStorage.getItem('adm_auth_tags') || "[]";
       const tags = JSON.parse(tagsStr);
       if (!tags.includes('admin')) {
-        this.showAccessDenied("Acesso Negado. Apenas administradores podem acessar o Painel Admin.", '/');
+        this.showAccessDenied("Acesso Negado. Apenas administradores podem acessar o Painel Admin.", '../');
         return;
       }
     }
@@ -209,28 +261,69 @@ const LoginSystem = {
     }
 
     try {
-      const response = await fetch(this.getBasePath() + 'api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ perfil, senha })
-      });
+      let resData;
       
-      const resData = await response.json();
-      if (!response.ok) {
-        errorEl.textContent = resData.error || "Erro ao efetuar login.";
-        errorEl.style.color = "var(--red)";
-        return;
+      if (this.useSupabase) {
+        // Converte o nome do perfil em um email virtual do 63º BI
+        const email = perfil.includes('@') ? perfil : `${perfil}@63bi.mil.br`;
+        
+        // 1. Efetua o login no Supabase Auth
+        const { data, error } = await this.supabase.auth.signInWithPassword({
+          email: email,
+          password: senha
+        });
+        
+        if (error) {
+          errorEl.textContent = "Perfil não encontrado ou senha inválida no Supabase.";
+          errorEl.style.color = "var(--red)";
+          return;
+        }
+
+        // 2. Registra a sessão no backend local utilizando o access_token obtido
+        const sessionRes = await fetch(this.getBasePath() + 'api/login_session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            access_token: data.session.access_token,
+            perfil: perfil
+          })
+        });
+
+        if (!sessionRes.ok) {
+          const sessionErr = await sessionRes.json();
+          errorEl.textContent = sessionErr.error || "Falha ao registrar sessão local.";
+          errorEl.style.color = "var(--red)";
+          return;
+        }
+
+        resData = await sessionRes.json();
+      } else {
+        // Fallback: Login legado local
+        const response = await fetch(this.getBasePath() + 'api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ perfil, senha })
+        });
+        
+        if (!response.ok) {
+          const legacyErr = await response.json();
+          errorEl.textContent = legacyErr.error || "Erro ao efetuar login.";
+          errorEl.style.color = "var(--red)";
+          return;
+        }
+        
+        resData = await response.json();
       }
       
-      // Decrypt the master key using the typed password
+      // Descriptografa a chave mestra utilizando a senha digitada
       const masterKeyHex = await this.decryptMasterKey(resData.wrapped_key, senha);
       if (!masterKeyHex) {
-        errorEl.textContent = "Erro de autenticação interna (chave inválida).";
+        errorEl.textContent = "Erro de autenticação interna (chave mestra inválida).";
         errorEl.style.color = "var(--red)";
         return;
       }
       
-      // Save session
+      // Salva a sessão localmente
       const token = resData.token;
       const tagsStr = JSON.stringify(resData.tags || []);
       
@@ -248,7 +341,7 @@ const LoginSystem = {
         sessionStorage.setItem('adm_master_key', masterKeyHex);
       }
       
-      // Success visual effects
+      // Efeitos visuais de sucesso
       document.querySelector('.login-header').style.display = 'none';
       document.querySelectorAll('.login-group').forEach(el => el.style.display = 'none');
       document.querySelector('.login-options').style.display = 'none';

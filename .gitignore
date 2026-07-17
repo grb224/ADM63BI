@@ -20,6 +20,7 @@ __pycache__/
 # Banco de dados e credenciais locais (Altamente Confidencial!)
 siteadm/dados/logins.json
 siteadm/dados/config.json
+supabase_config.json
 
 # Arquivos de mídia temporária
 .tempmediaStorage/

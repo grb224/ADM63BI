@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Painel Administrativo - 63º BI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="siteadm/assets/login.css?v=3">
+  <link rel="stylesheet" href="../assets/login.css?v=3">
   <style>
     :root {
       --olive: #3d5016; --olive-dark: #2a3810;
@@ -329,7 +329,7 @@
   // ── CONFIG: LOGIN TOGGLE ──
   async function loadConfig() {
     try {
-      const res = await fetch('/siteadm/dados/config.json?_t=' + Date.now());
+      const res = await fetch('/siteadm/api/config?_t=' + Date.now());
       if (res.ok) {
         const config = await res.json();
         const toggle = document.getElementById('toggle-login');
@@ -361,7 +361,7 @@
 
   window.onload = () => { loadUsers(); loadConfig(); };
 </script>
-<script src="siteadm/assets/login.js?v=3"></script>
+<script src="../assets/login.js?v=3"></script>
 
 </body>
 </html>
