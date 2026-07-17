@@ -444,6 +444,197 @@
       border: 2px solid var(--gold) !important;
       box-shadow: 0 0 10px rgba(201,162,39,0.5) !important;
     }
+
+    /* Centering and spacing adjustments */
+    #tbodyEmpCorrente td, #tbodyEmpRpnp td {
+      text-align: center;
+      vertical-align: middle;
+    }
+    #tab-emp-corrente th, #tab-emp-rpnp th {
+      text-align: center;
+    }
+    .table-wrap th:nth-child(-n+6),
+    .table-wrap td:nth-child(-n+6) {
+      white-space: nowrap;
+      width: 1%;
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    /* Cell situation styled as a read-only trigger */
+    .cell-situacao {
+      text-align: left;
+      background: rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 6px 12px;
+      border-radius: 4px;
+      color: #eee;
+      cursor: pointer;
+      max-width: 250px;
+      margin: 0 auto;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all 0.2s;
+    }
+    .cell-situacao:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--gold);
+    }
+    .cell-situacao .sem-sit {
+      color: #666;
+      font-style: italic;
+    }
+
+    /* Selected forecast dropdown styles */
+    select.select-prev {
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      border: 1px solid rgba(255,255,255,0.1);
+      outline: none;
+      cursor: pointer;
+    }
+    select.select-prev.prev-sim {
+      background: rgba(39, 174, 96, 0.2) !important;
+      color: #2ecf72 !important;
+      border-color: #27ae60 !important;
+    }
+    select.select-prev.prev-parcial {
+      background: rgba(217, 119, 6, 0.2) !important;
+      color: #fca5a5 !important;
+      border-color: #d97706 !important;
+    }
+    select.select-prev.prev-nao {
+      background: rgba(192, 57, 43, 0.2) !important;
+      color: #ff6b6b !important;
+      border-color: #c0392b !important;
+    }
+
+    /* Editing and modified rows indicators */
+    tr.editing-row {
+      background: rgba(201, 162, 39, 0.08) !important;
+      box-shadow: inset 4px 0 0 var(--gold) !important;
+    }
+    tr.modified-row {
+      background: rgba(39, 174, 96, 0.08) !important;
+      box-shadow: inset 4px 0 0 var(--green) !important;
+      transition: all 0.5s ease-out;
+    }
+
+    /* Overlay backdrops and cards */
+    .card-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(2px);
+      z-index: 9999;
+      display: none;
+    }
+    .sit-card-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 480px;
+      background: #1e251a;
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 20px;
+      z-index: 10000;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+    }
+    .sit-card-header {
+      color: var(--gold);
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .sit-card-modal textarea {
+      width: 100%;
+      height: 100px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      color: #fff;
+      padding: 10px;
+      font-size: 14px;
+      resize: none;
+      outline: none;
+      font-family: inherit;
+    }
+    .sit-card-modal textarea:focus {
+      border-color: var(--gold);
+    }
+
+    /* Custom confirmation dialog modal */
+    .confirm-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      z-index: 20000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .confirm-modal-card {
+      background: #181d15;
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 24px;
+      width: 90%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+    }
+    .confirm-modal-card h3 {
+      margin-top: 0;
+      color: var(--gold);
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    .confirm-modal-card p {
+      color: #ccc;
+      margin: 12px 0 24px 0;
+      font-size: 14px;
+    }
+    .confirm-modal-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .modal-btn {
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .modal-btn.success {
+      background: #27ae60;
+      color: #fff;
+    }
+    .modal-btn.success:hover {
+      background: #219653;
+    }
+    .modal-btn.danger {
+      background: #c0392b;
+      color: #fff;
+    }
+    .modal-btn.danger:hover {
+      background: #a93226;
+    }
+    .modal-btn.neutral {
+      background: rgba(255,255,255,0.08);
+      color: #eee;
+    }
+    .modal-btn.neutral:hover {
+      background: rgba(255,255,255,0.15);
+    }
   </style>
 </head>
 <body>
@@ -821,11 +1012,10 @@
               <th class="num">Saldo A Liquidar</th>
               <th>Previsão</th>
               <th>Valor Parcial</th>
-              <th>Ação</th>
             </tr>
           </thead>
           <tbody id="tbodyEmpCorrente">
-            <tr><td colspan="11" style="text-align:center;color:#999">Selecione uma UG para visualizar os empenhos.</td></tr>
+            <tr><td colspan="10" style="text-align:center;color:#999">Selecione uma UG para visualizar os empenhos.</td></tr>
           </tbody>
         </table>
       </div>
@@ -861,11 +1051,10 @@
               <th class="num">Saldo ALIQ</th>
               <th>Previsão</th>
               <th>Valor Parcial</th>
-              <th>Ação</th>
             </tr>
           </thead>
           <tbody id="tbodyEmpRpnp">
-            <tr><td colspan="11" style="text-align:center;color:#999">Selecione uma UG para visualizar os empenhos.</td></tr>
+            <tr><td colspan="10" style="text-align:center;color:#999">Selecione uma UG para visualizar os empenhos.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1714,12 +1903,12 @@ async function carregarEmpenhosCorrente(ug) {
   document.getElementById('btn-emp-corr-167').classList.toggle('active-filter-btn', ug === '167443');
   
   const tbody = document.getElementById('tbodyEmpCorrente');
-  tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#999"><span class="loading-spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px"></span> Carregando empenhos do banco de dados...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#999"><span class="loading-spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px"></span> Carregando empenhos do banco de dados...</td></tr>`;
   
   const tableName = ug === '160443' ? 'emp_corrente_160443' : 'emp_corrente_167443';
   
   if (!LoginSystem.useSupabase || !LoginSystem.supabase) {
-    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--danger)">Conexão com o banco de dados não disponível.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--danger)">Conexão com o banco de dados não disponível.</td></tr>`;
     return;
   }
   
@@ -1735,7 +1924,7 @@ async function carregarEmpenhosCorrente(ug) {
     if (error) throw error;
     
     if (!data || data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#999">Nenhum empenho encontrado para a UG ${ug}.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#999">Nenhum empenho encontrado para a UG ${ug}.</td></tr>`;
       return;
     }
     
@@ -1764,7 +1953,11 @@ async function carregarEmpenhosCorrente(ug) {
       const parcial = parseFloat(row.parcial || 0);
       const dias = calcularDiasDesde(row.data_emissao);
       
+      EMPENHOS_ORIGINAL[ne] = { previsao, parcial, situacao };
+      
       const tr = document.createElement('tr');
+      tr.id = `tr-${ne}`;
+      tr.onclick = () => ativarEdicaoLinha(tableName, ne);
       tr.innerHTML = `
         <td>${ug}</td>
         <td><strong>${ne}</strong></td>
@@ -1773,28 +1966,30 @@ async function carregarEmpenhosCorrente(ug) {
         <td>${pi}</td>
         <td><strong style="color:var(--gold)">${resp}</strong></td>
         <td>
-          <input type="text" class="input-parc" style="width:160px;" id="sit-corr-${ne}" value="${situacao}" placeholder="Sem situação" oninput="document.getElementById('btn-save-corr-${ne}').disabled = false">
+          <div class="cell-situacao" id="sit-txt-${ne}" data-value="${situacao}" onclick="abrirEdicaoSituacao('${tableName}', '${ne}')">
+            ${situacao || '<span class="sem-sit">Sem situação</span>'}
+          </div>
         </td>
         <td class="num font-mono">${R$(aLiquidar)}</td>
         <td>
-          <select class="select-prev" id="prev-corr-${ne}" onchange="document.getElementById('btn-save-corr-${ne}').disabled = false">
+          <select class="select-prev" id="prev-corr-${ne}" onfocus="ativarEdicaoLinha('${tableName}', '${ne}')" onchange="atualizarEstiloSelectPrev(this)">
             <option value="SIM" ${previsao === 'SIM' ? 'selected' : ''}>SIM</option>
             <option value="PARCIAL" ${previsao === 'PARCIAL' ? 'selected' : ''}>PARCIAL</option>
             <option value="NÃO" ${previsao === 'NÃO' ? 'selected' : ''}>NÃO</option>
           </select>
         </td>
         <td>
-          <input type="number" step="0.01" class="input-parc font-mono" id="parc-corr-${ne}" value="${parcial || ''}" placeholder="0.00" oninput="document.getElementById('btn-save-corr-${ne}').disabled = false">
-        </td>
-        <td>
-          <button class="btn-salvar-empenho" id="btn-save-corr-${ne}" disabled onclick="salvarPrevisaoEmpenho('${tableName}', '${ne}', 'prev-corr-${ne}', 'parc-corr-${ne}', 'sit-corr-${ne}', this)">Salvar</button>
+          <input type="text" class="input-parc font-mono" id="parc-corr-${ne}" value="${parcial > 0 ? R$(parcial) : ''}" placeholder="R$ 0,00" onfocus="ativarEdicaoLinha('${tableName}', '${ne}')" oninput="formatarMoedaInput(this)">
         </td>
       `;
       tbody.appendChild(tr);
+      
+      const selectEl = tr.querySelector(`#prev-corr-${ne}`);
+      if (selectEl) atualizarEstiloSelectPrev(selectEl);
     });
   } catch (err) {
     console.error("Erro ao buscar empenhos corrente:", err);
-    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--danger)">Erro ao carregar dados: ${err.message || err}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--danger)">Erro ao carregar dados: ${err.message || err}</td></tr>`;
   }
 }
 
@@ -1803,12 +1998,12 @@ async function carregarEmpenhosRpnp(ug) {
   document.getElementById('btn-emp-rpnp-167').classList.toggle('active-filter-btn', ug === '167443');
   
   const tbody = document.getElementById('tbodyEmpRpnp');
-  tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#999"><span class="loading-spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px"></span> Carregando empenhos do banco de dados...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#999"><span class="loading-spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px"></span> Carregando empenhos do banco de dados...</td></tr>`;
   
   const tableName = ug === '160443' ? 'emp_rpnp_160443' : 'emp_rpnp_167443';
   
   if (!LoginSystem.useSupabase || !LoginSystem.supabase) {
-    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--danger)">Conexão com o banco de dados não disponível.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--danger)">Conexão com o banco de dados não disponível.</td></tr>`;
     return;
   }
   
@@ -1824,7 +2019,7 @@ async function carregarEmpenhosRpnp(ug) {
     if (error) throw error;
     
     if (!data || data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#999">Nenhum empenho encontrado para a UG ${ug}.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#999">Nenhum empenho encontrado para a UG ${ug}.</td></tr>`;
       return;
     }
     
@@ -1853,7 +2048,11 @@ async function carregarEmpenhosRpnp(ug) {
       const parcial = parseFloat(row.parcial || 0);
       const dias = calcularDiasDesde(row.data_emissao);
       
+      EMPENHOS_ORIGINAL[ne] = { previsao, parcial, situacao };
+      
       const tr = document.createElement('tr');
+      tr.id = `tr-${ne}`;
+      tr.onclick = () => ativarEdicaoLinha(tableName, ne);
       tr.innerHTML = `
         <td>${ug}</td>
         <td><strong>${ne}</strong></td>
@@ -1862,28 +2061,30 @@ async function carregarEmpenhosRpnp(ug) {
         <td>${pi}</td>
         <td><strong style="color:var(--gold)">${resp}</strong></td>
         <td>
-          <input type="text" class="input-parc" style="width:160px;" id="sit-rpnp-${ne}" value="${situacao}" placeholder="Sem situação" oninput="document.getElementById('btn-save-rpnp-${ne}').disabled = false">
+          <div class="cell-situacao" id="sit-txt-${ne}" data-value="${situacao}" onclick="abrirEdicaoSituacao('${tableName}', '${ne}')">
+            ${situacao || '<span class="sem-sit">Sem situação</span>'}
+          </div>
         </td>
         <td class="num font-mono">${R$(aliq)}</td>
         <td>
-          <select class="select-prev" id="prev-rpnp-${ne}" onchange="document.getElementById('btn-save-rpnp-${ne}').disabled = false">
+          <select class="select-prev" id="prev-rpnp-${ne}" onfocus="ativarEdicaoLinha('${tableName}', '${ne}')" onchange="atualizarEstiloSelectPrev(this)">
             <option value="SIM" ${previsao === 'SIM' ? 'selected' : ''}>SIM</option>
             <option value="PARCIAL" ${previsao === 'PARCIAL' ? 'selected' : ''}>PARCIAL</option>
             <option value="NÃO" ${previsao === 'NÃO' ? 'selected' : ''}>NÃO</option>
           </select>
         </td>
         <td>
-          <input type="number" step="0.01" class="input-parc font-mono" id="parc-rpnp-${ne}" value="${parcial || ''}" placeholder="0.00" oninput="document.getElementById('btn-save-rpnp-${ne}').disabled = false">
-        </td>
-        <td>
-          <button class="btn-salvar-empenho" id="btn-save-rpnp-${ne}" disabled onclick="salvarPrevisaoEmpenho('${tableName}', '${ne}', 'prev-rpnp-${ne}', 'parc-rpnp-${ne}', 'sit-rpnp-${ne}', this)">Salvar</button>
+          <input type="text" class="input-parc font-mono" id="parc-rpnp-${ne}" value="${parcial > 0 ? R$(parcial) : ''}" placeholder="R$ 0,00" onfocus="ativarEdicaoLinha('${tableName}', '${ne}')" oninput="formatarMoedaInput(this)">
         </td>
       `;
       tbody.appendChild(tr);
+      
+      const selectEl = tr.querySelector(`#prev-rpnp-${ne}`);
+      if (selectEl) atualizarEstiloSelectPrev(selectEl);
     });
   } catch (err) {
     console.error("Erro ao buscar empenhos rpnp:", err);
-    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--danger)">Erro ao carregar dados: ${err.message || err}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--danger)">Erro ao carregar dados: ${err.message || err}</td></tr>`;
   }
 }
 
@@ -1929,6 +2130,307 @@ async function salvarPrevisaoEmpenho(tableName, ne, selectId, inputId, sitId, bu
     buttonEl.disabled = false;
   }
 }
+</script>
+
+<!-- HTML MODALS -->
+<div id="sitOverlay" class="card-overlay" onclick="fecharEdicaoSituacao(true)"></div>
+<div id="sitCard" class="sit-card-modal" style="display:none;">
+  <div class="sit-card-header">
+    <span>Situação do Empenho: <strong id="sitCardNe"></strong></span>
+  </div>
+  <textarea id="sitCardTextarea" placeholder="Digite a situação do empenho..."></textarea>
+  <p style="font-size:11px; color:#aaa; margin-top:8px;">Pressione Enter para concluir a edição.</p>
+</div>
+
+<div id="confirmModal" class="confirm-modal-overlay">
+  <div class="confirm-modal-card">
+    <h3>Confirmar Alterações?</h3>
+    <p>Você fez modificações nos dados do empenho <strong id="confirmNeText"></strong>.</p>
+    <div class="confirm-modal-buttons">
+      <button class="modal-btn success" id="btnConfirmSalvar">Salvar Alterações</button>
+      <button class="modal-btn danger" id="btnConfirmDescartar">Descartar Alterações</button>
+      <button class="modal-btn neutral" id="btnConfirmCancelar">Continuar Editando</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Global variables for inline edit management
+let activeEditingRowNe = null;
+let activeEditingRowTable = null;
+let currentSitEditTable = null;
+let currentSitEditNe = null;
+let EMPENHOS_ORIGINAL = {};
+
+let confirmCallbackSalvar = null;
+let confirmCallbackDescartar = null;
+let confirmCallbackCancelar = null;
+
+function formatarMoedaInput(el) {
+  let value = el.value.replace(/\D/g, '');
+  if (value === '') {
+    el.value = '';
+    return;
+  }
+  const floatVal = parseFloat(value) / 100;
+  el.value = floatVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function atualizarEstiloSelectPrev(selectEl) {
+  const val = selectEl.value;
+  selectEl.classList.remove('prev-sim', 'prev-parcial', 'prev-nao');
+  if (val === 'SIM') selectEl.classList.add('prev-sim');
+  else if (val === 'PARCIAL') selectEl.classList.add('prev-parcial');
+  else selectEl.classList.add('prev-nao');
+}
+
+function abrirEdicaoSituacao(tableName, ne) {
+  ativarEdicaoLinha(tableName, ne);
+  
+  currentSitEditTable = tableName;
+  currentSitEditNe = ne;
+  
+  const sitTxt = document.getElementById(`sit-txt-${ne}`);
+  const currentVal = sitTxt.getAttribute('data-value') || '';
+  
+  document.getElementById('sitCardNe').textContent = ne;
+  document.getElementById('sitCardTextarea').value = currentVal;
+  
+  document.getElementById('sitOverlay').style.display = 'block';
+  document.getElementById('sitCard').style.display = 'block';
+  document.getElementById('sitCardTextarea').focus();
+}
+
+function fecharEdicaoSituacao(fromBackdrop = false) {
+  const textarea = document.getElementById('sitCardTextarea');
+  const val = textarea.value.trim();
+  const ne = currentSitEditNe;
+  
+  const sitTxt = document.getElementById(`sit-txt-${ne}`);
+  if (sitTxt) {
+    const oldVal = sitTxt.getAttribute('data-value') || '';
+    if (val !== oldVal) {
+      sitTxt.setAttribute('data-value', val);
+      sitTxt.innerHTML = val ? val : '<span class="sem-sit">Sem situação</span>';
+    }
+  }
+  
+  document.getElementById('sitOverlay').style.display = 'none';
+  document.getElementById('sitCard').style.display = 'none';
+  
+  setTimeout(() => {
+    if (activeEditingRowNe) {
+      const editou = verificarSeModificado(activeEditingRowNe);
+      if (editou) {
+        abrirConfirmacaoPopup(activeEditingRowTable, activeEditingRowNe);
+      } else {
+        limparLinhaAtiva();
+      }
+    }
+  }, 100);
+}
+
+function ativarEdicaoLinha(tableName, ne) {
+  if (activeEditingRowNe === ne) return;
+  
+  if (activeEditingRowNe && activeEditingRowNe !== ne) {
+    const editou = verificarSeModificado(activeEditingRowNe);
+    if (editou) {
+      const prevNe = activeEditingRowNe;
+      const prevTable = activeEditingRowTable;
+      abrirConfirmacaoPopup(prevTable, prevNe, () => {
+        realizarMudancaLinhaAtiva(tableName, ne);
+      }, () => {
+        realizarMudancaLinhaAtiva(tableName, ne);
+      }, () => {
+        retornarFocoLinha(prevNe);
+      });
+      return;
+    }
+  }
+  
+  realizarMudancaLinhaAtiva(tableName, ne);
+}
+
+function realizarMudancaLinhaAtiva(tableName, ne) {
+  if (activeEditingRowNe) {
+    const trAnt = document.getElementById(`tr-${activeEditingRowNe}`);
+    if (trAnt) trAnt.classList.remove('editing-row');
+  }
+  
+  activeEditingRowNe = ne;
+  activeEditingRowTable = tableName;
+  
+  const tr = document.getElementById(`tr-${ne}`);
+  if (tr) tr.classList.add('editing-row');
+}
+
+function verificarSeModificado(ne) {
+  const orig = EMPENHOS_ORIGINAL[ne];
+  if (!orig) return false;
+  
+  const selectEl = document.getElementById(`prev-corr-${ne}`) || document.getElementById(`prev-rpnp-${ne}`);
+  const inputEl = document.getElementById(`parc-corr-${ne}`) || document.getElementById(`parc-rpnp-${ne}`);
+  const sitTxt = document.getElementById(`sit-txt-${ne}`);
+  
+  if (!selectEl || !inputEl) return false;
+  
+  const prevVal = selectEl.value;
+  const parcVal = num(inputEl.value);
+  const sitVal = sitTxt ? (sitTxt.getAttribute('data-value') || '') : '';
+  
+  const modPrev = prevVal !== orig.previsao;
+  const modParc = Math.abs(parcVal - orig.parcial) > 0.01;
+  const modSit = sitVal !== orig.situacao;
+  
+  return modPrev || modParc || modSit;
+}
+
+function abrirConfirmacaoPopup(tableName, ne, cbSalvar = null, cbDescartar = null, cbCancelar = null) {
+  const modal = document.getElementById('confirmModal');
+  const textNe = document.getElementById('confirmNeText');
+  if (!modal || !textNe) return;
+  
+  textNe.textContent = ne;
+  modal.style.display = 'flex';
+  
+  confirmCallbackSalvar = () => {
+    modal.style.display = 'none';
+    salvarLinha(tableName, ne);
+    if (cbSalvar) cbSalvar();
+  };
+  
+  confirmCallbackDescartar = () => {
+    modal.style.display = 'none';
+    descartarLinha(ne);
+    if (cbDescartar) cbDescartar();
+  };
+  
+  confirmCallbackCancelar = () => {
+    modal.style.display = 'none';
+    if (cbCancelar) cbCancelar();
+    else retornarFocoLinha(ne);
+  };
+}
+
+async function salvarLinha(tableName, ne) {
+  const selectEl = document.getElementById(`prev-corr-${ne}`) || document.getElementById(`prev-rpnp-${ne}`);
+  const inputEl = document.getElementById(`parc-corr-${ne}`) || document.getElementById(`parc-rpnp-${ne}`);
+  const sitTxt = document.getElementById(`sit-txt-${ne}`);
+  
+  if (!selectEl || !inputEl || !sitTxt) return;
+  
+  const prevVal = selectEl.value;
+  const parcVal = num(inputEl.value);
+  const sitVal = sitTxt.getAttribute('data-value') || '';
+  
+  try {
+    const { error } = await LoginSystem.supabase
+      .from(tableName)
+      .update({ previsao: prevVal, parcial: parcVal, situacao: sitVal })
+      .eq('ne', ne);
+      
+    if (error) throw error;
+    
+    EMPENHOS_ORIGINAL[ne] = { previsao: prevVal, parcial: parcVal, situacao: sitVal };
+    
+    const tr = document.getElementById(`tr-${ne}`);
+    if (tr) {
+      tr.classList.remove('editing-row');
+      tr.classList.add('modified-row');
+      setTimeout(() => tr.classList.remove('modified-row'), 2000);
+    }
+    
+    showNotification(`Empenho ${ne} salvo com sucesso!`, 'success');
+    
+    if (activeEditingRowNe === ne) {
+      activeEditingRowNe = null;
+      activeEditingRowTable = null;
+    }
+  } catch (err) {
+    console.error("Erro ao salvar empenho:", err);
+    showNotification("Erro ao salvar no banco de dados: " + (err.message || err), "error");
+    descartarLinha(ne);
+  }
+}
+
+function descartarLinha(ne) {
+  const orig = EMPENHOS_ORIGINAL[ne];
+  if (!orig) return;
+  
+  const selectEl = document.getElementById(`prev-corr-${ne}`) || document.getElementById(`prev-rpnp-${ne}`);
+  const inputEl = document.getElementById(`parc-corr-${ne}`) || document.getElementById(`parc-rpnp-${ne}`);
+  const sitTxt = document.getElementById(`sit-txt-${ne}`);
+  
+  if (selectEl) {
+    selectEl.value = orig.previsao;
+    atualizarEstiloSelectPrev(selectEl);
+  }
+  if (inputEl) {
+    inputEl.value = orig.parcial > 0 ? R$(orig.parcial) : '';
+  }
+  if (sitTxt) {
+    sitTxt.setAttribute('data-value', orig.situacao);
+    sitTxt.innerHTML = orig.situacao ? orig.situacao : '<span class="sem-sit">Sem situação</span>';
+  }
+  
+  const tr = document.getElementById(`tr-${ne}`);
+  if (tr) tr.classList.remove('editing-row');
+  
+  if (activeEditingRowNe === ne) {
+    activeEditingRowNe = null;
+    activeEditingRowTable = null;
+  }
+}
+
+function retornarFocoLinha(ne) {
+  const selectEl = document.getElementById(`prev-corr-${ne}`) || document.getElementById(`prev-rpnp-${ne}`);
+  if (selectEl) selectEl.focus();
+}
+
+function limparLinhaAtiva() {
+  if (activeEditingRowNe) {
+    const tr = document.getElementById(`tr-${activeEditingRowNe}`);
+    if (tr) tr.classList.remove('editing-row');
+    activeEditingRowNe = null;
+    activeEditingRowTable = null;
+  }
+}
+
+// Global click listener to detect focusout/blur from editing rows
+document.addEventListener('click', (e) => {
+  const noTr = e.target.closest('tr[id^="tr-"]');
+  const noModal = e.target.closest('.confirm-modal-card') || e.target.closest('.sit-card-modal') || e.target.closest('.card-overlay');
+  
+  if (!noTr && !noModal && activeEditingRowNe) {
+    const editou = verificarSeModificado(activeEditingRowNe);
+    if (editou) {
+      abrirConfirmacaoPopup(activeEditingRowTable, activeEditingRowNe);
+    } else {
+      limparLinhaAtiva();
+    }
+  }
+});
+
+// Setup click listeners for confirm buttons once loaded
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('btnConfirmSalvar').addEventListener('click', () => {
+    if (confirmCallbackSalvar) confirmCallbackSalvar();
+  });
+  document.getElementById('btnConfirmDescartar').addEventListener('click', () => {
+    if (confirmCallbackDescartar) confirmCallbackDescartar();
+  });
+  document.getElementById('btnConfirmCancelar').addEventListener('click', () => {
+    if (confirmCallbackCancelar) confirmCallbackCancelar();
+  });
+  
+  document.getElementById('sitCardTextarea').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      fecharEdicaoSituacao();
+    }
+  });
+});
 </script>
 </body>
 </html>
