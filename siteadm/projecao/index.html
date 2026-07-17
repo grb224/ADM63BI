@@ -835,7 +835,7 @@
     <div class="section animate-up">
       <div class="section-title"><span class="icon">💵</span>CONTROLE DE EMPENHOS DO EXERCÍCIO CORRENTE</div>
       <p style="font-size:12px;color:#666;margin-bottom:16px">
-        Visualize e altere as previsões e valores parciais de liquidação dos empenhos do Exercício Corrente salvos no Supabase.
+        Visualize e altere as previsões e valores parciais de liquidação dos empenhos do Exercício Corrente salvos no banco de dados.
       </p>
       <div style="margin-bottom: 20px; display: flex; gap: 10px;">
         <button class="btn-atualizar" onclick="carregarEmpenhosCorrente('160443')" id="btn-emp-corr-160">UG 160443</button>
@@ -848,8 +848,10 @@
               <th>UG</th>
               <th>NE (Empenho)</th>
               <th>Tipo NE</th>
-              <th>Data Emissão</th>
+              <th>Qtd Dias</th>
               <th>PI</th>
+              <th>Responsável</th>
+              <th>Situação do Empenho</th>
               <th class="num">Saldo A Liquidar</th>
               <th>Previsão</th>
               <th>Valor Parcial</th>
@@ -857,7 +859,7 @@
             </tr>
           </thead>
           <tbody id="tbodyEmpCorrente">
-            <tr><td colspan="9" style="text-align:center;color:#999">Selecione uma UG para visualizar os empenhos.</td></tr>
+            <tr><td colspan="11" style="text-align:center;color:#999">Selecione uma UG para visualizar os empenhos.</td></tr>
           </tbody>
         </table>
       </div>
@@ -873,7 +875,7 @@
     <div class="section animate-up">
       <div class="section-title"><span class="icon">⏳</span>CONTROLE DE EMPENHOS RPNP (Exercício Anterior)</div>
       <p style="font-size:12px;color:#666;margin-bottom:16px">
-        Visualize e altere as previsões e valores parciais de liquidação dos empenhos de Restos a Pagar salvos no Supabase.
+        Visualize e altere as previsões e valores parciais de liquidação dos empenhos de Restos a Pagar salvos no banco de dados.
       </p>
       <div style="margin-bottom: 20px; display: flex; gap: 10px;">
         <button class="btn-atualizar" onclick="carregarEmpenhosRpnp('160443')" id="btn-emp-rpnp-160">UG 160443</button>
@@ -886,8 +888,10 @@
               <th>UG</th>
               <th>NE (Empenho)</th>
               <th>Tipo NE</th>
-              <th>Data Emissão</th>
+              <th>Qtd Dias</th>
               <th>PI</th>
+              <th>Responsável</th>
+              <th>Situação do Empenho</th>
               <th class="num">Saldo ALIQ</th>
               <th>Previsão</th>
               <th>Valor Parcial</th>
@@ -895,7 +899,7 @@
             </tr>
           </thead>
           <tbody id="tbodyEmpRpnp">
-            <tr><td colspan="9" style="text-align:center;color:#999">Selecione uma UG para visualizar os empenhos.</td></tr>
+            <tr><td colspan="11" style="text-align:center;color:#999">Selecione uma UG para visualizar os empenhos.</td></tr>
           </tbody>
         </table>
       </div>
@@ -914,7 +918,8 @@ async function carregarDados() {
     // Tenta buscar do Supabase primeiro
     if (LoginSystem.useSupabase && LoginSystem.supabase) {
       try {
-        console.log("[DB] Buscando dados de projeção no Supabase...");
+        carregarMapeamentoPI();
+        console.log("[DB] Buscando dados de projeção no banco de dados...");
         const { data, error } = await LoginSystem.supabase
           .from('projecoes')
           .select('encrypted_data')
@@ -922,12 +927,12 @@ async function carregarDados() {
           .single();
         if (data && data.encrypted_data) {
           rawData = { encrypted: data.encrypted_data };
-          console.log("[DB] Projeção carregada com sucesso do Supabase.");
+          console.log("[DB] Projeção carregada com sucesso do banco de dados.");
         } else if (error) {
-          console.warn("[DB] Erro no Supabase:", error);
+          console.warn("[DB] Erro no banco de dados:", error);
         }
       } catch (err) {
-        console.warn("[DB] Falha ao ler projeção do Supabase. Tentando local...", err);
+        console.warn("[DB] Falha ao ler projeção do banco de dados. Tentando local...", err);
       }
     }
     
@@ -1607,51 +1612,114 @@ function showNotification(message, type = 'success') {
   }, 4000);
 }
 
-// ===================== CONTROLE DE EMPENHOS (SUPABASE) =====================
+// ===================== CONTROLE DE EMPENHOS (BANCO DE DADOS) =====================
+let MAPA_PI_RESP = {};
+
+async function carregarMapeamentoPI() {
+  if (LoginSystem.useSupabase && LoginSystem.supabase) {
+    try {
+      const { data, error } = await LoginSystem.supabase
+        .from('mapeamento_pi')
+        .select('pi,setor');
+      if (data) {
+        MAPA_PI_RESP = {};
+        data.forEach(row => {
+          if (row.pi) {
+            MAPA_PI_RESP[row.pi.toUpperCase().trim()] = row.setor.trim();
+          }
+        });
+        console.log("[DB] Mapeamento de PIs carregado do banco de dados:", Object.keys(MAPA_PI_RESP).length);
+      }
+    } catch (err) {
+      console.warn("[DB] Erro ao carregar mapeamento_pi do banco de dados:", err);
+    }
+  }
+}
+
+function calcularDiasDesde(dataStr) {
+  if (!dataStr) return 0;
+  let dateObj;
+  if (dataStr.includes('/')) {
+    const parts = dataStr.split('/');
+    dateObj = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+  } else {
+    dateObj = new Date(dataStr);
+  }
+  if (isNaN(dateObj.getTime())) return 0;
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+  dateObj.setHours(0,0,0,0);
+  const diffTime = hoje.getTime() - dateObj.getTime();
+  if (diffTime < 0) return 0;
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+}
+
 async function carregarEmpenhosCorrente(ug) {
   document.getElementById('btn-emp-corr-160').classList.toggle('active-filter-btn', ug === '160443');
   document.getElementById('btn-emp-corr-167').classList.toggle('active-filter-btn', ug === '167443');
   
   const tbody = document.getElementById('tbodyEmpCorrente');
-  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#999"><span class="loading-spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px"></span> Carregando empenhos do Supabase...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#999"><span class="loading-spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px"></span> Carregando empenhos do banco de dados...</td></tr>`;
   
   const tableName = ug === '160443' ? 'emp_corrente_160443' : 'emp_corrente_167443';
   
   if (!LoginSystem.useSupabase || !LoginSystem.supabase) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger)">Supabase não conectado. Não é possível ler os empenhos online.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--danger)">Conexão com o banco de dados não disponível.</td></tr>`;
     return;
   }
   
   try {
+    if (Object.keys(MAPA_PI_RESP).length === 0) {
+      await carregarMapeamentoPI();
+    }
+    
     const { data, error } = await LoginSystem.supabase
       .from(tableName)
-      .select('*')
-      .order('ne', { ascending: true });
+      .select('*');
       
     if (error) throw error;
     
     if (!data || data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#999">Nenhum empenho encontrado para a UG ${ug}.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#999">Nenhum empenho encontrado para a UG ${ug}.</td></tr>`;
       return;
     }
+    
+    data.sort((a, b) => {
+      const respA = (MAPA_PI_RESP[(a.pi || '').toUpperCase().trim()] || 'NÃO MAPEADO').toLowerCase();
+      const respB = (MAPA_PI_RESP[(b.pi || '').toUpperCase().trim()] || 'NÃO MAPEADO').toLowerCase();
+      
+      if (respA < respB) return -1;
+      if (respA > respB) return 1;
+      
+      const diasA = calcularDiasDesde(a.data_emissao);
+      const diasB = calcularDiasDesde(b.data_emissao);
+      
+      return diasB - diasA;
+    });
     
     tbody.innerHTML = '';
     data.forEach(row => {
       const ne = row.ne || '';
       const tipo = row.tipo_ne || '';
-      const dataEmissao = row.data_emissao || '';
       const pi = row.pi || '';
+      const resp = MAPA_PI_RESP[pi.toUpperCase().trim()] || 'NÃO MAPEADO';
+      const situacao = row.situacao || '';
       const aLiquidar = parseFloat(row.a_liquidar || 0);
       const previsao = row.previsao || 'NÃO';
       const parcial = parseFloat(row.parcial || 0);
+      const dias = calcularDiasDesde(row.data_emissao);
       
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${ug}</td>
         <td><strong>${ne}</strong></td>
         <td>${tipo}</td>
-        <td>${dataEmissao}</td>
+        <td class="num font-mono">${dias}</td>
         <td><span class="badge" style="background:#222;color:#eee">${pi}</span></td>
+        <td><strong style="color:var(--gold)">${resp}</strong></td>
+        <td>
+          <input type="text" class="input-parc" style="width:160px;" id="sit-corr-${ne}" value="${situacao}" placeholder="Sem situação" oninput="document.getElementById('btn-save-corr-${ne}').disabled = false">
+        </td>
         <td class="num font-mono">${R$(aLiquidar)}</td>
         <td>
           <select class="select-prev" id="prev-corr-${ne}" onchange="document.getElementById('btn-save-corr-${ne}').disabled = false">
@@ -1664,14 +1732,14 @@ async function carregarEmpenhosCorrente(ug) {
           <input type="number" step="0.01" class="input-parc font-mono" id="parc-corr-${ne}" value="${parcial || ''}" placeholder="0.00" oninput="document.getElementById('btn-save-corr-${ne}').disabled = false">
         </td>
         <td>
-          <button class="btn-salvar-empenho" id="btn-save-corr-${ne}" disabled onclick="salvarPrevisaoEmpenho('${tableName}', '${ne}', 'prev-corr-${ne}', 'parc-corr-${ne}', this)">Salvar</button>
+          <button class="btn-salvar-empenho" id="btn-save-corr-${ne}" disabled onclick="salvarPrevisaoEmpenho('${tableName}', '${ne}', 'prev-corr-${ne}', 'parc-corr-${ne}', 'sit-corr-${ne}', this)">Salvar</button>
         </td>
       `;
       tbody.appendChild(tr);
     });
   } catch (err) {
     console.error("Erro ao buscar empenhos corrente:", err);
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger)">Erro ao carregar dados: ${err.message || err}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--danger)">Erro ao carregar dados: ${err.message || err}</td></tr>`;
   }
 }
 
@@ -1680,45 +1748,67 @@ async function carregarEmpenhosRpnp(ug) {
   document.getElementById('btn-emp-rpnp-167').classList.toggle('active-filter-btn', ug === '167443');
   
   const tbody = document.getElementById('tbodyEmpRpnp');
-  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#999"><span class="loading-spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px"></span> Carregando empenhos do Supabase...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#999"><span class="loading-spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px"></span> Carregando empenhos do banco de dados...</td></tr>`;
   
   const tableName = ug === '160443' ? 'emp_rpnp_160443' : 'emp_rpnp_167443';
   
   if (!LoginSystem.useSupabase || !LoginSystem.supabase) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger)">Supabase não conectado. Não é possível ler os empenhos online.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--danger)">Conexão com o banco de dados não disponível.</td></tr>`;
     return;
   }
   
   try {
+    if (Object.keys(MAPA_PI_RESP).length === 0) {
+      await carregarMapeamentoPI();
+    }
+    
     const { data, error } = await LoginSystem.supabase
       .from(tableName)
-      .select('*')
-      .order('ne', { ascending: true });
+      .select('*');
       
     if (error) throw error;
     
     if (!data || data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#999">Nenhum empenho encontrado para a UG ${ug}.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#999">Nenhum empenho encontrado para a UG ${ug}.</td></tr>`;
       return;
     }
+    
+    data.sort((a, b) => {
+      const respA = (MAPA_PI_RESP[(a.pi || '').toUpperCase().trim()] || 'NÃO MAPEADO').toLowerCase();
+      const respB = (MAPA_PI_RESP[(b.pi || '').toUpperCase().trim()] || 'NÃO MAPEADO').toLowerCase();
+      
+      if (respA < respB) return -1;
+      if (respA > respB) return 1;
+      
+      const diasA = calcularDiasDesde(a.data_emissao);
+      const diasB = calcularDiasDesde(b.data_emissao);
+      
+      return diasB - diasA;
+    });
     
     tbody.innerHTML = '';
     data.forEach(row => {
       const ne = row.ne || '';
       const tipo = row.tipo_ne || '';
-      const dataEmissao = row.data_emissao || '';
       const pi = row.pi || '';
+      const resp = MAPA_PI_RESP[pi.toUpperCase().trim()] || 'NÃO MAPEADO';
+      const situacao = row.situacao || '';
       const aliq = parseFloat(row.aliq || 0);
       const previsao = row.previsao || 'NÃO';
       const parcial = parseFloat(row.parcial || 0);
+      const dias = calcularDiasDesde(row.data_emissao);
       
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${ug}</td>
         <td><strong>${ne}</strong></td>
         <td>${tipo}</td>
-        <td>${dataEmissao}</td>
+        <td class="num font-mono">${dias}</td>
         <td><span class="badge" style="background:#222;color:#eee">${pi}</span></td>
+        <td><strong style="color:var(--gold)">${resp}</strong></td>
+        <td>
+          <input type="text" class="input-parc" style="width:160px;" id="sit-rpnp-${ne}" value="${situacao}" placeholder="Sem situação" oninput="document.getElementById('btn-save-rpnp-${ne}').disabled = false">
+        </td>
         <td class="num font-mono">${R$(aliq)}</td>
         <td>
           <select class="select-prev" id="prev-rpnp-${ne}" onchange="document.getElementById('btn-save-rpnp-${ne}').disabled = false">
@@ -1731,25 +1821,27 @@ async function carregarEmpenhosRpnp(ug) {
           <input type="number" step="0.01" class="input-parc font-mono" id="parc-rpnp-${ne}" value="${parcial || ''}" placeholder="0.00" oninput="document.getElementById('btn-save-rpnp-${ne}').disabled = false">
         </td>
         <td>
-          <button class="btn-salvar-empenho" id="btn-save-rpnp-${ne}" disabled onclick="salvarPrevisaoEmpenho('${tableName}', '${ne}', 'prev-rpnp-${ne}', 'parc-rpnp-${ne}', this)">Salvar</button>
+          <button class="btn-salvar-empenho" id="btn-save-rpnp-${ne}" disabled onclick="salvarPrevisaoEmpenho('${tableName}', '${ne}', 'prev-rpnp-${ne}', 'parc-rpnp-${ne}', 'sit-rpnp-${ne}', this)">Salvar</button>
         </td>
       `;
       tbody.appendChild(tr);
     });
   } catch (err) {
     console.error("Erro ao buscar empenhos rpnp:", err);
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger)">Erro ao carregar dados: ${err.message || err}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--danger)">Erro ao carregar dados: ${err.message || err}</td></tr>`;
   }
 }
 
-async function salvarPrevisaoEmpenho(tableName, ne, selectId, inputId, buttonEl) {
+async function salvarPrevisaoEmpenho(tableName, ne, selectId, inputId, sitId, buttonEl) {
   const selectEl = document.getElementById(selectId);
   const inputEl = document.getElementById(inputId);
+  const sitEl = document.getElementById(sitId);
   
-  if (!selectEl || !inputEl) return;
+  if (!selectEl || !inputEl || !sitEl) return;
   
   const prevVal = selectEl.value;
   const parcVal = parseFloat(inputEl.value) || 0;
+  const sitVal = sitEl.value.trim();
   
   buttonEl.disabled = true;
   buttonEl.innerText = "Salvando...";
@@ -1757,7 +1849,7 @@ async function salvarPrevisaoEmpenho(tableName, ne, selectId, inputId, buttonEl)
   try {
     const { error } = await LoginSystem.supabase
       .from(tableName)
-      .update({ previsao: prevVal, parcial: parcVal })
+      .update({ previsao: prevVal, parcial: parcVal, situacao: sitVal })
       .eq('ne', ne);
       
     if (error) throw error;
@@ -1765,7 +1857,7 @@ async function salvarPrevisaoEmpenho(tableName, ne, selectId, inputId, buttonEl)
     buttonEl.innerText = "Salvo!";
     buttonEl.style.background = "var(--success)";
     buttonEl.style.color = "#fff";
-    showToast(`Empenho ${ne} atualizado com sucesso!`, 'success');
+    showNotification(`Empenho ${ne} atualizado com sucesso!`, 'success');
     
     setTimeout(() => {
       buttonEl.innerText = "Salvar";
@@ -1775,7 +1867,7 @@ async function salvarPrevisaoEmpenho(tableName, ne, selectId, inputId, buttonEl)
     }, 2000);
   } catch (err) {
     console.error("Erro ao salvar previsão do empenho:", err);
-    showToast("Erro ao salvar no Supabase: " + (err.message || err), "error");
+    showNotification("Erro ao salvar no banco de dados: " + (err.message || err), "error");
     buttonEl.innerText = "Erro";
     buttonEl.style.background = "var(--danger)";
     buttonEl.style.color = "#fff";

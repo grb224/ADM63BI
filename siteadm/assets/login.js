@@ -83,7 +83,7 @@ const LoginSystem = {
         const publicRes = await fetch(rootPath + 'dados/config_public.json?_t=' + Date.now());
         if (publicRes.ok) {
           config = await publicRes.json();
-          console.log("[CONFIG] Configurações públicas do Supabase carregadas.");
+          console.log("[CONFIG] Configurações públicas do banco de dados carregadas.");
         }
       } catch (err) {
         console.warn("[CONFIG] Não foi possível carregar config_public.json", err);
@@ -107,9 +107,9 @@ const LoginSystem = {
           }
           this.supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
           this.useSupabase = true;
-          console.log("[SUPABASE] Cliente inicializado com sucesso no frontend.");
+          console.log("[DB] Cliente de banco de dados inicializado com sucesso.");
         } catch (err) {
-          console.error("[SUPABASE] Falha ao inicializar o Supabase SDK. Usando fallback local.", err);
+          console.error("[DB] Falha ao inicializar o banco de dados. Usando fallback local.", err);
           this.useSupabase = false;
         }
       }
@@ -292,7 +292,7 @@ const LoginSystem = {
         });
         
         if (error) {
-          errorEl.textContent = "Perfil não encontrado ou senha inválida no Supabase.";
+          errorEl.textContent = "Perfil não encontrado ou senha inválida no banco de dados.";
           errorEl.style.color = "var(--red)";
           return;
         }
