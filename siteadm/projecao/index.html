@@ -479,9 +479,9 @@
 <div class="tabs-wrap">
   <div class="tabs-nav">
     <button class="tab-btn active" id="btn-tab-metas" onclick="openTab(event, 'tab-metas')">🎯 METAS E PROJEÇÕES</button>
-    <button class="tab-btn" id="btn-tab-empenhos40" onclick="openTab(event, 'tab-empenhos40')">⏱️ EMPENHOS 40D+</button>
     <button class="tab-btn" id="btn-tab-emp-corrente" onclick="openTab(event, 'tab-emp-corrente')">💵 EMPENHOS CORRENTE</button>
     <button class="tab-btn" id="btn-tab-emp-rpnp" onclick="openTab(event, 'tab-emp-rpnp')">⏳ EMPENHOS RPNP</button>
+    <button class="tab-btn" id="btn-tab-empenhos40" onclick="openTab(event, 'tab-empenhos40')">⏱️ EMPENHOS 40D+</button>
     <button class="tab-btn" id="btn-tab-controle" onclick="openTab(event, 'tab-controle')">📊 CONTROLE DAS PREVISÕES</button>
     <button class="tab-btn" id="btn-tab-auditoria" onclick="openTab(event, 'tab-auditoria')">🕵️ AUDITORIA</button>
   </div>
@@ -496,7 +496,13 @@
   <div class="controls animate-up">
     <div class="control-group">
       <label>Data Meta de Execução</label>
-      <input type="date" id="inputData" value="2026-04-30" disabled>
+      <select id="inputData" style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; outline: none;">
+        <option value="2026-04-30">30/04/2026</option>
+        <option value="2026-06-30">30/06/2026</option>
+        <option value="2026-08-31">31/08/2026</option>
+        <option value="2026-10-31">31/10/2026</option>
+        <option value="2026-12-31">31/12/2026</option>
+      </select>
     </div>
     <div class="controls-divider"></div>
     <div class="control-group">
@@ -788,46 +794,6 @@
 </div>
 
 <!-- ========================================== -->
-<!-- ABA 4: EMPENHOS 40D+                       -->
-<!-- ========================================== -->
-<div id="tab-empenhos40" class="tab-content">
-  <div class="main">
-    <div class="section animate-up">
-      <div class="section-title"><span class="icon">⚠️</span>EMPENHOS ORDINÁRIOS COM MAIS DE 40 DIAS — Exercício Corrente</div>
-      <p style="font-size:12px;color:#666;margin-bottom:16px">
-        Empenhos do tipo <strong>Ordinário</strong> com saldo positivo e mais de 40 dias de antiguidade. Separados por UG.
-      </p>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>Setor</th><th>NE</th><th>PI</th><th>Bloco / UG</th>
-            <th class="num">Dias</th><th class="num">Saldo Empenhado</th>
-          </tr></thead>
-          <tbody id="tbodyEmp40Corr"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="section animate-up">
-      <div class="section-title"><span class="icon">⚠️</span>EMPENHOS ORDINÁRIOS COM MAIS DE 40 DIAS — RPNP (Restos a Pagar)
-      </div>
-      <p style="font-size:12px;color:#666;margin-bottom:16px">
-        Empenhos do tipo <strong>Ordinário</strong> do RPNP com saldo positivo e mais de 40 dias.
-      </p>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>Setor</th><th>NE</th><th>PI</th><th>Bloco / UG</th>
-            <th class="num">Dias</th><th class="num">Saldo Empenhado</th>
-          </tr></thead>
-          <tbody id="tbodyEmp40Rpnp"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ========================================== -->
 <!-- ABA 5: EMPENHOS CORRENTE                    -->
 <!-- ========================================== -->
 <div id="tab-emp-corrente" class="tab-content">
@@ -907,6 +873,46 @@
   </div>
 </div>
 
+<!-- ========================================== -->
+<!-- ABA 4: EMPENHOS 40D+                       -->
+<!-- ========================================== -->
+<div id="tab-empenhos40" class="tab-content">
+  <div class="main">
+    <div class="section animate-up">
+      <div class="section-title"><span class="icon">⚠️</span>EMPENHOS ORDINÁRIOS COM MAIS DE 40 DIAS — Exercício Corrente</div>
+      <p style="font-size:12px;color:#666;margin-bottom:16px">
+        Empenhos do tipo <strong>Ordinário</strong> com saldo positivo e mais de 40 dias de antiguidade. Separados por UG.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Setor</th><th>NE</th><th>PI</th><th>Bloco / UG</th>
+            <th class="num">Dias</th><th class="num">Saldo Empenhado</th>
+          </tr></thead>
+          <tbody id="tbodyEmp40Corr"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section animate-up">
+      <div class="section-title"><span class="icon">⚠️</span>EMPENHOS ORDINÁRIOS COM MAIS DE 40 DIAS — RPNP (Restos a Pagar)
+      </div>
+      <p style="font-size:12px;color:#666;margin-bottom:16px">
+        Empenhos do tipo <strong>Ordinário</strong> do RPNP com saldo positivo e mais de 40 dias.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Setor</th><th>NE</th><th>PI</th><th>Bloco / UG</th>
+            <th class="num">Dias</th><th class="num">Saldo Empenhado</th>
+          </tr></thead>
+          <tbody id="tbodyEmp40Rpnp"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===================== CARREGAMENTO DINÂMICO =====================
 let DADOS = {};
@@ -970,22 +976,8 @@ async function carregarDados() {
     const tsH = document.getElementById('tsGeradoHeader');
     if (tsH) tsH.textContent = geradoEm;
 
-    // Preenche os campos de metas de acordo com o banco de dados carregado
-    if (DADOS.data_meta) {
-      const parts = DADOS.data_meta.split('/');
-      if (parts.length === 3) {
-        const inputDataEl = document.getElementById('inputData');
-        if (inputDataEl) {
-          inputDataEl.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
-          inputDataEl.disabled = true;
-        }
-      }
-    }
-    if (DADOS.metas) {
-      if (DADOS.metas.emp_corr) document.getElementById('inputPctEmpCorr').value = DADOS.metas.emp_corr;
-      if (DADOS.metas.liq_corr) document.getElementById('inputPctLiqCorr').value = DADOS.metas.liq_corr;
-      if (DADOS.metas.liq_rpnp) document.getElementById('inputPctLiqRpnp').value = DADOS.metas.liq_rpnp;
-    }
+    // Preenche os campos de metas de acordo com os marcos temporais dinâmicos
+    inicializarMetasPeriodo();
 
     // Esconde loading
     document.getElementById('loadingOverlay').classList.add('hidden');
@@ -1012,6 +1004,12 @@ function openTab(evt, tabId) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(tabId).style.display = 'block';
   evt.currentTarget.classList.add('active');
+  
+  if (tabId === 'tab-emp-corrente') {
+    carregarEmpenhosCorrente('160443');
+  } else if (tabId === 'tab-emp-rpnp') {
+    carregarEmpenhosRpnp('160443');
+  }
 }
 
 // ===================== HELPERS =====================
@@ -1288,13 +1286,23 @@ function onInput() {
 }
 ['inputData','inputPctEmpCorr','inputPctLiqCorr','inputPctLiqRpnp'].forEach(id=>{
   const elDOM = el(id);
-  if(elDOM) elDOM.addEventListener('input', onInput);
+  if(elDOM) {
+    elDOM.addEventListener('input', onInput);
+    elDOM.addEventListener('change', onInput);
+  }
 });
 
 // ===================== AUDITORIA DE PREVISÕES =====================
 function renderAuditoria() {
   const audit    = DADOS.auditoria || [];
-  const dataMeta = DADOS.data_meta || '—';
+  let dataMeta = DADOS.data_meta || '—';
+  const rawDate = el('inputData').value;
+  if (rawDate) {
+    const parts = rawDate.split('-');
+    if (parts.length === 3) {
+      dataMeta = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+  }
   const dmEl = el('auditDataMeta'); if (dmEl) dmEl.textContent = dataMeta;
 
   const criticos = audit.filter(a => a.status === 'CRITICO');
@@ -1613,6 +1621,51 @@ function showNotification(message, type = 'success') {
 }
 
 // ===================== CONTROLE DE EMPENHOS (BANCO DE DADOS) =====================
+const METAS_MILESTONES = [
+  { date: '2026-04-30', emp: 50, liq: 20, liq_rpnp: 50 },
+  { date: '2026-06-30', emp: 70, liq: 40, liq_rpnp: 60 },
+  { date: '2026-08-31', emp: 80, liq: 50, liq_rpnp: 70 },
+  { date: '2026-10-31', emp: 100, liq: 65, liq_rpnp: 75 },
+  { date: '2026-12-31', emp: 100, liq: 75, liq_rpnp: 85 }
+];
+
+function inicializarMetasPeriodo() {
+  const inputDataEl = document.getElementById('inputData');
+  if (!inputDataEl) return;
+  
+  // Encontra a próxima meta com base no dia de hoje
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+  
+  let metaSelecionada = METAS_MILESTONES[METAS_MILESTONES.length - 1];
+  for (let m of METAS_MILESTONES) {
+    const metaDate = new Date(m.date + 'T00:00:00');
+    if (hoje <= metaDate) {
+      metaSelecionada = m;
+      break;
+    }
+  }
+  
+  inputDataEl.value = metaSelecionada.date;
+  
+  // Define os valores padrão nas caixas de input
+  document.getElementById('inputPctEmpCorr').value = metaSelecionada.emp;
+  document.getElementById('inputPctLiqCorr').value = metaSelecionada.liq;
+  document.getElementById('inputPctLiqRpnp').value = metaSelecionada.liq_rpnp;
+  
+  // Evento para atualizar metas ao trocar o select
+  inputDataEl.removeEventListener('change', onInput); // Evita duplo gatilho manual
+  inputDataEl.addEventListener('change', (e) => {
+    const selectedDate = e.target.value;
+    const milestone = METAS_MILESTONES.find(m => m.date === selectedDate);
+    if (milestone) {
+      document.getElementById('inputPctEmpCorr').value = milestone.emp;
+      document.getElementById('inputPctLiqCorr').value = milestone.liq;
+      document.getElementById('inputPctLiqRpnp').value = milestone.liq_rpnp;
+    }
+  });
+}
+
 let MAPA_PI_RESP = {};
 
 async function carregarMapeamentoPI() {
@@ -1641,7 +1694,9 @@ function calcularDiasDesde(dataStr) {
   let dateObj;
   if (dataStr.includes('/')) {
     const parts = dataStr.split('/');
-    dateObj = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+    let ano = parseInt(parts[2], 10);
+    if (ano < 100) ano += 2000;
+    dateObj = new Date(ano, parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
   } else {
     dateObj = new Date(dataStr);
   }
@@ -1715,7 +1770,7 @@ async function carregarEmpenhosCorrente(ug) {
         <td><strong>${ne}</strong></td>
         <td>${tipo}</td>
         <td class="num font-mono">${dias}</td>
-        <td><span class="badge" style="background:#222;color:#eee">${pi}</span></td>
+        <td>${pi}</td>
         <td><strong style="color:var(--gold)">${resp}</strong></td>
         <td>
           <input type="text" class="input-parc" style="width:160px;" id="sit-corr-${ne}" value="${situacao}" placeholder="Sem situação" oninput="document.getElementById('btn-save-corr-${ne}').disabled = false">
@@ -1804,7 +1859,7 @@ async function carregarEmpenhosRpnp(ug) {
         <td><strong>${ne}</strong></td>
         <td>${tipo}</td>
         <td class="num font-mono">${dias}</td>
-        <td><span class="badge" style="background:#222;color:#eee">${pi}</span></td>
+        <td>${pi}</td>
         <td><strong style="color:var(--gold)">${resp}</strong></td>
         <td>
           <input type="text" class="input-parc" style="width:160px;" id="sit-rpnp-${ne}" value="${situacao}" placeholder="Sem situação" oninput="document.getElementById('btn-save-rpnp-${ne}').disabled = false">
