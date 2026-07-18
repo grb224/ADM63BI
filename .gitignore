@@ -3,6 +3,7 @@ painel_admin.py
 script_gestao_orcamentaria/
 iniciar_painel.bat
 rotina_diaria.bat
+instruções/
 
 # Cache do Python
 __pycache__/
