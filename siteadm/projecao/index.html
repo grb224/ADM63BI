@@ -493,6 +493,7 @@
       position: relative;
       width: 100%;
       min-width: 180px;
+      height: 32px;
     }
     .sit-textarea {
       width: 100%;
@@ -515,7 +516,7 @@
       color: #888;
       font-style: italic;
     }
-    .sit-textarea:focus {
+    .sit-textarea.expanded {
       position: absolute;
       top: -24px;
       left: 0;
@@ -1839,7 +1840,7 @@ async function carregarEmpenhosCorrente(ug) {
         <td><strong style="color:var(--gold)">${resp}</strong></td>
         <td>
           <div class="sit-textarea-container">
-            <textarea class="sit-textarea" id="sit-txt-${ne}" placeholder="Sem situação" onfocus="ativarEdicaoLinha('${tableName}', '${ne}')">${situacao}</textarea>
+            <textarea class="sit-textarea" id="sit-txt-${ne}" placeholder="Sem situação" onfocus="onSitFocus(this); ativarEdicaoLinha('${tableName}', '${ne}')" onblur="onSitBlur(this)">${situacao}</textarea>
           </div>
         </td>
         <td class="num font-mono">${R$(aLiquidar)}</td>
@@ -1959,7 +1960,7 @@ async function carregarEmpenhosRpnp(ug) {
         <td><strong style="color:var(--gold)">${resp}</strong></td>
         <td>
           <div class="sit-textarea-container">
-            <textarea class="sit-textarea" id="sit-txt-${ne}" placeholder="Sem situação" onfocus="ativarEdicaoLinha('${tableName}', '${ne}')">${situacao}</textarea>
+            <textarea class="sit-textarea" id="sit-txt-${ne}" placeholder="Sem situação" onfocus="onSitFocus(this); ativarEdicaoLinha('${tableName}', '${ne}')" onblur="onSitBlur(this)">${situacao}</textarea>
           </div>
         </td>
         <td class="num font-mono">${R$(aliq)}</td>
@@ -2042,6 +2043,18 @@ let EMPENHOS_ORIGINAL = {};
 let confirmCallbackSalvar = null;
 let confirmCallbackDescartar = null;
 let confirmCallbackCancelar = null;
+
+function onSitFocus(el) {
+  // Only expand if the text is cut off by natural constraints
+  const isCutOff = el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight;
+  if (isCutOff) {
+    el.classList.add('expanded');
+  }
+}
+
+function onSitBlur(el) {
+  el.classList.remove('expanded');
+}
 
 function formatarMoedaInput(el) {
   let value = el.value.replace(/\D/g, '');
