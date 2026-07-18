@@ -1340,8 +1340,15 @@ async function carregarDados() {
           .eq('uge', 'geral')
           .single();
         if (data && data.encrypted_data) {
-          rawData = { encrypted: data.encrypted_data };
-          console.log("[DB] Projeção carregada com sucesso do banco de dados.");
+          try {
+            // Se for JSON plano, faz o parse direto
+            const parsed = JSON.parse(data.encrypted_data);
+            rawData = parsed;
+            console.log("[DB] Projeção carregada com sucesso do banco de dados em formato plano.");
+          } catch(e) {
+            rawData = { encrypted: data.encrypted_data };
+            console.log("[DB] Projeção carregada com sucesso do banco de dados em formato criptografado.");
+          }
         } else if (error) {
           console.warn("[DB] Erro no banco de dados:", error);
         }

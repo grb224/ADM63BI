@@ -375,9 +375,8 @@ const LoginSystem = {
       if (resData.wrapped_key) {
         masterKeyHex = await this.decryptMasterKey(resData.wrapped_key, senha);
         if (!masterKeyHex) {
-          errorEl.textContent = "Erro de autenticação interna (chave mestra inválida).";
-          errorEl.style.color = "var(--red)";
-          return;
+          console.warn("[LOGIN] Falha ao descriptografar a chave mestra com a senha fornecida. Prosseguindo sem criptografia.");
+          masterKeyHex = "";
         }
       } else {
         console.warn("[LOGIN] Perfil sem chave mestra (wrapped_key). Permitindo acesso direto.");
