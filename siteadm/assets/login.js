@@ -298,23 +298,60 @@ const LoginSystem = {
         }
 
         // 2. Registra a sessão no backend local utilizando o access_token obtido
-        const sessionRes = await fetch(this.getBasePath() + 'api/login_session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            access_token: data.session.access_token,
-            perfil: perfil
-          })
-        });
+        let sessionResOk = false;
+        try {
+          const sessionRes = await fetch(this.getBasePath() + 'api/login_session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              access_token: data.session.access_token,
+              perfil: perfil
+            })
+          });
 
-        if (!sessionRes.ok) {
-          const sessionErr = await sessionRes.json();
-          errorEl.textContent = sessionErr.error || "Falha ao registrar sessão local.";
-          errorEl.style.color = "var(--red)";
-          return;
+          if (sessionRes.ok) {
+            resData = await sessionRes.json();
+            sessionResOk = true;
+          } else {
+            console.warn("[LOGIN] Backend local respondeu com erro, tentando Supabase direto...");
+          }
+        } catch (err) {
+          console.warn("[LOGIN] Falha de conexão com backend local, operando no modo serverless:", err);
         }
 
-        resData = await sessionRes.json();
+        if (!sessionResOk) {
+          // Fallback: Obter dados de perfil diretamente do Supabase (Modo Serverless)
+          const { data: profileRows, error: profileErr } = await this.supabase
+            .from('perfis')
+            .select('*')
+            .eq('id', data.user.id);
+            
+          if (profileErr || !profileRows || profileRows.length === 0) {
+            // Se o perfil não existe no banco, cria um perfil padrão
+            const defaultProfile = {
+              id: data.user.id,
+              nome_visivel: perfil.charAt(0).toUpperCase() + perfil.slice(1),
+              tags: []
+            };
+            await this.supabase.from('perfis').insert([defaultProfile]);
+            resData = {
+              token: data.session.access_token,
+              perfil: perfil,
+              nome: defaultProfile.nome_visivel,
+              tags: defaultProfile.tags,
+              wrapped_key: ""
+            };
+          } else {
+            const profile = profileRows[0];
+            resData = {
+              token: data.session.access_token,
+              perfil: perfil,
+              nome: profile.nome_visivel || perfil,
+              tags: profile.tags || [],
+              wrapped_key: profile.wrapped_key || ""
+            };
+          }
+        }
       } else {
         // Fallback: Login legado local
         const response = await fetch(this.getBasePath() + 'api/login', {
