@@ -221,9 +221,15 @@
       background: repeating-linear-gradient(45deg, rgba(201,162,39,0.35), rgba(201,162,39,0.35) 4px, transparent 4px, transparent 8px);
       border: 1px dashed var(--gold); transition: width 0.6s; max-width: 100%;
     }
+    @keyframes pulse-red {
+      0% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.7); }
+      70% { box-shadow: 0 0 0 6px rgba(192, 57, 43, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0); }
+    }
     .progress-meta-marker {
       position: absolute; top: -5px; bottom: -5px; width: 3px; background: var(--red);
       border-radius: 2px; transition: left 0.6s;
+      animation: pulse-red 2s infinite;
     }
     .progress-meta-marker::after {
       content: attr(data-pct); position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
@@ -439,6 +445,7 @@
       width: 100px;
       outline: none;
       font-family: 'Inter', sans-serif;
+      text-align: center;
     }
     .active-filter-btn {
       border: 2px solid var(--gold) !important;
@@ -454,11 +461,19 @@
       text-align: center;
     }
     .table-wrap th:nth-child(-n+6),
-    .table-wrap td:nth-child(-n+6) {
+    .table-wrap td:nth-child(-n+6),
+    .table-wrap th:nth-child(9),
+    .table-wrap td:nth-child(9),
+    .table-wrap th:nth-child(10),
+    .table-wrap td:nth-child(10) {
       white-space: nowrap;
       width: 1%;
       padding-left: 12px;
       padding-right: 12px;
+    }
+    .table-wrap th:nth-child(7),
+    .table-wrap td:nth-child(7) {
+      width: auto !important;
     }
 
     /* Expand sheets to full width on Corrente and RPNP tabs */
@@ -518,12 +533,15 @@
 
     /* Selected forecast dropdown styles */
     select.select-prev {
-      padding: 6px 12px;
+      padding: 6px;
+      width: 100px;
       border-radius: 4px;
       font-weight: bold;
       border: 1px solid rgba(255,255,255,0.1);
       outline: none;
       cursor: pointer;
+      font-size: 11px;
+      text-align: center;
     }
     select.select-prev.prev-sim {
       background: rgba(39, 174, 96, 0.2) !important;
@@ -643,9 +661,6 @@
       <p>Sistema de Gestão Financeira · Seção de Administração · Gerado em: <span id="tsGeradoHeader">—</span></p>
     </div>
     <div class="header-actions">
-      <button class="btn-atualizar" id="btnAtualizar" onclick="solicitarAtualizacaoPlanilha()">
-        <span id="btnAtualizarIcon" style="display: inline-block;">🔄</span> Atualizar dados
-      </button>
       <a href="../" class="btn-voltar" style="margin: 0;">← Menu</a>
     </div>
   </div>
@@ -676,16 +691,16 @@
     <div class="controls-divider"></div>
     <div class="control-group">
       <label>% Meta Emp. Corrente</label>
-      <input type="number" id="inputPctEmpCorr" min="0" max="100" step="1" value="60" disabled style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 600; outline: none; width: 80px; text-align: center;">
+      <input type="number" id="inputPctEmpCorr" min="0" max="100" step="1" value="60" style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 600; outline: none; width: 80px; text-align: center;">
     </div>
     <div class="control-group">
       <label>% Meta Liq. Corrente</label>
-      <input type="number" id="inputPctLiqCorr" min="0" max="100" step="1" value="60" disabled style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 600; outline: none; width: 80px; text-align: center;">
+      <input type="number" id="inputPctLiqCorr" min="0" max="100" step="1" value="60" style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 600; outline: none; width: 80px; text-align: center;">
     </div>
     <div class="controls-divider"></div>
     <div class="control-group">
       <label>% Meta Liq. RPNP</label>
-      <input type="number" id="inputPctLiqRpnp" min="0" max="100" step="1" value="90" disabled style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 600; outline: none; width: 80px; text-align: center;">
+      <input type="number" id="inputPctLiqRpnp" min="0" max="100" step="1" value="90" style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 600; outline: none; width: 80px; text-align: center;">
     </div>
     <div class="gen-info">
       Dados atualizados em<br><strong id="tsGerado">—</strong>
@@ -1607,15 +1622,7 @@ function aplicarAcessoTags() {
   const tagsStr = localStorage.getItem('adm_auth_tags') || sessionStorage.getItem('adm_auth_tags') || "[]";
   const tags = JSON.parse(tagsStr);
   
-  // Hide btnAtualizar if not admin
-  const btnAtualizar = document.getElementById('btnAtualizar');
-  if (btnAtualizar) {
-    if (!tags.includes('admin')) {
-      btnAtualizar.style.display = 'none';
-    } else {
-      btnAtualizar.style.display = '';
-    }
-  }
+  // btnAtualizar removido conforme solicitação
   
   if (tags.includes('admin')) return; // Acesso total
   
@@ -1663,87 +1670,7 @@ window.openTab = function(evt, tabName) {
   originalOpenTab(evt, tabName);
 }
 
-async function solicitarAtualizacaoPlanilha() {
-  const btn = document.getElementById('btnAtualizar');
-  const icon = document.getElementById('btnAtualizarIcon');
-  if (!btn) return;
-
-  btn.disabled = true;
-  if (icon) icon.style.animation = 'spin 1s linear infinite';
-
-  try {
-    const response = await fetch('/api/projecao/atualizar', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const rawData = await response.json();
-
-    if (rawData.encrypted) {
-      const masterKeyHex = sessionStorage.getItem('adm_master_key') || localStorage.getItem('adm_master_key');
-      if (!masterKeyHex) {
-        throw new Error("Chave de decriptação não encontrada. Efetue login novamente.");
-      }
-      DADOS = await LoginSystem.decryptData(rawData.encrypted, masterKeyHex);
-    } else {
-      DADOS = rawData;
-    }
-
-    // Atualiza logo se disponível
-    if (DADOS.logo_base64) {
-      const logoEl = document.getElementById('headerLogo');
-      if (logoEl) {
-        logoEl.src = 'data:image/png;base64,' + DADOS.logo_base64;
-        logoEl.style.display = '';
-      }
-    }
-
-    // Atualiza timestamp
-    const geradoEm = DADOS.gerado_em || '—';
-    const tsEl = document.getElementById('tsGerado');
-    if (tsEl) tsEl.textContent = geradoEm;
-    const tsH = document.getElementById('tsGeradoHeader');
-    if (tsH) tsH.textContent = geradoEm;
-
-    // Atualiza os inputs na tela se novos valores de metas foram carregados
-    if (DADOS.data_meta) {
-      const parts = DADOS.data_meta.split('/');
-      if (parts.length === 3) {
-        const inputDataEl = document.getElementById('inputData');
-        if (inputDataEl) {
-          inputDataEl.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
-        }
-      }
-    }
-    if (DADOS.metas) {
-      if (DADOS.metas.emp_corr) document.getElementById('inputPctEmpCorr').value = DADOS.metas.emp_corr;
-      if (DADOS.metas.liq_corr) document.getElementById('inputPctLiqCorr').value = DADOS.metas.liq_corr;
-      if (DADOS.metas.liq_rpnp) document.getElementById('inputPctLiqRpnp').value = DADOS.metas.liq_rpnp;
-    }
-
-    // Re-renderiza tudo com animação de contagem
-    startCountUpAnimation();
-    setTimeout(initChart, 300);
-    renderAuditoria();
-    renderEmpenhos40();
-
-    showNotification("Dados da planilha atualizados com sucesso!", "success");
-
-  } catch (err) {
-    console.error('Erro ao atualizar dados da planilha:', err);
-    showNotification('Erro ao atualizar: ' + err.message, 'error');
-  } finally {
-    btn.disabled = false;
-    if (icon) icon.style.animation = '';
-  }
-}
+// solicitarAtualizacaoPlanilha removida conforme solicitação
 
 function showNotification(message, type = 'success') {
   let container = document.getElementById('notification-container');
@@ -2142,6 +2069,11 @@ function onPrevisaoChange(selectEl, tableName, ne) {
     if (inputEl) {
       const aLiq = EMPENHOS_ORIGINAL[ne].a_liquidar;
       inputEl.value = R$(aLiq);
+    }
+  } else if (selectEl.value === 'NÃO') {
+    const inputEl = document.getElementById(`parc-corr-${ne}`) || document.getElementById(`parc-rpnp-${ne}`);
+    if (inputEl) {
+      inputEl.value = '';
     }
   }
   
