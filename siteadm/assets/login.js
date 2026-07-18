@@ -370,12 +370,17 @@ const LoginSystem = {
         resData = await response.json();
       }
       
-      // Descriptografa a chave mestra utilizando a senha digitada
-      const masterKeyHex = await this.decryptMasterKey(resData.wrapped_key, senha);
-      if (!masterKeyHex) {
-        errorEl.textContent = "Erro de autenticação interna (chave mestra inválida).";
-        errorEl.style.color = "var(--red)";
-        return;
+      // Descriptografa a chave mestra utilizando a senha digitada se ela existir
+      let masterKeyHex = "";
+      if (resData.wrapped_key) {
+        masterKeyHex = await this.decryptMasterKey(resData.wrapped_key, senha);
+        if (!masterKeyHex) {
+          errorEl.textContent = "Erro de autenticação interna (chave mestra inválida).";
+          errorEl.style.color = "var(--red)";
+          return;
+        }
+      } else {
+        console.warn("[LOGIN] Perfil sem chave mestra (wrapped_key). Permitindo acesso direto.");
       }
       
       // Salva a sessão localmente
