@@ -460,19 +460,27 @@
     #tab-emp-corrente th, #tab-emp-rpnp th {
       text-align: center;
     }
-    .table-wrap th:nth-child(-n+6),
-    .table-wrap td:nth-child(-n+6),
-    .table-wrap th:nth-child(9),
-    .table-wrap td:nth-child(9),
-    .table-wrap th:nth-child(10),
-    .table-wrap td:nth-child(10) {
+    #tab-emp-corrente .table-wrap th:nth-child(-n+6),
+    #tab-emp-corrente .table-wrap td:nth-child(-n+6),
+    #tab-emp-corrente .table-wrap th:nth-child(9),
+    #tab-emp-corrente .table-wrap td:nth-child(9),
+    #tab-emp-corrente .table-wrap th:nth-child(10),
+    #tab-emp-corrente .table-wrap td:nth-child(10),
+    #tab-emp-rpnp .table-wrap th:nth-child(-n+6),
+    #tab-emp-rpnp .table-wrap td:nth-child(-n+6),
+    #tab-emp-rpnp .table-wrap th:nth-child(9),
+    #tab-emp-rpnp .table-wrap td:nth-child(9),
+    #tab-emp-rpnp .table-wrap th:nth-child(10),
+    #tab-emp-rpnp .table-wrap td:nth-child(10) {
       white-space: nowrap;
       width: 1%;
       padding-left: 12px;
       padding-right: 12px;
     }
-    .table-wrap th:nth-child(7),
-    .table-wrap td:nth-child(7) {
+    #tab-emp-corrente .table-wrap th:nth-child(7),
+    #tab-emp-corrente .table-wrap td:nth-child(7),
+    #tab-emp-rpnp .table-wrap th:nth-child(7),
+    #tab-emp-rpnp .table-wrap td:nth-child(7) {
       width: auto !important;
     }
 
@@ -571,72 +579,267 @@
       transition: all 0.5s ease-out;
     }
 
-    /* Custom confirmation dialog modal */
+    /* Custom confirmation dialog modal matching Setor Financeiro (liquidacoes) */
     .confirm-modal-overlay {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(4px);
+      inset: 0;
+      background: rgba(0,0,0,0.5);
       z-index: 20000;
       display: none;
       align-items: center;
       justify-content: center;
+      transition: opacity 0.25s ease;
     }
     .confirm-modal-card {
-      background: #181d15;
-      border: 1px solid var(--gold);
-      border-radius: 8px;
-      padding: 24px;
+      background: var(--white);
+      border-radius: 16px;
+      padding: 28px;
       width: 90%;
-      max-width: 420px;
-      text-align: center;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      max-width: 480px;
+      text-align: left;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+      border: none;
     }
     .confirm-modal-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--olive);
       margin-top: 0;
-      color: var(--gold);
-      font-size: 18px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .confirm-modal-card p {
-      color: #ccc;
-      margin: 12px 0 24px 0;
-      font-size: 14px;
+      font-size: 13px;
+      color: var(--gray-600);
+      line-height: 1.6;
+      margin: 12px 0 20px 0;
     }
     .confirm-modal-buttons {
       display: flex;
-      flex-direction: column;
       gap: 10px;
+      justify-content: flex-end;
     }
     .modal-btn {
-      padding: 12px;
-      border: none;
+      padding: 10px 20px;
       border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      font-size: 14px;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
+      border: none;
     }
-    .modal-btn.success {
-      background: #27ae60;
-      color: #fff;
+    .modal-btn.neutral {
+      background: transparent;
+      border: 1px solid var(--gray-200);
+      color: var(--gray-600);
     }
-    .modal-btn.success:hover {
-      background: #219653;
+    .modal-btn.neutral:hover {
+      background: var(--gray-200);
     }
     .modal-btn.danger {
-      background: #c0392b;
+      background: #dc2626;
       color: #fff;
     }
     .modal-btn.danger:hover {
-      background: #a93226;
+      background: #b91c1c;
     }
-    .modal-btn.neutral {
-      background: rgba(255,255,255,0.08);
-      color: #eee;
+    .modal-btn.success {
+      background: var(--olive);
+      color: #fff;
     }
-    .modal-btn.neutral:hover {
-      background: rgba(255,255,255,0.15);
+    .modal-btn.success:hover {
+      background: var(--olive-dark);
+    }
+    
+    /* Accordion details row */
+    tr.details-row {
+      background-color: var(--cream) !important;
+    }
+    tr.details-row td {
+      padding: 12px 24px !important;
+      border-top: none;
+    }
+    .sub-table-container {
+      background: var(--white);
+      border-radius: 8px;
+      border: 1px solid var(--cream-dark);
+      padding: 16px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .sub-table-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--olive);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .sub-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: unset !important;
+    }
+    .sub-table th {
+      background: var(--olive);
+      color: var(--white);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 8px 10px;
+      text-transform: uppercase;
+    }
+    .sub-table td {
+      font-size: 11px;
+      padding: 8px 10px;
+      border-top: 1px solid var(--cream-dark);
+      background: var(--white) !important;
+    }
+    .sub-table tr:hover td {
+      background: var(--cream) !important;
+    }
+    
+    .btn-toggle-details {
+      background: none;
+      border: none;
+      color: var(--olive);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: transform 0.2s, background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      outline: none;
+    }
+    .btn-toggle-details:hover {
+      background: rgba(61, 80, 22, 0.1);
+    }
+    .btn-toggle-details.expanded {
+      transform: rotate(90deg);
+    }
+    
+    .input-prazo {
+      background: var(--bg-dark);
+      color: var(--text-light);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 6px;
+      font-size: 11px;
+      width: 100px;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      text-align: center;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .input-prazo:focus {
+      border-color: var(--gold);
+      background: #fff;
+      color: #000;
+    }
+    .prazo-simples {
+      border-color: rgba(0,0,0,0.15);
+    }
+    .prazo-folga {
+      background: rgba(39, 174, 96, 0.15) !important;
+      color: #27ae60 !important;
+      border-color: #27ae60 !important;
+    }
+    .prazo-atencao {
+      background: rgba(217, 119, 6, 0.15) !important;
+      color: #b7791f !important;
+      border-color: #d97706 !important;
+    }
+    .prazo-vencido {
+      background: rgba(192, 57, 43, 0.15) !important;
+      color: #c0392b !important;
+      border-color: #c0392b !important;
+    }
+    .prazo-recolhimento {
+      background: rgba(128, 0, 128, 0.15) !important;
+      color: purple !important;
+      border-color: purple !important;
+    }
+    
+    .text-red {
+      color: var(--red) !important;
+    }
+    .text-green {
+      color: var(--green) !important;
+    }
+    .recolhimento-header-row td {
+      background: rgba(128, 0, 128, 0.08) !important;
+      color: purple !important;
+      font-weight: 700;
+      border-left: 5px solid purple;
+      transition: background 0.2s ease;
+    }
+    .recolhimento-header-row:hover td {
+      background: rgba(128, 0, 128, 0.14) !important;
+    }
+    .recolhimentos-arrow {
+      font-size: 10px;
+    }
+    
+    /* Multiselect Status Dropdown */
+    .multiselect-status {
+      position: relative;
+      width: 190px;
+    }
+    .multiselect-status .select-box {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--cream-dark);
+      background: var(--white);
+      color: var(--text-dark);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+    .multiselect-status .options-container {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid var(--cream-dark);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 100;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 6px 0;
+    }
+    .multiselect-status .options-container label {
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-dark);
+      gap: 8px;
+      margin: 0;
+      transition: background 0.15s ease;
+    }
+    .multiselect-status .options-container label:hover {
+      background: var(--cream-light);
+    }
+    .multiselect-status .options-container input[type="checkbox"] {
+      margin: 0;
+      cursor: pointer;
+      width: 14px;
+      height: 14px;
+      accent-color: var(--olive);
     }
   </style>
 </head>
@@ -659,7 +862,7 @@
     <img id="headerLogo" src="../assets/logo.png" alt="Logo 63BI" class="header-logo" style="display:none">
     <div class="header-title">
       <h1>GESTÃO ORÇAMENTÁRIA — 63º BI</h1>
-      <p>Sistema de Gestão Financeira · Seção de Administração · Gerado em: <span id="tsGeradoHeader">—</span></p>
+      <p>Sistema de gestão orçamentária do 63° Batalhão de Infantaria · Gerado em: <span id="tsGeradoHeader">—</span></p>
     </div>
     <div class="header-actions">
       <a href="../" class="btn-voltar" style="margin: 0;">← Menu</a>
@@ -672,9 +875,9 @@
     <button class="tab-btn active" id="btn-tab-metas" onclick="openTab(event, 'tab-metas')">🎯 METAS E PROJEÇÕES</button>
     <button class="tab-btn" id="btn-tab-emp-corrente" onclick="openTab(event, 'tab-emp-corrente')">💵 EMPENHOS CORRENTE</button>
     <button class="tab-btn" id="btn-tab-emp-rpnp" onclick="openTab(event, 'tab-emp-rpnp')">⏳ EMPENHOS RPNP</button>
+    <button class="tab-btn" id="btn-tab-creditos-tela" onclick="openTab(event, 'tab-creditos-tela')">💳 CRÉDITOS NA TELA</button>
     <button class="tab-btn" id="btn-tab-empenhos40" onclick="openTab(event, 'tab-empenhos40')">⏱️ EMPENHOS 40D+</button>
-    <button class="tab-btn" id="btn-tab-controle" onclick="openTab(event, 'tab-controle')">📊 CONTROLE DAS PREVISÕES</button>
-    <button class="tab-btn" id="btn-tab-auditoria" onclick="openTab(event, 'tab-auditoria')">🕵️ AUDITORIA</button>
+    <button class="tab-btn" id="btn-tab-logs" onclick="openTab(event, 'tab-logs')">🕵️ AUDITORIA</button>
   </div>
 </div>
 
@@ -850,129 +1053,112 @@
   </div> <!-- main end -->
 </div>
 
-<!-- ========================================== -->
-<!-- ABA 2: CONTROLE DE AUDITORIA E PENDÊNCIAS  -->
-<!-- ========================================== -->
-<div id="tab-controle" class="tab-content">
-  <div class="main">
 
-    <!-- HEADER + SUMMARY CARDS -->
+
+<!-- ========================================== -->
+<!-- ABA: AUDITORIA                             -->
+<!-- ========================================== -->
+<div id="tab-logs" class="tab-content">
+  <div class="main" style="max-width: 100% !important; width: 100% !important; padding-left: 20px !important; padding-right: 20px !important;">
     <div class="section animate-up">
-      <div class="section-title"><span class="icon">📋</span>CONTROLE DAS PREVISÕES — Monitoramento por NE</div>
+      <div class="section-title"><span class="icon">🕵️</span>AUDITORIA E COMPARATIVO DE LOGS DIÁRIOS</div>
       <p style="font-size:12px;color:#666;margin-bottom:16px">
-        Auditoria baseada nos LOGS diários. Fonte: col K (Previsão) das LOGS.
-        Data meta: <strong id="auditDataMeta">—</strong>
+        Selecione duas datas de snapshot para comparar a evolução dos saldos de empenhos e créditos.
       </p>
-      <div class="cards-grid audit-cards-grid" style="margin-bottom:0">
-        <div class="card red">
-          <div class="card-label">🔴 CRÍTICOS</div>
-          <div class="card-value" id="auditCntCritico">—</div>
-          <div class="card-sub">SIM sem liquidar</div>
+      
+      <!-- CONTROLS E FILTROS DE LOG COMPARATIVO -->
+      <div class="logs-filter-bar" style="margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+        <div class="control-group" style="margin:0">
+          <label style="color:var(--olive);font-weight:700">Data Inicial (A)</label>
+          <select id="filterLogsDateStart" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--cream-dark); background: var(--white); color: var(--text-dark); font-size: 13px; font-weight: 600; outline: none; width: 140px;">
+            <option value="">Carregando...</option>
+          </select>
         </div>
-        <div class="card yellow">
-          <div class="card-label">🟡 ATENÇÃO</div>
-          <div class="card-value" id="auditCntAtencao">—</div>
-          <div class="card-sub">PARCIAL &lt; 50% / SIM parcial</div>
+        <div class="control-group" style="margin:0">
+          <label style="color:var(--olive);font-weight:700">Data Final (B)</label>
+          <select id="filterLogsDateEnd" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--cream-dark); background: var(--white); color: var(--text-dark); font-size: 13px; font-weight: 600; outline: none; width: 140px;">
+            <option value="">Carregando...</option>
+          </select>
         </div>
-        <div class="card" style="border-left-color:#3182ce;background:#ebf8ff">
-          <div class="card-label">🔵 FEEDBACK</div>
-          <div class="card-value" id="auditCntFeedback">—</div>
-          <div class="card-sub">NÃO mas liquidou (ótimo!)</div>
+        <div class="control-group" style="margin:0">
+          <label style="color:var(--olive);font-weight:700">NE (Empenho)</label>
+          <input type="text" id="filterLogsNe" oninput="aplicarFiltrosEExibirLogs()" placeholder="Ex: 2026NE..." style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--cream-dark); background: var(--white); color: var(--text-dark); font-size: 13px; font-weight: 600; outline: none; width: 140px;">
         </div>
-        <div class="card green">
-          <div class="card-label">🟢 EM DIA</div>
-          <div class="card-value" id="auditCntOk">—</div>
-          <div class="card-sub">Conforme planejado</div>
+        <div class="control-group" style="margin:0">
+          <label style="color:var(--olive);font-weight:700">Setor / Responsável</label>
+          <input type="text" id="filterLogsResp" oninput="aplicarFiltrosEExibirLogs()" placeholder="Filtrar por setor..." style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--cream-dark); background: var(--white); color: var(--text-dark); font-size: 13px; font-weight: 600; outline: none; width: 140px;">
         </div>
+        <div class="control-group" style="margin:0">
+          <label style="color:var(--olive);font-weight:700">Status Comparação</label>
+          <div class="multiselect-status" id="multiselectStatusContainer">
+            <div class="select-box" onclick="toggleStatusDropdown()">
+              <span id="selectedStatusText">Todos os Status</span>
+              <span style="font-size:10px">▼</span>
+            </div>
+            <div class="options-container" id="statusDropdownOptions">
+              <label>
+                <input type="checkbox" value="Liquidação Parcial" onchange="onStatusCheckboxChange()"> Liquidação Parcial
+              </label>
+              <label>
+                <input type="checkbox" value="Empenho Zerado" onchange="onStatusCheckboxChange()"> Empenho Zerado
+              </label>
+              <label>
+                <input type="checkbox" value="Novo Empenho" onchange="onStatusCheckboxChange()"> Novo Empenho
+              </label>
+              <label>
+                <input type="checkbox" value="Alteração Previsão" onchange="onStatusCheckboxChange()"> Alteração Previsão
+              </label>
+              <label>
+                <input type="checkbox" value="Novo Crédito" onchange="onStatusCheckboxChange()"> Novo Crédito
+              </label>
+              <label>
+                <input type="checkbox" value="Alteração Crédito" onchange="onStatusCheckboxChange()"> Alteração Crédito
+              </label>
+              <label>
+                <input type="checkbox" value="Crédito Zerado" onchange="onStatusCheckboxChange()"> Crédito Zerado
+              </label>
+              <label>
+                <input type="checkbox" value="Sem Alteração" onchange="onStatusCheckboxChange()"> Sem Alteração
+              </label>
+            </div>
+          </div>
+        </div>
+        <button class="btn-atualizar" onclick="buscarEFiltrarLogs()" style="height:35px">🔍 Comparar</button>
+        <button class="btn-atualizar" onclick="limparFiltrosLogs()" style="height:35px; background:transparent; border:1px solid var(--gray-300); color:var(--gray-600)">Limpar</button>
       </div>
-    </div>
 
-    <!-- CRÍTICOS -->
-    <div class="section animate-up">
-      <div class="section-title" style="border-color:var(--red);color:var(--red)">🔴 CRÍTICOS — SIM mas sem liquidação detectada</div>
       <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>NE</th><th>Setor</th><th>PI</th>
-            <th class="num">Saldo Atual</th><th class="num">Liquidado</th>
-            <th>Prev.</th><th>Prazo / Situação</th>
-          </tr></thead>
-          <tbody id="tbodyAuditCritico"></tbody>
+        <table style="table-layout: fixed; width: 100%;">
+          <thead>
+            <tr>
+              <th style="width: 55px; text-align: center;">UG</th>
+              <th style="width: 120px; text-align: center;">Responsável</th>
+              <th style="width: 90px; text-align: center;">PI</th>
+              <th style="width: 60px; text-align: center;">ND</th>
+              <th style="width: 110px; text-align: center;">NE</th>
+              <th class="num" style="width: 110px; text-align: right;">Valor Inicial (A)</th>
+              <th class="num" style="width: 110px; text-align: right;">Valor Final (B)</th>
+              <th class="num" style="width: 100px; text-align: right;">Diferença</th>
+              <th style="width: 70px; text-align: center;">Prev (A)</th>
+              <th style="width: 70px; text-align: center;">Prev (B)</th>
+              <th style="width: 150px; text-align: center;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyLogsHistorico">
+            <tr><td colspan="11" style="text-align:center;color:#999">Carregando logs do Supabase...</td></tr>
+          </tbody>
         </table>
       </div>
-    </div>
-
-    <!-- ATENÇÃO -->
-    <div class="section animate-up">
-      <div class="section-title" style="border-color:var(--yellow);color:var(--yellow)">🟡 ATENÇÃO — PARCIAL &lt; 50% executado / SIM liquidou parcialmente</div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>NE</th><th>Setor</th><th>PI</th>
-            <th class="num">Saldo Atual</th><th class="num">Liquidado</th>
-            <th>Prev.</th><th>Progresso / Situação</th>
-          </tr></thead>
-          <tbody id="tbodyAuditAtencao"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- FEEDBACK -->
-    <div class="section animate-up">
-      <div class="section-title" style="border-color:#3182ce;color:#2b6cb0">🔵 FEEDBACK — NÃO mas liquidou (execução além do previsto!)</div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>NE</th><th>Setor</th><th>PI</th>
-            <th class="num">Liquidado</th>
-            <th>Prev.</th><th>Observação</th>
-          </tr></thead>
-          <tbody id="tbodyAuditFeedback"></tbody>
-        </table>
-      </div>
-    </div>
-
-
-    <div class="uge-grid animate-up">
-      <div class="section">
-        <div class="section-title"><span class="icon">⚠️</span>EMPENHOS SEM DESCRIÇÃO NO CONTROLE (G/Q Vazios)</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Bloco</th><th>NE</th><th>PI</th><th>Setor</th><th>Saldo Empenhado</th></tr></thead>
-            <tbody id="tbodySemControle"></tbody>
-          </table>
+      
+      <!-- PAGINAÇÃO -->
+      <div class="logs-pagination" style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 12px; color: var(--gray-600)" id="logsTotalCounter">
+          Exibindo registros 0-0 de 0
         </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title"><span class="icon">⚠️</span>EMPENHOS SEM PREVISÃO (H/R Vazios)</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Bloco</th><th>NE</th><th>PI</th><th>Setor</th><th>Saldo Empenhado</th></tr></thead>
-            <tbody id="tbodySemPrevisao"></tbody>
-          </table>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-atualizar" onclick="paginarLogs(-1)" id="btnLogsPrev" style="padding: 6px 12px; font-size: 12px; font-weight: 700;">◀ Anterior</button>
+          <button class="btn-atualizar" onclick="paginarLogs(1)" id="btnLogsNext" style="padding: 6px 12px; font-size: 12px; font-weight: 700;">Próximo ▶</button>
         </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ========================================== -->
-<!-- ABA 3: AUDITORIA                           -->
-<!-- ========================================== -->
-<div id="tab-auditoria" class="tab-content">
-  <div class="main">
-    <div class="section animate-up">
-      <div class="section-title"><span class="icon">🕵️</span>HISTÓRICO DE MUDANÇAS MANUAIS <span style="font-size:11px;font-weight:400;color:var(--gray-600)">(mudancas_previsao.json)</span></div>
-      <p style="font-size:12px;color:#666;margin-bottom:16px">
-        Registo de alterações locais detectadas nas previsões — fonte: <strong>snapshots/mudancas_previsao.json</strong>.
-      </p>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>UG</th><th>NE</th><th>Setor</th><th>ALTERAÇÃO DETECTADA</th><th>Status</th></tr></thead>
-          <tbody id="tbodyFeedback"></tbody>
-        </table>
       </div>
     </div>
   </div>
@@ -1049,6 +1235,45 @@
           </thead>
           <tbody id="tbodyEmpRpnp">
             <tr><td colspan="10" style="text-align:center;color:#999">Selecione uma UG para visualizar os empenhos.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- ABA 7: CRÉDITOS NA TELA                    -->
+<!-- ========================================== -->
+<div id="tab-creditos-tela" class="tab-content">
+  <div class="main" style="max-width: 100% !important; width: 100% !important; padding-left: 20px !important; padding-right: 20px !important;">
+    <div class="section animate-up">
+      <div class="section-title"><span class="icon">💳</span>DETALHAMENTO DE CRÉDITOS E NOTAS DE CRÉDITO (NC)</div>
+      <p style="font-size:12px;color:#666;margin-bottom:16px">
+        Visualize os créditos disponíveis agrupados por setor responsável e detalhados pelas Notas de Crédito (NCs) que os compõem. Defina prazos e providências em tempo real.
+      </p>
+      <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+        <button class="btn-atualizar" onclick="carregarCreditosTela('160443')" id="btn-cred-tela-160">UG 160443</button>
+        <button class="btn-atualizar" onclick="carregarCreditosTela('167443')" id="btn-cred-tela-167">UG 167443</button>
+      </div>
+      <div class="table-wrap">
+        <table style="table-layout: fixed; width: 100%;">
+          <thead>
+            <tr>
+              <th style="width: 35px; text-align: center; padding: 12px 4px;"></th>
+              <th style="text-align: center; width: 55px; padding: 12px 4px;">UG</th>
+              <th style="text-align: center; width: 110px; padding: 12px 4px;">Responsável</th>
+              <th style="text-align: center; width: 100px; padding: 12px 4px;">PI</th>
+              <th style="text-align: center; width: 65px; padding: 12px 4px;">ND</th>
+              <th style="text-align: center; width: 100px; padding: 12px 4px;">Valor Inicial</th>
+              <th style="text-align: center; width: 110px; padding: 12px 4px;">Valor Empenhado</th>
+              <th style="text-align: center; width: 110px; padding: 12px 4px;">Valor Disponível</th>
+              <th style="text-align: center; width: 95px; padding: 12px 4px;">Prazo da OM</th>
+              <th style="text-align: center; padding: 12px 4px;">Providência</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyCreditosTela">
+            <tr><td colspan="10" style="text-align:center;color:#999">Selecione uma UG para visualizar os créditos.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1143,6 +1368,59 @@ async function carregarDados() {
       DADOS = rawData;
     }
 
+    // Override local forecasts with live Supabase forecasts at startup (only done once to save data)
+    if (LoginSystem.useSupabase && LoginSystem.supabase) {
+      try {
+        console.log("[DB] Sincronizando previsões em tempo real para o dashboard...");
+        const tables = [
+          'emp_corrente_160443',
+          'emp_corrente_167443',
+          'emp_rpnp_160443',
+          'emp_rpnp_167443'
+        ];
+        const promises = tables.map(t => LoginSystem.supabase.from(t).select('ne, previsao, parcial, situacao'));
+        const results = await Promise.all(promises);
+        
+        const liveForecasts = {};
+        results.forEach(res => {
+          if (res.data) {
+            res.data.forEach(row => {
+              if (row.ne) {
+                liveForecasts[row.ne] = {
+                  previsao: row.previsao || 'NÃO',
+                  parcial: parseFloat(row.parcial || 0),
+                  situacao: row.situacao || ''
+                };
+              }
+            });
+          }
+        });
+        
+        if (DADOS.corrente) {
+          DADOS.corrente.forEach(row => {
+            if (row.ne && liveForecasts[row.ne]) {
+              row.previsao = liveForecasts[row.ne].previsao;
+              row.parcial = liveForecasts[row.ne].parcial;
+              row.situacao = liveForecasts[row.ne].situacao;
+            }
+          });
+        }
+        if (DADOS.rpnp) {
+          DADOS.rpnp.forEach(row => {
+            if (row.ne && liveForecasts[row.ne]) {
+              row.previsao = liveForecasts[row.ne].previsao;
+              row.parcial = liveForecasts[row.ne].parcial;
+              row.situacao = liveForecasts[row.ne].situacao;
+            }
+          });
+        }
+        await recalcularCreditosProjecaoSetorial();
+        console.log("[DB] Sincronização concluída com sucesso!");
+      } catch (err) {
+        console.warn("[DB] Erro ao sincronizar previsões em tempo real:", err);
+      }
+    }
+
     // Atualiza logo se disponível no JSON
     if (DADOS.logo_base64) {
       const logoEl = document.getElementById('headerLogo');
@@ -1181,7 +1459,6 @@ async function carregarDados() {
     // Renderiza tudo com animação de contagem
     startCountUpAnimation();
     setTimeout(initChart, 300);
-    renderAuditoria();
     renderEmpenhos40();
 
   } catch (err) {
@@ -1205,6 +1482,10 @@ function openTab(evt, tabId) {
     carregarEmpenhosCorrente('160443');
   } else if (tabId === 'tab-emp-rpnp') {
     carregarEmpenhosRpnp('160443');
+  } else if (tabId === 'tab-creditos-tela') {
+    carregarCreditosTela('160443');
+  } else if (tabId === 'tab-logs') {
+    carregarLogsHistorico();
   }
 }
 
@@ -1275,7 +1556,9 @@ function calcularPrevisto(r, metaDate) {
 function agruparPorSetor(linhas, metaDate) {
   const setores = {};
   linhas.forEach(r => {
-    const s = (r.setor||'').trim(); if (!s) return;
+    const piVal = (r.pi || '').toUpperCase().trim();
+    const s = MAPA_PI_RESP[piVal] || (r.setor||'').trim() || 'NÃO MAPEADO';
+    if (!s) return;
     if (!setores[s]) setores[s] = {emp160:0, prev160:0, emp167:0, prev167:0};
     const prev = calcularPrevisto(r, metaDate);
     if (r.bloco === '160443') { setores[s].emp160 += num(r.emp); setores[s].prev160 += prev; }
@@ -1463,17 +1746,6 @@ function render() {
   el('tbodySetorRpnp').innerHTML = rowsSetorR;
 
 
-  // 2. ABA CONTROLE E AUDITORIA (NOVAS FUNÇÕES)
-  const todasNEs = [...(DADOS.corrente||[]), ...(DADOS.rpnp||[])];
-  
-  const semCont = todasNEs.filter(r => (r.situacao || '').trim() === '');
-  el('tbodySemControle').innerHTML = semCont.length ? semCont.map(r => `<tr><td>${r.bloco}</td><td><strong>${r.ne}</strong></td><td>${r.pi}</td><td>${r.setor}</td><td>${R$(num(r.emp))}</td></tr>`).join('') : '<tr><td colspan="5" style="text-align:center">Nenhuma pendência de controle de SI/CL! Excelente!</td></tr>';
-
-  const semPrev = todasNEs.filter(r => (r.previsao || '').trim() === '');
-  el('tbodySemPrevisao').innerHTML = semPrev.length ? semPrev.map(r => `<tr><td>${r.bloco}</td><td><strong>${r.ne}</strong></td><td>${r.pi}</td><td>${r.setor}</td><td>${R$(num(r.emp))}</td></tr>`).join('') : '<tr><td colspan="5" style="text-align:center">Nenhuma pendência de previsão! Parabéns!</td></tr>';
-
-  const feed = DADOS.mudancas || [];
-  el('tbodyFeedback').innerHTML = feed.length ? feed.map(m => `<tr><td>${m.ug}</td><td><strong>${m.ne}</strong></td><td>${m.setor}</td><td><strong>${m.valor}</strong></td><td><span class="pill warn">⚠️ ALTERAÇÃO LOCAL IDENTIFICADA</span></td></tr>`).reverse().slice(0, 50).join('') : '<tr><td colspan="5" style="text-align:center">Nenhuma mudança simulada identificada nas LOGS.</td></tr>';
 }
 
 let debTimer;
@@ -1488,90 +1760,7 @@ function onInput() {
   }
 });
 
-// ===================== AUDITORIA DE PREVISÕES =====================
-function renderAuditoria() {
-  const audit    = DADOS.auditoria || [];
-  let dataMeta = DADOS.data_meta || '—';
-  const rawDate = el('inputData').value;
-  if (rawDate) {
-    const parts = rawDate.split('-');
-    if (parts.length === 3) {
-      dataMeta = `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-  }
-  const dmEl = el('auditDataMeta'); if (dmEl) dmEl.textContent = dataMeta;
 
-  const criticos = audit.filter(a => a.status === 'CRITICO');
-  const atencao  = audit.filter(a => a.status === 'ATENCAO');
-  const feedback = audit.filter(a => a.status === 'FEEDBACK');
-  const ok       = audit.filter(a => a.status === 'OK');
-
-  el('auditCntCritico').textContent  = criticos.length;
-  el('auditCntAtencao').textContent  = atencao.length;
-  el('auditCntFeedback').textContent = feedback.length;
-  el('auditCntOk').textContent       = ok.length;
-
-  function diasTag(a) {
-    const d = num(a.dias_restantes);
-    if (d <= 0) return `<span style="font-size:10px;color:#c53030;font-weight:bold">Meta vencida!</span>`;
-    return `<span style="font-size:10px;color:${d <= 5 ? '#c53030' : '#b7791f'};font-weight:bold">${d}d até ${a.data_meta||'—'}</span>`;
-  }
-
-  function barParcial(a) {
-    const pct = Math.min(num(a.pct_executado || 0), 100);
-    const cor  = pct >= 50 ? '#48bb78' : pct >= 20 ? '#ecc94b' : '#fc8181';
-    return `<div class="audit-bar-wrap"><div class="audit-bar" style="width:${pct}%;background:${cor}"></div></div>
-            <span style="font-size:9px;color:#666">${pct.toFixed(1)}% do parcial</span>`;
-  }
-
-  function rowMain(a, rowCls) {
-    const prevPill = (p => {
-      if (p === 'SIM')     return `<span class="pill ok">SIM</span>`;
-      if (p === 'PARCIAL') return `<span class="pill warn">PARCIAL</span>`;
-      return `<span class="pill gray">NÃO</span>`;
-    })(a.previsao || '');
-
-    const progBar = (a.previsao === 'PARCIAL') ? barParcial(a) : '';
-
-    return `<tr class="${rowCls}">
-      <td><strong>${a.ne}</strong><br><span style="font-size:10px;color:#888">${a.ug}</span></td>
-      <td>${a.setor}</td>
-      <td style="font-size:11px">${a.pi}</td>
-      <td class="num">${R$(num(a.saldo_atual))}</td>
-      <td class="num" style="color:var(--green)">${R$(num(a.liquidado_acumulado))}</td>
-      <td>${prevPill}</td>
-      <td style="font-size:11px">${progBar}${diasTag(a)}<br><span style="color:#555">${a.mensagem || ''}</span></td>
-    </tr>`;
-  }
-
-  function rowFeed(a) {
-    return `<tr class="row-feedback">
-      <td><strong>${a.ne}</strong><br><span style="font-size:10px;color:#888">${a.ug}</span></td>
-      <td>${a.setor}</td>
-      <td style="font-size:11px">${a.pi}</td>
-      <td class="num" style="color:var(--green);font-weight:bold">${R$(num(a.liquidado_acumulado))}</td>
-      <td><span class="pill gray">NÃO</span></td>
-      <td style="font-size:11px">${a.mensagem || ''}</td>
-    </tr>`;
-  }
-
-  const empty = (msg, cols) => `<tr><td colspan="${cols}" style="text-align:center;padding:20px;color:#27ae60">${msg}</td></tr>`;
-
-  const tC = el('tbodyAuditCritico');
-  if (tC) tC.innerHTML = criticos.length
-    ? criticos.map(a => rowMain(a, 'row-crit')).join('')
-    : empty('✅ Nenhum empenho crítico!', 7);
-
-  const tA = el('tbodyAuditAtencao');
-  if (tA) tA.innerHTML = atencao.length
-    ? atencao.map(a => rowMain(a, 'row-atencao')).join('')
-    : empty('✅ Nenhum empenho em atenção!', 7);
-
-  const tF = el('tbodyAuditFeedback');
-  if (tF) tF.innerHTML = feedback.length
-    ? feedback.map(rowFeed).join('')
-    : empty('Nenhum feedback adicional por enquanto.', 6);
-}
 
 // ===================== EMPENHOS 40D+ =====================
 function renderEmpenhos40() {
@@ -1623,8 +1812,6 @@ function aplicarAcessoTags() {
   const tagsStr = localStorage.getItem('adm_auth_tags') || sessionStorage.getItem('adm_auth_tags') || "[]";
   const tags = JSON.parse(tagsStr);
   
-  // btnAtualizar removido conforme solicitação
-  
   if (tags.includes('admin')) return; // Acesso total
   
   // Se for apenas auditor, não vê metas nem empenhos
@@ -1634,22 +1821,53 @@ function aplicarAcessoTags() {
     if (btnMetas) btnMetas.style.display = 'none';
     if (btnEmp) btnEmp.style.display = 'none';
     
-    // Força abrir a aba controle como padrao
-    const btnControle = document.getElementById('btn-tab-controle');
-    if (btnControle) {
-      openTab({currentTarget: btnControle}, 'tab-controle');
+    // Força abrir a aba auditoria (logs) como padrao
+    const btnLogs = document.getElementById('btn-tab-logs');
+    if (btnLogs) {
+      openTab({currentTarget: btnLogs}, 'tab-logs');
     }
   }
   
-  // Se não for auditor (nem admin), não vê auditoria nem controle
+  // Se não for auditor (nem admin), não vê a aba de auditoria (logs)
   if (!tags.includes('auditor')) {
-    const btnControle = document.getElementById('btn-tab-controle');
-    const btnAuditoria = document.getElementById('btn-tab-auditoria');
-    if (btnControle) btnControle.style.display = 'none';
-    if (btnAuditoria) btnAuditoria.style.display = 'none';
+    const btnLogs = document.getElementById('btn-tab-logs');
+    if (btnLogs) btnLogs.style.display = 'none';
   }
 }
 aplicarAcessoTags();
+
+async function recalcularCreditosProjecaoSetorial() {
+  if (!LoginSystem.useSupabase || !LoginSystem.supabase) return;
+  try {
+    await carregarMapeamentoPI();
+    const [resCred160, resCred167] = await Promise.all([
+      LoginSystem.supabase.from('creditos_disponiveis_160443').select('responsavel, disponivel'),
+      LoginSystem.supabase.from('creditos_disponiveis_167443').select('responsavel, disponivel')
+    ]);
+    
+    const liveCreditos = {};
+    const processRows = (rows, field) => {
+      if (!rows) return;
+      rows.forEach(row => {
+        const sector = (row.responsavel || 'NÃO MAPEADO').trim();
+        const val = parseFloat(row.disponivel || 0);
+        if (val > 0) {
+          if (!liveCreditos[sector]) liveCreditos[sector] = { c160: 0.0, c167: 0.0 };
+          liveCreditos[sector][field] += val;
+        }
+      });
+    };
+    
+    processRows(resCred160.data, 'c160');
+    processRows(resCred167.data, 'c167');
+    
+    DADOS.creditos = liveCreditos;
+    console.log("[DB] Recalculado DADOS.creditos em tempo real:", DADOS.creditos);
+    render();
+  } catch (err) {
+    console.warn("Erro ao recalcular créditos em tempo real para a projeção setorial:", err);
+  }
+}
 
 // Substituir função openTab global para interceptar se necessário
 const originalOpenTab = window.openTab;
@@ -1658,9 +1876,9 @@ window.openTab = function(evt, tabName) {
   const tags = JSON.parse(tagsStr);
   
   if (!tags.includes('admin')) {
-    if ((tabName === 'tab-controle' || tabName === 'tab-auditoria') && !tags.includes('auditor')) {
+    if (tabName === 'tab-logs' && !tags.includes('auditor')) {
       if (typeof LoginSystem !== 'undefined') {
-        LoginSystem.showTabDeniedModal("Seu perfil não tem permissão para acessar a área de Auditoria e Controle.");
+        LoginSystem.showTabDeniedModal("Seu perfil não tem permissão para acessar a área de Auditoria.");
       } else {
         alert("Acesso Negado à aba.");
       }
@@ -1669,6 +1887,10 @@ window.openTab = function(evt, tabName) {
   }
   
   originalOpenTab(evt, tabName);
+  
+  if (tabName === 'tab-metas') {
+    recalcularCreditosProjecaoSetorial();
+  }
 }
 
 // solicitarAtualizacaoPlanilha removida conforme solicitação
@@ -2024,12 +2246,11 @@ async function carregarEmpenhosRpnp(ug) {
 
 <div id="confirmModal" class="confirm-modal-overlay">
   <div class="confirm-modal-card">
-    <h3>Confirmar Alterações?</h3>
-    <p>Você fez modificações nos dados do empenho <strong id="confirmNeText"></strong>.</p>
+    <h3>💾 Confirmar Alterações?</h3>
+    <p>Deseja salvar as alterações feitas em <strong id="confirmNeText"></strong>?</p>
     <div class="confirm-modal-buttons">
-      <button class="modal-btn success" id="btnConfirmSalvar">Salvar Alterações</button>
-      <button class="modal-btn danger" id="btnConfirmDescartar">Descartar Alterações</button>
-      <button class="modal-btn neutral" id="btnConfirmCancelar">Continuar Editando</button>
+      <button class="modal-btn neutral" id="btnConfirmCancelar">Cancelar</button>
+      <button class="modal-btn success" id="btnConfirmSalvar">Salvar</button>
     </div>
   </div>
 </div>
@@ -2160,22 +2381,22 @@ function abrirConfirmacaoPopup(tableName, ne, cbSalvar = null, cbDescartar = nul
   textNe.textContent = ne;
   modal.style.display = 'flex';
   
+  // Pre-select (focus) the save button
+  setTimeout(() => {
+    const btnConfirm = document.getElementById('btnConfirmSalvar');
+    if (btnConfirm) btnConfirm.focus();
+  }, 50);
+  
   confirmCallbackSalvar = () => {
     modal.style.display = 'none';
     salvarLinha(tableName, ne);
     if (cbSalvar) cbSalvar();
   };
   
-  confirmCallbackDescartar = () => {
+  confirmCallbackCancelar = () => {
     modal.style.display = 'none';
     descartarLinha(ne);
     if (cbDescartar) cbDescartar();
-  };
-  
-  confirmCallbackCancelar = () => {
-    modal.style.display = 'none';
-    if (cbCancelar) cbCancelar();
-    else retornarFocoLinha(ne);
   };
 }
 
@@ -2199,6 +2420,21 @@ async function salvarLinha(tableName, ne) {
     if (error) throw error;
     
     EMPENHOS_ORIGINAL[ne] = { previsao: prevVal, parcial: parcVal, situacao: sitVal, a_liquidar: EMPENHOS_ORIGINAL[ne].a_liquidar };
+    
+    // Update local in-memory DADOS to allow dynamic recalculations on Metas tab instantly
+    const isRpnp = tableName.includes('rpnp');
+    const targetArray = isRpnp ? DADOS.rpnp : DADOS.corrente;
+    if (targetArray) {
+      const match = targetArray.find(row => row.ne === ne);
+      if (match) {
+        match.previsao = prevVal;
+        match.parcial = parcVal;
+        match.situacao = sitVal;
+      }
+    }
+    
+    // Recalculate Metas in-memory instantly
+    render();
     
     const tr = document.getElementById(`tr-${ne}`);
     if (tr) {
@@ -2262,17 +2498,642 @@ function limparLinhaAtiva() {
   }
 }
 
+// ===================== CRÉDITOS NA TELA LOGIC =====================
+const ORDEM_SETORES = [
+  "Aprovisionamento", "ALMOX", "Fisc Contrato", "PMT", "S3",
+  "SFPC", "HT", "NPOR", "Saúde", "Of Cmb Inc", "NÃO MAPEADO"
+];
+let activeEditingCreditoKey = null;
+let CREDITOS_ORIGINAL = {};
+
+function usuarioEPermitidoEditarPrazo() {
+  try {
+    const tagsStr = localStorage.getItem('adm_auth_tags') || sessionStorage.getItem('adm_auth_tags') || "[]";
+    const tags = JSON.parse(tagsStr).map(t => t.trim().toLowerCase());
+    return tags.includes('admin') || tags.includes('auditor');
+  } catch (e) {
+    return false;
+  }
+}
+
+async function carregarCreditosTela(ug) {
+  document.getElementById('btn-cred-tela-160').classList.toggle('active-filter-btn', ug === '160443');
+  document.getElementById('btn-cred-tela-167').classList.toggle('active-filter-btn', ug === '167443');
+  
+  const tbody = document.getElementById('tbodyCreditosTela');
+  tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#999"><span class="loading-spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px"></span> Carregando créditos do banco de dados...</td></tr>`;
+  
+  const tableCreditos = ug === '160443' ? 'creditos_disponiveis_160443' : 'creditos_disponiveis_167443';
+  
+  if (!LoginSystem.useSupabase || !LoginSystem.supabase) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--danger)">Conexão com o banco de dados não disponível.</td></tr>`;
+    return;
+  }
+  
+  try {
+    if (Object.keys(MAPA_PI_RESP).length === 0) {
+      await carregarMapeamentoPI();
+    }
+    
+    const [resCred, resNcs, resObs] = await Promise.all([
+      LoginSystem.supabase.from(tableCreditos).select('*'),
+      LoginSystem.supabase.from('notas_credito').select('*').eq('ug_fav', ug),
+      LoginSystem.supabase.from('creditos_observacoes').select('*').eq('ug', ug)
+    ]);
+    
+    if (resCred.error) throw resCred.error;
+    if (resNcs.error) throw resNcs.error;
+    if (resObs.error) throw resObs.error;
+    
+    const rawCreditos = resCred.data || [];
+    const rawNcs = resNcs.data || [];
+    const rawObs = resObs.data || [];
+    
+    // Save rawNcs in a global cache for adding new associations
+    window.RAW_NCS_CACHE = rawNcs;
+    
+    const obsMap = {};
+    rawObs.forEach(obs => {
+      const key = `${obs.pi.toUpperCase().trim()}|||${obs.nd.toUpperCase().trim()}`;
+      obsMap[key] = { prazo_om: obs.prazo_om || '', providencia: obs.providencia || '' };
+    });
+    
+    const ncsMap = {};
+    rawNcs.forEach(nc => {
+      if (!nc.pi) return;
+      const key = `${nc.pi.toUpperCase().trim()}|||${nc.nd.toUpperCase().trim()}`;
+      if (!ncsMap[key]) ncsMap[key] = [];
+      ncsMap[key].push(nc);
+    });
+    
+    const processedCreds = [];
+    rawCreditos.forEach(cred => {
+      const pi = cred.pi ? cred.pi.trim() : '';
+      const nd = cred.nd ? cred.nd.trim() : '';
+      const disponivel = parseFloat(cred.disponivel || 0);
+      
+      if (!pi || disponivel <= 0) return;
+      
+      const key = `${pi.toUpperCase()}|||${nd.toUpperCase()}`;
+      const sector = MAPA_PI_RESP[pi.toUpperCase()] || 'NÃO MAPEADO';
+      
+      // Obter as NCs com PI e ND idênticos
+      const exactNcs = ncsMap[key] || [];
+      
+      // Parse do campo nc_vinculadas (valores separados por vírgula)
+      const vinculadasStr = cred.nc_vinculadas || '';
+      const vinculadasArray = vinculadasStr.split(',')
+        .map(x => x.trim().toUpperCase())
+        .filter(x => x);
+      
+      // Obter as NCs associadas manualmente pelo número ou pelo ID da NC
+      const linkedNcs = rawNcs.filter(nc => {
+        const ncNum = (nc.numero_nc || '').trim().toUpperCase();
+        const ncIdStr = String(nc.id);
+        
+        // Evita duplicatas se já estiver nas NCs exatas
+        const isExact = exactNcs.some(e => String(e.id) === String(nc.id));
+        if (isExact) return false;
+        
+        return (ncNum && vinculadasArray.includes(ncNum)) || vinculadasArray.includes(ncIdStr);
+      });
+      
+      const ncs = [...exactNcs, ...linkedNcs];
+      const somaNcs = ncs.reduce((sum, nc) => sum + parseFloat(nc.valor || 0), 0);
+      const difference = somaNcs - disponivel;
+      
+      const obs = obsMap[key] || { prazo_om: '', providencia: '' };
+      
+      processedCreds.push({
+        id: cred.id,
+        ug,
+        sector,
+        pi,
+        ptres: cred.ptres || '',
+        nd,
+        disponivel,
+        somaNcs,
+        difference,
+        ncs,
+        prazo_om: obs.prazo_om,
+        providencia: obs.providencia,
+        nc_vinculadas: vinculadasStr
+      });
+    });
+    
+    const idxSetor = (s) => {
+      const idx = ORDEM_SETORES.indexOf(s);
+      return idx === -1 ? 999 : idx;
+    };
+    processedCreds.sort((a, b) => {
+      const sA = idxSetor(a.sector);
+      const sB = idxSetor(b.sector);
+      if (sA !== sB) return sA - sB;
+      if (a.pi < b.pi) return -1;
+      if (a.pi > b.pi) return 1;
+      if (a.nd < b.nd) return -1;
+      if (a.nd > b.nd) return 1;
+      return 0;
+    });
+    
+    if (processedCreds.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#999">Nenhum crédito disponível com saldo positivo encontrado para a UG ${ug}.</td></tr>`;
+      return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    // Separar recolhimentos e normais
+    const recolhimentoCreds = [];
+    const normalCreds = [];
+    
+    processedCreds.forEach((cred) => {
+      const isRecol = (cred.prazo_om || '').toLowerCase().includes('recolhimento') || obterClassePrazo(cred.prazo_om, cred.disponivel) === 'prazo-recolhimento';
+      if (isRecol) {
+        recolhimentoCreds.push(cred);
+      } else {
+        normalCreds.push(cred);
+      }
+    });
+    
+    // Renderizar linha roxa de cabeçalho do grupo de Recolhimentos
+    const trHeader = document.createElement('tr');
+    trHeader.className = 'recolhimento-header-row';
+    trHeader.style.cursor = 'pointer';
+    trHeader.title = 'Clique para exibir todos os saldos residuais e recolhimentos';
+    trHeader.onclick = () => toggleRecolhimentosGroup();
+    
+    const isExpanded = RECOLHIMENTOS_EXPANDED === true;
+    const arrowChar = isExpanded ? '▼' : '▶';
+    
+    trHeader.innerHTML = `
+      <td colspan="10" style="text-align: left; padding: 12px 14px; font-weight: 700; color: purple; border-left: 5px solid purple; font-size: 12px; letter-spacing: 0.5px;">
+        <span class="recolhimentos-arrow" style="display: inline-block; margin-right: 8px; transform: ${isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}; transition: transform 0.2s;">${arrowChar}</span> 
+        🟣 RECOLHIMENTOS E SALDOS RESIDUAIS (${recolhimentoCreds.length} itens)
+      </td>
+    `;
+    tbody.appendChild(trHeader);
+    
+    // Função auxiliar para renderizar uma linha de crédito
+    const renderCreditoRow = (cred, isRecolGroup) => {
+      const key = `${ug}|||${cred.pi}|||${cred.nd}`;
+      const uniqueId = `cred-${ug}-${cred.pi.replace(/\s+/g,'')}-${cred.nd.replace(/\s+/g,'')}`;
+      
+      CREDITOS_ORIGINAL[key] = { prazo_om: cred.prazo_om, providencia: cred.providencia, disponivel: cred.disponivel };
+      
+      const tr = document.createElement('tr');
+      tr.id = `tr-${uniqueId}`;
+      if (isRecolGroup) {
+        tr.className = 'recolhimento-item-row';
+        tr.style.display = isExpanded ? 'table-row' : 'none';
+      }
+      tr.onclick = (e) => {
+        if (!e.target.closest('input') && !e.target.closest('textarea') && !e.target.closest('button')) {
+          ativarEdicaoCredito(ug, cred.pi, cred.nd);
+        }
+      };
+      
+      const prazoColorClass = obterClassePrazo(cred.prazo_om, cred.disponivel);
+      const isAllowed = usuarioEPermitidoEditarPrazo();
+      
+      const prazoInputHtml = isAllowed ? `
+        <input type="text" class="input-prazo ${prazoColorClass}" id="prazo-txt-${uniqueId}" 
+               value="${cred.prazo_om}" placeholder="DD/MM/AAAA" style="text-align: center; width: 100%; box-sizing: border-box; font-size: 11px; padding: 6px 2px;"
+               onfocus="ativarEdicaoCredito('${ug}', '${cred.pi}', '${cred.nd}')" 
+               onchange="onPrazoChange(this, '${ug}', '${cred.pi}', '${cred.nd}')">
+      ` : `
+        <input type="text" class="input-prazo ${prazoColorClass}" id="prazo-txt-${uniqueId}" 
+               value="${cred.prazo_om}" placeholder="DD/MM/AAAA" style="text-align: center; width: 100%; box-sizing: border-box; font-size: 11px; padding: 6px 2px; cursor: not-allowed;"
+               readonly title="Apenas Administradores e Auditores podem editar o prazo">
+      `;
+      
+      tr.innerHTML = `
+        <td style="text-align: center; width: 35px; padding: 10px 4px;">
+          <button class="btn-toggle-details" id="btn-toggle-${uniqueId}" onclick="toggleCreditoDetails('${uniqueId}')" title="Mostrar/Ocultar Notas de Crédito">
+            ▶
+          </button>
+        </td>
+        <td style="text-align: center; width: 55px; padding: 10px 4px;">${ug}</td>
+        <td style="text-align: center; width: 110px; padding: 10px 4px;"><strong style="color:var(--gold)">${cred.sector}</strong></td>
+        <td style="text-align: center; width: 100px; padding: 10px 4px;"><strong>${cred.pi}</strong></td>
+        <td style="text-align: center; width: 65px; padding: 10px 4px;">${cred.nd}</td>
+        <td style="text-align: center; width: 100px; padding: 10px 4px; color: var(--black);" class="num font-mono">${R$(cred.somaNcs)}</td>
+        <td style="text-align: center; width: 110px; padding: 10px 4px; color: var(--red); font-weight: 700;" class="num font-mono">${R$(cred.difference)}</td>
+        <td style="text-align: center; width: 110px; padding: 10px 4px; color: var(--green); font-weight: 700;" class="num font-mono">${R$(cred.disponivel)}</td>
+        <td style="text-align: center; width: 95px; padding: 10px 4px;">
+          ${prazoInputHtml}
+        </td>
+        <td style="text-align: center; padding: 10px 4px;">
+          <div class="sit-textarea-container" style="width: 100%; min-width: 150px; display: inline-block;">
+            <textarea class="sit-textarea" id="prov-txt-${uniqueId}" placeholder="Sem providência" style="text-align: center; width: 100%; box-sizing: border-box; font-size: 11px;"
+                      onfocus="onSitFocus(this); ativarEdicaoCredito('${ug}', '${cred.pi}', '${cred.nd}')" 
+                      onblur="onSitBlur(this)">${cred.providencia}</textarea>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+      
+      const trDetails = document.createElement('tr');
+      trDetails.id = `details-${uniqueId}`;
+      if (isRecolGroup) {
+        trDetails.className = 'details-row recolhimento-item-row';
+      } else {
+        trDetails.className = 'details-row';
+      }
+      trDetails.style.display = 'none';
+      
+      let subTableContent = '';
+      const ncTitleHtml = `
+        <div class="sub-table-title" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <span>NCs que compõem este crédito (Qtd: ${cred.ncs.length}):</span>
+          <button class="btn-add-nc" onclick="abrirAdicionarNc('${ug}', '${cred.pi}', '${cred.nd}', '${uniqueId}')" style="background: var(--olive); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;">
+            <span>＋</span> Atribuir NC
+          </button>
+        </div>
+        <div id="add-nc-container-${uniqueId}" style="display:none; margin-top: 8px; margin-bottom: 8px; padding: 8px; background: rgba(0,0,0,0.02); border-radius: 6px; border: 1px solid var(--gray-200);">
+          <label style="font-size: 11px; font-weight: 600; color: var(--gray-600); display: block; margin-bottom: 4px;">Selecionar NC para atribuir:</label>
+          <div style="display: flex; gap: 8px;">
+            <select id="select-nc-${uniqueId}" style="flex-grow: 1; padding: 4px; font-size: 12px; border-radius: 4px; border: 1px solid var(--gray-200); background: white; color: var(--black);">
+            </select>
+            <button onclick="confirmarAtribuirNc('${ug}', '${cred.pi}', '${cred.nd}', '${uniqueId}', ${cred.id})" style="background: var(--green); color: white; border: none; border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; font-weight: 600;">Confirmar</button>
+            <button onclick="cancelarAtribuirNc('${uniqueId}')" style="background: var(--gray-200); color: var(--gray-600); border: none; border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; font-weight: 600;">Cancelar</button>
+          </div>
+        </div>
+      `;
+      
+      if (cred.ncs.length === 0) {
+        subTableContent = `
+          ${ncTitleHtml}
+          <p style="font-size: 11px; color: #888; font-style: italic; margin-top: 8px; margin-bottom: 0;">Nenhuma Nota de Crédito (NC) recente associada.</p>
+        `;
+      } else {
+        const rowsHtml = cred.ncs.map(nc => `
+          <tr>
+            <td style="text-align: center;"><strong>${nc.numero_nc || '—'}</strong></td>
+            <td style="text-align: center;">${nc.data_emissao || '—'}</td>
+            <td style="text-align: center;">${nc.pi || '—'}</td>
+            <td style="text-align: center;">${nc.ptres || '—'}</td>
+            <td style="text-align: center;">${nc.nd || '—'}</td>
+            <td style="text-align: center;" class="num font-mono">${R$(parseFloat(nc.valor || 0))}</td>
+            <td style="text-align: center;">${nc.obs || '—'}</td>
+            <td style="text-align: center; width: 60px;">
+              <button class="btn-remove-nc" onclick="removerNc('${ug}', '${nc.id}', ${cred.id})" style="background: transparent; border: none; color: var(--red); cursor: pointer; padding: 2px 6px; font-size: 14px;" title="Remover NC deste crédito">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        `).join('');
+        
+        subTableContent = `
+          ${ncTitleHtml}
+          <table class="sub-table">
+            <thead>
+              <tr>
+                <th style="text-align: center;">Nº NC</th>
+                <th style="text-align: center; width: 120px;">Data Chegada</th>
+                <th style="text-align: center; width: 100px;">PI</th>
+                <th style="text-align: center; width: 80px;">PTRES</th>
+                <th style="text-align: center; width: 80px;">ND</th>
+                <th style="text-align: center; width: 140px;">Valor da NC</th>
+                <th style="text-align: center;">Observação NC</th>
+                <th style="text-align: center; width: 60px;">Remover</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        `;
+      }
+      
+      trDetails.innerHTML = `
+        <td colspan="10">
+          <div class="sub-table-container">
+            ${subTableContent}
+          </div>
+        </td>
+      `;
+      tbody.appendChild(trDetails);
+      
+      tr.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.activeElement.blur();
+          setTimeout(() => {
+            if (activeEditingCreditoKey) {
+              const { ug, pi, nd } = activeEditingCreditoKey;
+              const editou = verificarCreditoModificado(ug, pi, nd);
+              if (editou) {
+                abrirConfirmacaoPopupCredito(ug, pi, nd);
+              }
+            }
+          }, 100);
+        }
+      });
+      
+      const txtEl = tr.querySelector(`#prov-txt-${uniqueId}`);
+      if (txtEl) {
+        txtEl.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            txtEl.blur();
+          }
+        });
+      }
+    };
+    
+    // Renderizar recolhimentos primeiro (dentro do grupo recolhimento-item-row)
+    recolhimentoCreds.forEach(c => renderCreditoRow(c, true));
+    
+    // Renderizar normais
+    normalCreds.forEach(c => renderCreditoRow(c, false));
+    
+  } catch (err) {
+    console.error("Erro ao buscar créditos:", err);
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--danger)">Erro ao carregar dados: ${err.message || err}</td></tr>`;
+  }
+}
+
+function obterClassePrazo(prazoStr, valor) {
+  const normalized = (prazoStr || '').trim().toLowerCase();
+  if (!normalized) return 'prazo-simples';
+  if (normalized.includes('recolhimento') || valor < 100) {
+    return 'prazo-recolhimento';
+  }
+  
+  const parts = normalized.split('/');
+  if (parts.length === 3) {
+    const dia = parseInt(parts[0], 10);
+    const mes = parseInt(parts[1], 10) - 1;
+    let ano = parseInt(parts[2], 10);
+    if (ano < 100) ano += 2000;
+    const dt = new Date(ano, mes, dia);
+    if (!isNaN(dt.getTime())) {
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      dt.setHours(0,0,0,0);
+      const diffTime = dt.getTime() - hoje.getTime();
+      const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (dias < 0) return 'prazo-vencido';
+      if (dias <= 20) return 'prazo-atencao';
+      return 'prazo-folga';
+    }
+  }
+  return 'prazo-simples';
+}
+
+let RECOLHIMENTOS_EXPANDED = false;
+
+function toggleRecolhimentosGroup() {
+  RECOLHIMENTOS_EXPANDED = !RECOLHIMENTOS_EXPANDED;
+  const arrow = document.querySelector('.recolhimentos-arrow');
+  if (arrow) {
+    arrow.style.transform = RECOLHIMENTOS_EXPANDED ? 'rotate(90deg)' : 'rotate(0deg)';
+    arrow.textContent = RECOLHIMENTOS_EXPANDED ? '▼' : '▶';
+  }
+  const rows = document.querySelectorAll('.recolhimento-item-row');
+  rows.forEach(row => {
+    if (RECOLHIMENTOS_EXPANDED) {
+      if (!row.classList.contains('details-row')) {
+        row.style.display = 'table-row';
+      }
+    } else {
+      row.style.display = 'none';
+      if (row.classList.contains('details-row')) {
+        const uniqueId = row.id.replace('details-', '');
+        const btn = document.getElementById(`btn-toggle-${uniqueId}`);
+        if (btn) {
+          btn.innerHTML = '▶';
+          btn.classList.remove('expanded');
+        }
+      }
+    }
+  });
+}
+
+function toggleCreditoDetails(uniqueId) {
+  const detailsRow = document.getElementById(`details-${uniqueId}`);
+  const btn = document.getElementById(`btn-toggle-${uniqueId}`);
+  if (!detailsRow || !btn) return;
+  
+  const isHidden = detailsRow.style.display === 'none';
+  if (isHidden) {
+    detailsRow.style.display = 'table-row';
+    btn.innerHTML = '▼';
+    btn.classList.add('expanded');
+  } else {
+    detailsRow.style.display = 'none';
+    btn.innerHTML = '▶';
+    btn.classList.remove('expanded');
+  }
+}
+
+function onPrazoChange(inputEl, ug, pi, nd) {
+  const key = `${ug}|||${pi}|||${nd}`;
+  const valor = CREDITOS_ORIGINAL[key] ? CREDITOS_ORIGINAL[key].disponivel : 0;
+  inputEl.className = 'input-prazo ' + obterClassePrazo(inputEl.value, valor);
+  
+  const editou = verificarCreditoModificado(ug, pi, nd);
+  if (editou) {
+    abrirConfirmacaoPopupCredito(ug, pi, nd);
+  }
+}
+
+function ativarEdicaoCredito(ug, pi, nd) {
+  const key = `${ug}|||${pi}|||${nd}`;
+  const uniqueId = `cred-${ug}-${pi.replace(/\s+/g,'')}-${nd.replace(/\s+/g,'')}`;
+  
+  if (activeEditingCreditoKey && (activeEditingCreditoKey.ug !== ug || activeEditingCreditoKey.pi !== pi || activeEditingCreditoKey.nd !== nd)) {
+    const prevUg = activeEditingCreditoKey.ug;
+    const prevPi = activeEditingCreditoKey.pi;
+    const prevNd = activeEditingCreditoKey.nd;
+    
+    const editou = verificarCreditoModificado(prevUg, prevPi, prevNd);
+    if (editou) {
+      abrirConfirmacaoPopupCredito(prevUg, prevPi, prevNd, () => {
+        realizarMudancaLinhaCreditoAtiva(ug, pi, nd);
+      }, () => {
+        realizarMudancaLinhaCreditoAtiva(ug, pi, nd);
+      }, () => {
+        retornarFocoCredito(prevUg, prevPi, prevNd);
+      });
+      return;
+    }
+  }
+  
+  realizarMudancaLinhaCreditoAtiva(ug, pi, nd);
+}
+
+function realizarMudancaLinhaCreditoAtiva(ug, pi, nd) {
+  if (activeEditingCreditoKey) {
+    const prevUniqueId = `cred-${activeEditingCreditoKey.ug}-${activeEditingCreditoKey.pi.replace(/\s+/g,'')}-${activeEditingCreditoKey.nd.replace(/\s+/g,'')}`;
+    const trAnt = document.getElementById(`tr-${prevUniqueId}`);
+    if (trAnt) trAnt.classList.remove('editing-row');
+  }
+  
+  activeEditingCreditoKey = { ug, pi, nd };
+  
+  const uniqueId = `cred-${ug}-${pi.replace(/\s+/g,'')}-${nd.replace(/\s+/g,'')}`;
+  const tr = document.getElementById(`tr-${uniqueId}`);
+  if (tr) tr.classList.add('editing-row');
+}
+
+function verificarCreditoModificado(ug, pi, nd) {
+  const key = `${ug}|||${pi}|||${nd}`;
+  const orig = CREDITOS_ORIGINAL[key];
+  if (!orig) return false;
+  
+  const uniqueId = `cred-${ug}-${pi.replace(/\s+/g,'')}-${nd.replace(/\s+/g,'')}`;
+  const inputEl = document.getElementById(`prazo-txt-${uniqueId}`);
+  const textareaEl = document.getElementById(`prov-txt-${uniqueId}`);
+  
+  if (!inputEl || !textareaEl) return false;
+  
+  const prazoVal = inputEl.value.trim();
+  const provVal = textareaEl.value.trim();
+  
+  const modPrazo = prazoVal !== orig.prazo_om;
+  const modProv = provVal !== orig.providencia;
+  
+  return modPrazo || modProv;
+}
+
+function abrirConfirmacaoPopupCredito(ug, pi, nd, cbSalvar = null, cbDescartar = null, cbCancelar = null) {
+  const modal = document.getElementById('confirmModal');
+  const textNe = document.getElementById('confirmNeText');
+  if (!modal || !textNe) return;
+  
+  textNe.textContent = `Crédito ${pi} / ${nd} (UG ${ug})`;
+  modal.style.display = 'flex';
+  
+  // Pre-select (focus) the save button
+  setTimeout(() => {
+    const btnConfirm = document.getElementById('btnConfirmSalvar');
+    if (btnConfirm) btnConfirm.focus();
+  }, 50);
+  
+  confirmCallbackSalvar = () => {
+    modal.style.display = 'none';
+    salvarCredito(ug, pi, nd);
+    if (cbSalvar) cbSalvar();
+  };
+  
+  confirmCallbackCancelar = () => {
+    modal.style.display = 'none';
+    descartarCredito(ug, pi, nd);
+    if (cbDescartar) cbDescartar();
+  };
+}
+
+async function salvarCredito(ug, pi, nd) {
+  const key = `${ug}|||${pi}|||${nd}`;
+  const uniqueId = `cred-${ug}-${pi.replace(/\s+/g,'')}-${nd.replace(/\s+/g,'')}`;
+  
+  const inputEl = document.getElementById(`prazo-txt-${uniqueId}`);
+  const textareaEl = document.getElementById(`prov-txt-${uniqueId}`);
+  
+  if (!inputEl || !textareaEl) return;
+  
+  const prazoVal = inputEl.value.trim();
+  const provVal = textareaEl.value.trim();
+  
+  try {
+    const { error } = await LoginSystem.supabase
+      .from('creditos_observacoes')
+      .upsert({ 
+        ug, 
+        pi, 
+        nd, 
+        prazo_om: prazoVal, 
+        providencia: provVal 
+      }, { onConflict: 'ug,pi,nd' });
+      
+    if (error) throw error;
+    
+    CREDITOS_ORIGINAL[key].prazo_om = prazoVal;
+    CREDITOS_ORIGINAL[key].providencia = provVal;
+    
+    const tr = document.getElementById(`tr-${uniqueId}`);
+    if (tr) {
+      tr.classList.remove('editing-row');
+      tr.classList.add('modified-row');
+      setTimeout(() => tr.classList.remove('modified-row'), 2000);
+    }
+    
+    showNotification(`Crédito ${pi}/${nd} salvo com sucesso!`, 'success');
+    
+    if (activeEditingCreditoKey && activeEditingCreditoKey.ug === ug && activeEditingCreditoKey.pi === pi && activeEditingCreditoKey.nd === nd) {
+      activeEditingCreditoKey = null;
+    }
+  } catch (err) {
+    console.error("Erro ao salvar observação de crédito:", err);
+    showNotification("Erro ao salvar no banco de dados: " + (err.message || err), "error");
+    descartarCredito(ug, pi, nd);
+  }
+}
+
+function descartarCredito(ug, pi, nd) {
+  const key = `${ug}|||${pi}|||${nd}`;
+  const orig = CREDITOS_ORIGINAL[key];
+  if (!orig) return;
+  
+  const uniqueId = `cred-${ug}-${pi.replace(/\s+/g,'')}-${nd.replace(/\s+/g,'')}`;
+  const inputEl = document.getElementById(`prazo-txt-${uniqueId}`);
+  const textareaEl = document.getElementById(`prov-txt-${uniqueId}`);
+  
+  if (inputEl) {
+    inputEl.value = orig.prazo_om;
+    inputEl.className = 'input-prazo ' + obterClassePrazo(orig.prazo_om, orig.disponivel);
+  }
+  if (textareaEl) {
+    textareaEl.value = orig.providencia;
+  }
+  
+  const tr = document.getElementById(`tr-${uniqueId}`);
+  if (tr) tr.classList.remove('editing-row');
+  
+  if (activeEditingCreditoKey && activeEditingCreditoKey.ug === ug && activeEditingCreditoKey.pi === pi && activeEditingCreditoKey.nd === nd) {
+    activeEditingCreditoKey = null;
+  }
+}
+
+function retornarFocoCredito(ug, pi, nd) {
+  const uniqueId = `cred-${ug}-${pi.replace(/\s+/g,'')}-${nd.replace(/\s+/g,'')}`;
+  const inputEl = document.getElementById(`prazo-txt-${uniqueId}`);
+  if (inputEl) inputEl.focus();
+}
+
+function limparCreditoAtivo() {
+  if (activeEditingCreditoKey) {
+    const uniqueId = `cred-${activeEditingCreditoKey.ug}-${activeEditingCreditoKey.pi.replace(/\s+/g,'')}-${activeEditingCreditoKey.nd.replace(/\s+/g,'')}`;
+    const tr = document.getElementById(`tr-${uniqueId}`);
+    if (tr) tr.classList.remove('editing-row');
+    activeEditingCreditoKey = null;
+  }
+}
+
 // Global click listener to detect focusout/blur from editing rows
 document.addEventListener('click', (e) => {
   const noTr = e.target.closest('tr[id^="tr-"]');
   const noModal = e.target.closest('.confirm-modal-card') || e.target.closest('.sit-card-modal') || e.target.closest('.card-overlay');
   
-  if (!noTr && !noModal && activeEditingRowNe) {
-    const editou = verificarSeModificado(activeEditingRowNe);
-    if (editou) {
-      abrirConfirmacaoPopup(activeEditingRowTable, activeEditingRowNe);
-    } else {
-      limparLinhaAtiva();
+  if (!noTr && !noModal) {
+    if (activeEditingRowNe) {
+      const editou = verificarSeModificado(activeEditingRowNe);
+      if (editou) {
+        abrirConfirmacaoPopup(activeEditingRowTable, activeEditingRowNe);
+      } else {
+        limparLinhaAtiva();
+      }
+    } else if (activeEditingCreditoKey) {
+      const { ug, pi, nd } = activeEditingCreditoKey;
+      const editou = verificarCreditoModificado(ug, pi, nd);
+      if (editou) {
+        abrirConfirmacaoPopupCredito(ug, pi, nd);
+      } else {
+        limparCreditoAtivo();
+      }
     }
   }
 });
@@ -2282,13 +3143,610 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnConfirmSalvar').addEventListener('click', () => {
     if (confirmCallbackSalvar) confirmCallbackSalvar();
   });
-  document.getElementById('btnConfirmDescartar').addEventListener('click', () => {
-    if (confirmCallbackDescartar) confirmCallbackDescartar();
-  });
   document.getElementById('btnConfirmCancelar').addEventListener('click', () => {
     if (confirmCallbackCancelar) confirmCallbackCancelar();
   });
 });
+
+// Capture Enter keypress globally when confirmation modal is open
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const modal = document.getElementById('confirmModal');
+    if (modal && modal.style.display === 'flex') {
+      if (confirmCallbackSalvar) {
+        e.preventDefault();
+        e.stopPropagation();
+        confirmCallbackSalvar();
+      }
+    }
+  }
+});
+
+// NC association functions
+function calcularSemelhancaString(str1, str2) {
+  const s1 = (str1 || '').trim().toUpperCase();
+  const s2 = (str2 || '').trim().toUpperCase();
+  if (s1 === s2) return 1.0;
+  if (!s1 || !s2) return 0.0;
+  
+  const m = s1.length;
+  const n = s2.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (s1[i - 1] === s2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,    // deletion
+          dp[i][j - 1] + 1,    // insertion
+          dp[i - 1][j - 1] + 1 // substitution
+        );
+      }
+    }
+  }
+  
+  const distancia = dp[m][n];
+  const maxLen = Math.max(m, n);
+  return 1.0 - (distancia / maxLen);
+}
+
+function abrirAdicionarNc(ug, pi, nd, uniqueId) {
+  const container = document.getElementById(`add-nc-container-${uniqueId}`);
+  const select = document.getElementById(`select-nc-${uniqueId}`);
+  if (!container || !select) return;
+  
+  const targetPi = pi.trim().toUpperCase();
+  const targetNd = nd.trim().toUpperCase();
+  
+  let samePiNcs = (window.RAW_NCS_CACHE || []).filter(nc => {
+    const ncPi = (nc.pi || '').trim().toUpperCase();
+    const ncNd = (nc.nd || '').trim().toUpperCase();
+    return ncPi === targetPi && ncNd !== targetNd;
+  });
+  
+  let usingSimilar = false;
+  if (samePiNcs.length === 0) {
+    // Busca PIs com pelo menos 50% de similaridade
+    samePiNcs = (window.RAW_NCS_CACHE || []).filter(nc => {
+      const ncPi = (nc.pi || '').trim().toUpperCase();
+      const ncNd = (nc.nd || '').trim().toUpperCase();
+      
+      // Exclui apenas se já estiver associada a este crédito exato (mesmo PI e mesmo ND)
+      if (ncPi === targetPi && ncNd === targetNd) return false;
+      
+      const similarity = calcularSemelhancaString(ncPi, targetPi);
+      return similarity >= 0.5;
+    });
+    usingSimilar = true;
+  }
+  
+  select.innerHTML = '';
+  if (samePiNcs.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'Nenhuma NC disponível com PI compatível';
+    select.appendChild(opt);
+  } else {
+    samePiNcs.forEach(nc => {
+      const opt = document.createElement('option');
+      opt.value = nc.id;
+      
+      const ncNum = nc.numero_nc || 'Sem número';
+      const ncDate = nc.data_emissao || '—';
+      const ncPiStr = nc.pi || '—';
+      const ncPtres = nc.ptres || '—';
+      const ncNdStr = nc.nd || '—';
+      const ncVal = R$(parseFloat(nc.valor || 0));
+      const ncObs = nc.obs || '—';
+      
+      const labelSuffix = usingSimilar ? ' (PI Similar)' : '';
+      opt.textContent = `${ncNum} | Data: ${ncDate} | PI: ${ncPiStr}${labelSuffix} | PTRES: ${ncPtres} | ND: ${ncNdStr} | Valor: ${ncVal} | Obs: ${ncObs}`;
+      select.appendChild(opt);
+    });
+  }
+  container.style.display = 'block';
+}
+
+function cancelarAtribuirNc(uniqueId) {
+  const container = document.getElementById(`add-nc-container-${uniqueId}`);
+  if (container) container.style.display = 'none';
+}
+
+async function confirmarAtribuirNc(ug, pi, nd, uniqueId, credId) {
+  const select = document.getElementById(`select-nc-${uniqueId}`);
+  if (!select) return;
+  const ncId = select.value;
+  if (!ncId) {
+    showNotification('Selecione uma NC para atribuir.', 'error');
+    return;
+  }
+  
+  try {
+    showNotification('Atribuindo NC...', 'info');
+    
+    // Obter dados da NC a partir do cache global
+    const ncObj = (window.RAW_NCS_CACHE || []).find(n => String(n.id) === String(ncId));
+    const ncNum = ncObj ? (ncObj.numero_nc || '').trim() : '';
+    
+    if (!ncNum) {
+      throw new Error("Número da Nota de Crédito não localizado.");
+    }
+    
+    const tableCreditos = ug === '160443' ? 'creditos_disponiveis_160443' : 'creditos_disponiveis_167443';
+    
+    // Buscar nc_vinculadas atual do crédito no banco
+    const { data: credData, error: fetchErr } = await LoginSystem.supabase
+      .from(tableCreditos)
+      .select('nc_vinculadas')
+      .eq('id', credId)
+      .single();
+      
+    if (fetchErr) throw fetchErr;
+    
+    let vinculadasStr = credData.nc_vinculadas || '';
+    let parts = vinculadasStr.split(',').map(x => x.trim()).filter(x => x);
+    if (!parts.includes(ncNum)) {
+      parts.push(ncNum);
+    }
+    const newVinculadas = parts.join(',');
+    
+    // Salvar na coluna nc_vinculadas no supabase
+    const { error: updateCredErr } = await LoginSystem.supabase
+      .from(tableCreditos)
+      .update({ nc_vinculadas: newVinculadas })
+      .eq('id', credId);
+      
+    if (updateCredErr) throw updateCredErr;
+    
+    // Também atualizar o ND da NC na tabela notas_credito para sincronizar
+    const { error: updateNcErr } = await LoginSystem.supabase
+      .from('notas_credito')
+      .update({ nd: nd })
+      .eq('id', ncId);
+      
+    if (updateNcErr) throw updateNcErr;
+    
+    showNotification('NC atribuída com sucesso!', 'success');
+    cancelarAtribuirNc(uniqueId);
+    carregarCreditosTela(ug);
+  } catch (err) {
+    console.error("Erro ao atribuir NC:", err);
+    showNotification("Erro ao atribuir NC: " + (err.message || err), "error");
+  }
+}
+
+async function removerNc(ug, ncId, credId) {
+  if (!confirm('Deseja realmente remover esta NC deste crédito?')) return;
+  
+  try {
+    showNotification('Removendo NC...', 'info');
+    
+    // Obter dados da NC a partir do cache global
+    const ncObj = (window.RAW_NCS_CACHE || []).find(n => String(n.id) === String(ncId));
+    const ncNum = ncObj ? (ncObj.numero_nc || '').trim() : '';
+    
+    const tableCreditos = ug === '160443' ? 'creditos_disponiveis_160443' : 'creditos_disponiveis_167443';
+    
+    // Buscar nc_vinculadas atual do crédito no banco
+    const { data: credData, error: fetchErr } = await LoginSystem.supabase
+      .from(tableCreditos)
+      .select('nc_vinculadas')
+      .eq('id', credId)
+      .single();
+      
+    if (fetchErr) throw fetchErr;
+    
+    let vinculadasStr = credData.nc_vinculadas || '';
+    let parts = vinculadasStr.split(',').map(x => x.trim()).filter(x => x);
+    if (ncNum) {
+      parts = parts.filter(x => x !== ncNum);
+    }
+    const newVinculadas = parts.join(',');
+    
+    // Remover da coluna nc_vinculadas
+    const { error: updateCredErr } = await LoginSystem.supabase
+      .from(tableCreditos)
+      .update({ nc_vinculadas: newVinculadas })
+      .eq('id', credId);
+      
+    if (updateCredErr) throw updateCredErr;
+    
+    // Limpar o campo ND na tabela notas_credito
+    const { error: updateNcErr } = await LoginSystem.supabase
+      .from('notas_credito')
+      .update({ nd: '' })
+      .eq('id', ncId);
+      
+    if (updateNcErr) throw updateNcErr;
+    
+    showNotification('NC removida com sucesso!', 'success');
+    carregarCreditosTela(ug);
+  } catch (err) {
+    console.error("Erro ao remover NC:", err);
+    showNotification("Erro ao remover NC: " + (err.message || err), "error");
+  }
+}
+
+// ===================== LOGS E HISTÓRICO LOGIC =====================
+let LOGS_DATES = [];
+let LOGS_COMPARATIVE_RESULT = [];
+let LOGS_COMPARATIVE_FILTERED = [];
+let LOGS_CURRENT_PAGE = 0;
+const LOGS_PAGE_SIZE = 50;
+
+async function carregarLogsHistorico() {
+  const tbody = document.getElementById('tbodyLogsHistorico');
+  if (!tbody) return;
+  
+  if (!LoginSystem.useSupabase || !LoginSystem.supabase) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#999">Banco de dados Supabase não ativo ou indisponível.</td></tr>';
+    return;
+  }
+
+  try {
+    // 1. Carrega datas se estiver vazio
+    if (LOGS_DATES.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#999"><div class="loading-spinner" style="margin: 20px auto; width: 30px; height: 30px;"></div>Carregando datas dos snapshots do banco...</td></tr>';
+      
+      const { data, error } = await LoginSystem.supabase
+        .from('v_datas_logs')
+        .select('data, timestamp, max_id');
+        
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#999">Nenhum snapshot de logs encontrado no banco.</td></tr>';
+        return;
+      }
+      
+      function parseDateBR(dStr) {
+        const p = dStr.split('/');
+        return new Date(p[2], p[1] - 1, p[0]);
+      }
+      
+      // Ordena cronologicamente crescente (mais antigos primeiro)
+      data.sort((a, b) => parseDateBR(a.data) - parseDateBR(b.data));
+      LOGS_DATES = data;
+      
+      // Popula os seletores de data
+      const selStart = document.getElementById('filterLogsDateStart');
+      const selEnd = document.getElementById('filterLogsDateEnd');
+      
+      selStart.innerHTML = '';
+      selEnd.innerHTML = '';
+      
+      LOGS_DATES.forEach((d, idx) => {
+        const optA = document.createElement('option');
+        optA.value = d.data;
+        optA.textContent = d.data;
+        selStart.appendChild(optA);
+        
+        const optB = document.createElement('option');
+        optB.value = d.data;
+        optB.textContent = d.data;
+        selEnd.appendChild(optB);
+      });
+      
+      // Seleciona o último (Data Final) e o penúltimo (Data Inicial)
+      if (LOGS_DATES.length > 1) {
+        selStart.value = LOGS_DATES[LOGS_DATES.length - 2].data;
+      } else {
+        selStart.value = LOGS_DATES[0].data;
+      }
+      selEnd.value = LOGS_DATES[LOGS_DATES.length - 1].data;
+    }
+    
+    // 2. Executa a comparação de snapshots
+    await compararSnapshots();
+  } catch (err) {
+    console.error("Erro ao inicializar histórico de logs:", err);
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--red)">Erro ao ler datas: ${err.message || err}</td></tr>`;
+  }
+}
+
+async function compararSnapshots() {
+  const tbody = document.getElementById('tbodyLogsHistorico');
+  if (!tbody) return;
+  
+  const dateA = document.getElementById('filterLogsDateStart').value;
+  const dateB = document.getElementById('filterLogsDateEnd').value;
+  
+  if (!dateA || !dateB) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#999">Selecione as datas para comparar.</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#999"><div class="loading-spinner" style="margin: 20px auto; width: 30px; height: 30px;"></div>Buscando e comparando saldos dos snapshots...</td></tr>';
+  
+  try {
+    // Busca dados da data A
+    const { data: dataA, error: errA } = await LoginSystem.supabase
+      .from('logs')
+      .select('*')
+      .eq('data', dateA);
+      
+    if (errA) throw errA;
+    
+    // Busca dados da data B
+    const { data: dataB, error: errB } = await LoginSystem.supabase
+      .from('logs')
+      .select('*')
+      .eq('data', dateB);
+      
+    if (errB) throw errB;
+    
+    // Organiza por dicionário
+    const mapA = {};
+    const mapB = {};
+    
+    dataA.forEach(row => {
+      if (row.ne) {
+        mapA[row.ne] = row;
+      } else if (row.categoria === 'Crédito Disponível') {
+        const key = `${row.ug}|${row.responsavel}|${row.pi}|${row.nd}`;
+        mapA[key] = row;
+      }
+    });
+    
+    dataB.forEach(row => {
+      if (row.ne) {
+        mapB[row.ne] = row;
+      } else if (row.categoria === 'Crédito Disponível') {
+        const key = `${row.ug}|${row.responsavel}|${row.pi}|${row.nd}`;
+        mapB[key] = row;
+      }
+    });
+    
+    const allKeys = new Set([...Object.keys(mapA), ...Object.keys(mapB)]);
+    LOGS_COMPARATIVE_RESULT = [];
+    
+    allKeys.forEach(key => {
+      const rowA = mapA[key];
+      const rowB = mapB[key];
+      
+      const isCredit = key.includes('|');
+      
+      let ug = (rowB || rowA).ug;
+      let responsavel = (rowB || rowA).responsavel;
+      let pi = (rowB || rowA).pi;
+      let nd = isCredit ? ((rowB || rowA).nd || '') : '';
+      let ne = isCredit ? '' : key;
+      
+      let valA = rowA ? Number(rowA.valor_principal || 0) : 0;
+      let valB = rowB ? Number(rowB.valor_principal || 0) : 0;
+      let prevA = rowA ? (rowA.previsao || 'NÃO') : 'NÃO';
+      let prevB = rowB ? (rowB.previsao || 'NÃO') : 'NÃO';
+      let parcA = rowA ? Number(rowA.valor_previsao || 0) : 0;
+      let parcB = rowB ? Number(rowB.valor_previsao || 0) : 0;
+      
+      let status = 'Sem Alteração';
+      
+      if (!isCredit) {
+        // Empenhos
+        const hadSaldoA = valA > 0.01;
+        const hasSaldoB = valB > 0.01;
+        
+        if (hadSaldoA && !hasSaldoB) {
+          status = 'Empenho Zerado';
+        } else if (!hadSaldoA && hasSaldoB) {
+          status = 'Novo Empenho';
+        } else if (hadSaldoA && hasSaldoB) {
+          if (valB < valA - 0.01) {
+            status = 'Liquidação Parcial';
+          } else if (prevA !== prevB || Math.abs(parcA - parcB) > 0.01) {
+            status = 'Alteração Previsão';
+          }
+        }
+      } else {
+        // Créditos
+        const hadSaldoA = valA > 0.01;
+        const hasSaldoB = valB > 0.01;
+        
+        if (hadSaldoA && !hasSaldoB) {
+          status = 'Crédito Zerado';
+        } else if (!hadSaldoA && hasSaldoB) {
+          status = 'Novo Crédito';
+        } else if (hadSaldoA && hasSaldoB) {
+          if (Math.abs(valA - valB) > 0.01) {
+            status = 'Alteração Crédito';
+          }
+        }
+      }
+      
+      LOGS_COMPARATIVE_RESULT.push({
+        ug, responsavel, pi, nd, ne,
+        valA, valB, diff: valA - valB,
+        prevA, prevB, status
+      });
+    });
+    
+    aplicarFiltrosEExibirLogs();
+  } catch (err) {
+    console.error("Erro ao comparar logs:", err);
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--red)">Erro ao processar comparação: ${err.message || err}</td></tr>`;
+  }
+}
+
+function toggleStatusDropdown() {
+  const options = document.getElementById('statusDropdownOptions');
+  if (options) {
+    options.style.display = options.style.display === 'block' ? 'none' : 'block';
+  }
+}
+
+function onStatusCheckboxChange() {
+  const checked = document.querySelectorAll('#statusDropdownOptions input[type="checkbox"]:checked');
+  const selectedText = document.getElementById('selectedStatusText');
+  if (selectedText) {
+    if (checked.length === 0) {
+      selectedText.textContent = 'Todos os Status';
+    } else if (checked.length === 1) {
+      selectedText.textContent = checked[0].value;
+    } else {
+      selectedText.textContent = `${checked.length} selecionados`;
+    }
+  }
+  aplicarFiltrosEExibirLogs();
+}
+
+// Fechar dropdown de status ao clicar fora
+document.addEventListener('click', (e) => {
+  const container = document.getElementById('multiselectStatusContainer');
+  const options = document.getElementById('statusDropdownOptions');
+  if (container && options && !container.contains(e.target)) {
+    options.style.display = 'none';
+  }
+});
+
+function aplicarFiltrosEExibirLogs() {
+  const tbody = document.getElementById('tbodyLogsHistorico');
+  if (!tbody) return;
+  
+  const neFilter = document.getElementById('filterLogsNe').value.trim().toUpperCase();
+  const respFilter = document.getElementById('filterLogsResp').value.trim().toUpperCase();
+  
+  // Obter status selecionados
+  const checkedCheckboxes = document.querySelectorAll('#statusDropdownOptions input[type="checkbox"]:checked');
+  const checkedStatuses = Array.from(checkedCheckboxes).map(cb => cb.value);
+  
+  // Filtragem
+  LOGS_COMPARATIVE_FILTERED = LOGS_COMPARATIVE_RESULT.filter(r => {
+    if (neFilter && !r.ne.toUpperCase().includes(neFilter)) return false;
+    if (respFilter && !r.responsavel.toUpperCase().includes(respFilter)) return false;
+    if (checkedStatuses.length > 0 && !checkedStatuses.includes(r.status)) return false;
+    return true;
+  });
+  
+  // Ordenação: alterações primeiro, "Sem Alteração" por último
+  LOGS_COMPARATIVE_FILTERED.sort((a, b) => {
+    if (a.status === 'Sem Alteração' && b.status !== 'Sem Alteração') return 1;
+    if (a.status !== 'Sem Alteração' && b.status === 'Sem Alteração') return -1;
+    return a.responsavel.localeCompare(b.responsavel);
+  });
+  
+  LOGS_CURRENT_PAGE = 0;
+  exibirPaginaLogs();
+}
+
+function exibirPaginaLogs() {
+  const tbody = document.getElementById('tbodyLogsHistorico');
+  if (!tbody) return;
+  
+  const total = LOGS_COMPARATIVE_FILTERED.length;
+  
+  if (total === 0) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#999">Nenhuma linha de auditoria encontrada para os filtros selecionados.</td></tr>';
+    atualizarLogsPaginationUI(0);
+    return;
+  }
+  
+  const from = LOGS_CURRENT_PAGE * LOGS_PAGE_SIZE;
+  const to = Math.min(from + LOGS_PAGE_SIZE, total);
+  
+  tbody.innerHTML = '';
+  const pageItems = LOGS_COMPARATIVE_FILTERED.slice(from, to);
+  
+  pageItems.forEach(r => {
+    const tr = document.createElement('tr');
+    
+    // Estilos de linha baseados no status da auditoria
+    let rowStyle = '';
+    let valAStr = R$(r.valA);
+    let valBStr = R$(r.valB);
+    let diffStr = R$(r.diff);
+    let diffStyle = '';
+    
+    if (r.status === 'Novo Empenho' || r.status === 'Novo Crédito') {
+      rowStyle = 'background: rgba(46, 204, 113, 0.08);';
+      diffStyle = 'color: var(--green); font-weight: 700;';
+      diffStr = '+ ' + R$(Math.abs(r.diff));
+    } else if (r.status === 'Empenho Zerado' || r.status === 'Crédito Zerado') {
+      rowStyle = 'background: rgba(231, 76, 60, 0.08);';
+      diffStyle = 'color: var(--red); font-weight: 700;';
+      diffStr = '- ' + R$(Math.abs(r.diff));
+    } else if (r.status === 'Liquidação Parcial') {
+      rowStyle = 'background: rgba(52, 152, 219, 0.08);';
+      diffStyle = 'color: var(--blue); font-weight: 700;';
+      diffStr = '- ' + R$(Math.abs(r.diff));
+    } else if (r.status === 'Alteração Previsão' || r.status === 'Alteração Crédito') {
+      rowStyle = 'background: rgba(241, 196, 15, 0.08);';
+    }
+    
+    tr.style.cssText = rowStyle;
+    
+    tr.innerHTML = `
+      <td style="text-align: center;">${r.ug || '—'}</td>
+      <td style="text-align: center; font-size: 11px;">${r.responsavel || '—'}</td>
+      <td style="text-align: center;">${r.pi || '—'}</td>
+      <td style="text-align: center;">${r.nd || '—'}</td>
+      <td style="text-align: center; font-weight: 600;">${r.ne || '—'}</td>
+      <td style="text-align: right; font-weight: 600;">${valAStr}</td>
+      <td style="text-align: right; font-weight: 600;">${valBStr}</td>
+      <td style="text-align: right; ${diffStyle}">${diffStr}</td>
+      <td style="text-align: center;">${r.prevA || '—'}</td>
+      <td style="text-align: center; font-weight: 600;">${r.prevB || '—'}</td>
+      <td style="text-align: center; font-weight: 600; font-size: 11px;">${r.status}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  
+  atualizarLogsPaginationUI(total);
+}
+
+function atualizarLogsPaginationUI(total) {
+  const counter = document.getElementById('logsTotalCounter');
+  if (counter) {
+    const from = total === 0 ? 0 : LOGS_CURRENT_PAGE * LOGS_PAGE_SIZE + 1;
+    const to = Math.min((LOGS_CURRENT_PAGE + 1) * LOGS_PAGE_SIZE, total);
+    counter.textContent = `Exibindo registros ${from}-${to} de ${total}`;
+  }
+  
+  const btnPrev = document.getElementById('btnLogsPrev');
+  const btnNext = document.getElementById('btnLogsNext');
+  
+  if (btnPrev) btnPrev.disabled = LOGS_CURRENT_PAGE === 0;
+  if (btnNext) btnNext.disabled = (LOGS_CURRENT_PAGE + 1) * LOGS_PAGE_SIZE >= total;
+}
+
+function paginarLogs(direction) {
+  const total = LOGS_COMPARATIVE_FILTERED.length;
+  LOGS_CURRENT_PAGE += direction;
+  if (LOGS_CURRENT_PAGE < 0) LOGS_CURRENT_PAGE = 0;
+  if (LOGS_CURRENT_PAGE * LOGS_PAGE_SIZE >= total) LOGS_CURRENT_PAGE = Math.max(0, Math.floor((total - 1) / LOGS_PAGE_SIZE));
+  exibirPaginaLogs();
+}
+
+function buscarEFiltrarLogs() {
+  LOGS_CURRENT_PAGE = 0;
+  compararSnapshots();
+}
+
+function limparFiltrosLogs() {
+  document.getElementById('filterLogsNe').value = '';
+  document.getElementById('filterLogsResp').value = '';
+  
+  // Desmarcar todos os checkboxes
+  const checkboxes = document.querySelectorAll('#statusDropdownOptions input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = false);
+  const selectedText = document.getElementById('selectedStatusText');
+  if (selectedText) selectedText.textContent = 'Todos os Status';
+  
+  if (LOGS_DATES.length > 1) {
+    document.getElementById('filterLogsDateStart').value = LOGS_DATES[LOGS_DATES.length - 2].data;
+  } else if (LOGS_DATES.length > 0) {
+    document.getElementById('filterLogsDateStart').value = LOGS_DATES[0].data;
+  }
+  if (LOGS_DATES.length > 0) {
+    document.getElementById('filterLogsDateEnd').value = LOGS_DATES[LOGS_DATES.length - 1].data;
+  }
+  LOGS_CURRENT_PAGE = 0;
+  compararSnapshots();
+}
 </script>
 </body>
 </html>

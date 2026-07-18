@@ -713,6 +713,13 @@
       
       closePiModal();
       loadMapeamentoPI();
+      
+      // Sync responsavel column in creditos_disponiveis tables in background
+      Promise.all([
+        LoginSystem.supabase.from('creditos_disponiveis_160443').update({ responsavel: setor }).eq('pi', pi),
+        LoginSystem.supabase.from('creditos_disponiveis_167443').update({ responsavel: setor }).eq('pi', pi)
+      ]).catch(err => console.warn("Erro ao sincronizar setor responsável nos créditos:", err));
+      
     } catch(e) {
       alert("Erro ao salvar mapeamento: " + (e.message || e));
     }
@@ -728,6 +735,13 @@
         if (error) throw error;
         
         loadMapeamentoPI();
+        
+        // Reset responsavel column in creditos_disponiveis tables to 'NÃO MAPEADO' in background
+        Promise.all([
+          LoginSystem.supabase.from('creditos_disponiveis_160443').update({ responsavel: 'NÃO MAPEADO' }).eq('pi', pi),
+          LoginSystem.supabase.from('creditos_disponiveis_167443').update({ responsavel: 'NÃO MAPEADO' }).eq('pi', pi)
+        ]).catch(err => console.warn("Erro ao limpar setor responsável nos créditos:", err));
+        
       } catch(e) {
         alert("Erro ao excluir: " + (e.message || e));
       }
