@@ -350,6 +350,18 @@
 
   // ── CONTROL ACCESOS ──
   async function loadUsers() {
+    if (LoginSystem.useSupabase && LoginSystem.supabase) {
+      try {
+        const { data, error } = await LoginSystem.supabase.rpc('get_users_list');
+        if (error) throw error;
+        users = data || [];
+        renderTable();
+        return;
+      } catch (e) {
+        console.warn("Erro ao buscar logins via Supabase:", e);
+      }
+    }
+    
     try {
       const res = await fetch('/api/logins');
       if (!res.ok) return;
@@ -364,7 +376,7 @@
       
       renderTable();
     } catch (e) {
-      console.warn("Erro ao ler banco de dados", e);
+      console.warn("Erro ao ler banco de dados local", e);
     }
   }
 
@@ -445,8 +457,28 @@
     if(document.getElementById('tag-setfinliq').checked) tags.push('setfinliq');
     if(document.getElementById('tag-setfindashboard').checked) tags.push('setfindashboard');
     
-    let hash = "";
+    if (LoginSystem.useSupabase && LoginSystem.supabase) {
+      try {
+        if (idx === -1 && !senha) return alert("A senha é obrigatória para um novo perfil.");
+        const action_type = idx === -1 ? 'create' : 'update';
+        const { data, error } = await LoginSystem.supabase.rpc('manage_user_profile', {
+          action_type,
+          target_perfil: perfil,
+          target_nome: nome,
+          target_senha: senha,
+          target_tags: tags
+        });
+        if (error) throw error;
+        
+        closeModal();
+        await loadUsers();
+        return;
+      } catch(e) {
+        return alert("Erro ao salvar no Supabase: " + (e.message || e));
+      }
+    }
     
+    let hash = "";
     if (idx === -1) {
       if(!senha) return alert("A senha é obrigatória para um novo perfil.");
       hash = await sha256(senha);
@@ -467,7 +499,25 @@
   }
   
   async function deleteUser(index) {
-    if(confirm(`Tem certeza que deseja excluir o perfil ${users[index].perfil}?`)) {
+    const perfil = users[index].perfil;
+    if(confirm(`Tem certeza que deseja excluir o perfil ${perfil}?`)) {
+      if (LoginSystem.useSupabase && LoginSystem.supabase) {
+        try {
+          const { data, error } = await LoginSystem.supabase.rpc('manage_user_profile', {
+            action_type: 'delete',
+            target_perfil: perfil,
+            target_nome: '',
+            target_senha: '',
+            target_tags: []
+          });
+          if (error) throw error;
+          await loadUsers();
+          return;
+        } catch(e) {
+          return alert("Erro ao excluir no Supabase: " + (e.message || e));
+        }
+      }
+      
       users.splice(index, 1);
       await saveToServer();
       renderTable();
@@ -482,7 +532,7 @@
         body: JSON.stringify(users)
       });
     } catch(e) {
-      alert("Erro ao salvar.");
+      console.warn("Falha ao salvar localmente (legacy):", e);
     }
   }
   
@@ -495,6 +545,30 @@
 
   // ── CONFIG & MARCOS DE METAS ──
   async function loadConfig() {
+    if (LoginSystem.useSupabase && LoginSystem.supabase) {
+      try {
+        const { data, error } = await LoginSystem.supabase
+          .from('config')
+          .select('value')
+          .eq('key', 'settings')
+          .single();
+        if (data && data.value) {
+          configData = data.value;
+          
+          const toggle = document.getElementById('toggle-login');
+          const status = document.getElementById('toggle-status');
+          toggle.checked = configData.login_required !== false;
+          status.textContent = toggle.checked ? 'Ativado' : 'Desativado';
+          status.style.color = toggle.checked ? 'var(--olive)' : 'var(--red)';
+          
+          renderMilestonesTable();
+          return;
+        }
+      } catch(e) {
+        console.warn("Erro ao buscar config no Supabase:", e);
+      }
+    }
+
     try {
       const res = await fetch('/siteadm/api/config?_t=' + Date.now());
       if (res.ok) {
@@ -519,14 +593,33 @@
     status.style.color = newValue ? 'var(--olive)' : 'var(--red)';
     
     configData.login_required = newValue;
+    await saveConfigToServer(true);
+  }
+
+  async function saveConfigToServer(isSilent = false) {
+    if (LoginSystem.useSupabase && LoginSystem.supabase) {
+      try {
+        const { error } = await LoginSystem.supabase
+          .from('config')
+          .upsert({ key: 'settings', value: configData });
+        if (error) throw error;
+        if (!isSilent) alert("Metas e Marcos salvos com sucesso no Supabase!");
+        return;
+      } catch(e) {
+        alert('Erro ao salvar configuração no Supabase: ' + (e.message || e));
+        return;
+      }
+    }
+
     try {
       await fetch('/api/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(configData)
       });
+      if (!isSilent) alert("Metas e Marcos salvos com sucesso localmente!");
     } catch(e) {
-      alert('Erro ao salvar configuração.');
+      alert("Erro ao salvar configurações localmente: " + e);
     }
   }
 
@@ -610,18 +703,6 @@
     }
   }
 
-  async function saveConfigToServer() {
-    try {
-      await fetch('/api/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(configData)
-      });
-      alert("Metas e Marcos salvos com sucesso!");
-    } catch(e) {
-      alert("Erro ao salvar configurações: " + e);
-    }
-  }
 
   // ── RESPONSAIVEIS POR PI (BANCO DE DADOS) ──
   async function loadMapeamentoPI() {

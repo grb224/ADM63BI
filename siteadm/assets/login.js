@@ -108,6 +108,21 @@ const LoginSystem = {
           this.supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
           this.useSupabase = true;
           console.log("[DB] Cliente de banco de dados inicializado com sucesso.");
+          
+          // Buscar configuração em tempo real no Supabase
+          try {
+            const { data, error } = await this.supabase
+              .from('config')
+              .select('value')
+              .eq('key', 'settings')
+              .single();
+            if (data && data.value && data.value.login_required !== undefined) {
+              this.loginRequired = data.value.login_required;
+              console.log("[CONFIG] Exigir login atualizado via banco de dados:", this.loginRequired);
+            }
+          } catch (cfgErr) {
+            console.warn("[CONFIG] Falha ao ler config em tempo real do banco:", cfgErr);
+          }
         } catch (err) {
           console.error("[DB] Falha ao inicializar o banco de dados. Usando fallback local.", err);
           this.useSupabase = false;
