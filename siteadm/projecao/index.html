@@ -841,6 +841,181 @@
       height: 14px;
       accent-color: var(--olive);
     }
+    
+    /* NE Clickable & Items Modal Styles (Design System Institucional) */
+    .ne-clickable {
+      color: #3d5016 !important;
+      font-weight: 800 !important;
+      cursor: pointer !important;
+      text-decoration: underline !important;
+      text-decoration-color: rgba(201, 162, 39, 0.4) !important;
+      transition: all 0.2s ease-in-out !important;
+      display: inline-block !important;
+      padding: 2px 6px !important;
+      border-radius: 4px !important;
+    }
+    .ne-clickable:hover {
+      color: #c9a227 !important;
+      background: rgba(201, 162, 39, 0.2) !important;
+      text-decoration-color: #c9a227 !important;
+      transform: scale(1.06) !important;
+      box-shadow: 0 0 8px rgba(201, 162, 39, 0.4) !important;
+    }
+    
+    .modal-itens-overlay {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: rgba(0, 0, 0, 0.7) !important;
+      backdrop-filter: blur(5px) !important;
+      -webkit-backdrop-filter: blur(5px) !important;
+      z-index: 999999 !important;
+      display: none !important;
+      align-items: center !important;
+      justify-content: center !important;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .modal-itens-overlay.open {
+      display: flex !important;
+      opacity: 1 !important;
+    }
+    .modal-itens-card {
+      background: #ffffff !important;
+      border-radius: 16px !important;
+      width: 92% !important;
+      max-width: 920px !important;
+      max-height: 85vh !important;
+      display: flex !important;
+      flex-direction: column !important;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4) !important;
+      overflow: hidden !important;
+      border: 1px solid rgba(201, 162, 39, 0.5) !important;
+      animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    @keyframes modalPop {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-itens-header {
+      background: linear-gradient(135deg, #2a3810 0%, #3d5016 100%) !important;
+      color: #ffffff !important;
+      padding: 16px 24px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      border-bottom: 2px solid #c9a227 !important;
+    }
+    .modal-itens-header h3 {
+      font-size: 16px !important;
+      font-weight: 700 !important;
+      color: #f5e8b0 !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      margin: 0 !important;
+    }
+    .modal-itens-header .close-btn {
+      background: rgba(255,255,255,0.15) !important;
+      border: none !important;
+      color: #ffffff !important;
+      width: 32px !important;
+      height: 32px !important;
+      border-radius: 50% !important;
+      cursor: pointer !important;
+      font-size: 18px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transition: background 0.2s ease !important;
+    }
+    .modal-itens-header .close-btn:hover {
+      background: rgba(255,255,255,0.3) !important;
+    }
+    .modal-itens-info-bar {
+      display: grid !important;
+      grid-template-columns: repeat(4, 1fr) !important;
+      gap: 12px !important;
+      padding: 14px 24px !important;
+      background: #f5f2e8 !important;
+      border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+    }
+    .info-item-box {
+      background: #ffffff !important;
+      border: 1px solid rgba(0,0,0,0.08) !important;
+      border-radius: 8px !important;
+      padding: 8px 12px !important;
+    }
+    .info-item-box .label {
+      font-size: 10px !important;
+      font-weight: 700 !important;
+      color: #6b7280 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      margin-bottom: 2px !important;
+    }
+    .info-item-box .val {
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      color: #1a1a1a !important;
+    }
+    .info-item-box .val.gold {
+      color: #3d5016 !important;
+    }
+    .modal-itens-body {
+      padding: 20px 24px !important;
+      overflow-y: auto !important;
+      flex: 1 !important;
+    }
+    .modal-itens-table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+      font-size: 12px !important;
+    }
+    .modal-itens-table th {
+      background: rgba(61,80,22,0.08) !important;
+      color: #2a3810 !important;
+      font-size: 10px !important;
+      font-weight: 700 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 1px !important;
+      padding: 10px 12px !important;
+      text-align: center !important;
+      border-bottom: 1px solid rgba(0,0,0,0.1) !important;
+    }
+    .modal-itens-table td {
+      padding: 10px 12px !important;
+      border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+      text-align: center !important;
+      font-size: 12px !important;
+    }
+    .modal-itens-table tr:hover {
+      background: rgba(245,242,232,0.5) !important;
+    }
+    .modal-itens-footer {
+      padding: 12px 24px !important;
+      background: #ffffff !important;
+      border-top: 1px solid rgba(0,0,0,0.08) !important;
+      display: flex !important;
+      justify-content: flex-end !important;
+    }
+    .modal-itens-footer button {
+      padding: 8px 20px !important;
+      border-radius: 6px !important;
+      border: 1px solid rgba(0,0,0,0.12) !important;
+      background: #f5f2e8 !important;
+      color: #3d5016 !important;
+      font-weight: 700 !important;
+      font-size: 12px !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+    }
+    .modal-itens-footer button:hover {
+      background: #3d5016 !important;
+      color: #ffffff !important;
+    }
   </style>
 </head>
 <body>
@@ -1029,7 +1204,7 @@
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Setor</th><th class="num">Projeção Liquidação</th><th class="num">Crédito DsP</th><th class="num">S. Emp</th><th class="num">Total Previsto</th><th>Status</th></tr>
+              <tr><th>Setor</th><th class="num">Projeção Liquidação</th><th class="num">Crédito DsP</th><th class="num">S. Emp</th><th class="num">Total Previsto</th></tr>
             </thead>
             <tbody id="tbodySetorCorr"></tbody>
           </table>
@@ -1042,7 +1217,7 @@
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Setor</th><th class="num">Saldo Emp.</th><th class="num">Projeção Liquidação</th><th>Status</th></tr>
+              <tr><th>Setor</th><th class="num">Saldo Emp.</th><th class="num">Projeção Liquidação</th></tr>
             </thead>
             <tbody id="tbodySetorRpnp"></tbody>
           </table>
@@ -1262,7 +1437,7 @@
             <tr>
               <th style="width: 35px; text-align: center; padding: 12px 4px;"></th>
               <th style="text-align: center; width: 55px; padding: 12px 4px;">UG</th>
-              <th style="text-align: center; width: 110px; padding: 12px 4px;">Responsável</th>
+              <th style="text-align: center; width: 145px; min-width: 145px; padding: 12px 4px; white-space: nowrap;">Responsável</th>
               <th style="text-align: center; width: 100px; padding: 12px 4px;">PI</th>
               <th style="text-align: center; width: 65px; padding: 12px 4px;">ND</th>
               <th style="text-align: center; width: 100px; padding: 12px 4px;">Valor Inicial</th>
@@ -1422,6 +1597,70 @@ async function carregarDados() {
           });
         }
         await recalcularCreditosProjecaoSetorial();
+        
+        // Sincroniza o Panorama UGE (resumo_exercicio_corrente e resumo_rpnp) em tempo real do Supabase
+        try {
+          console.log("[DB] Buscando panorama UGE atualizado no Supabase...");
+          const [resCorr, resRpnp] = await Promise.all([
+            LoginSystem.supabase.from('resumo_exercicio_corrente').select('*'),
+            LoginSystem.supabase.from('resumo_rpnp').select('*')
+          ]);
+
+          if (resCorr.data && resCorr.data.length > 0) {
+            if (!DADOS.banco) DADOS.banco = { corrente: {}, rpnp: {} };
+            if (!DADOS.banco.corrente) DADOS.banco.corrente = {};
+            resCorr.data.forEach(r => {
+              const ug = String(r.ug || '').trim();
+              if (!ug) return;
+              let disp = 0, aLiq = 0, emLiq = 0, liqPag = 0, pago = 0;
+              if (r.colunas && Array.isArray(r.colunas)) {
+                disp   = num(r.colunas[3]);
+                aLiq   = num(r.colunas[4]);
+                emLiq  = num(r.colunas[5]);
+                liqPag = num(r.colunas[6]);
+                pago   = num(r.colunas[7]);
+              } else {
+                disp   = num(r.disponivel);
+                aLiq   = num(r.a_liquidar);
+                emLiq  = num(r.liquidacao);
+                liqPag = num(r.liq_a_pagar);
+                pago   = num(r.pago);
+              }
+              DADOS.banco.corrente[ug] = {
+                base: disp + aLiq + emLiq + liqPag + pago,
+                empenhado: aLiq + emLiq + liqPag + pago,
+                liquidado: emLiq + liqPag + pago
+              };
+            });
+          }
+
+          if (resRpnp.data && resRpnp.data.length > 0) {
+            if (!DADOS.banco) DADOS.banco = { corrente: {}, rpnp: {} };
+            if (!DADOS.banco.rpnp) DADOS.banco.rpnp = {};
+            resRpnp.data.forEach(r => {
+              const ug = String(r.ug || '').trim();
+              if (!ug) return;
+              let base = 0, liqPag = 0, pago = 0;
+              if (r.colunas && Array.isArray(r.colunas)) {
+                base   = num(r.colunas[3]);
+                liqPag = num(r.colunas[11]);
+                pago   = num(r.colunas[12]);
+              } else {
+                base   = num(r.base_rpnp);
+                liqPag = num(r.liq_a_pagar);
+                pago   = num(r.pago);
+              }
+              DADOS.banco.rpnp[ug] = {
+                base: base,
+                liquidado: liqPag + pago
+              };
+            });
+          }
+          console.log("[DB] Panorama UGE atualizado em tempo real com sucesso!");
+        } catch (errUge) {
+          console.warn("[DB] Erro ao sincronizar panorama UGE em tempo real:", errUge);
+        }
+
         console.log("[DB] Sincronização concluída com sucesso!");
       } catch (err) {
         console.warn("[DB] Erro ao sincronizar previsões em tempo real:", err);
@@ -1560,13 +1799,32 @@ function calcularPrevisto(r, metaDate) {
   return 0;
 }
 
+const SETORES_OFICIAIS = [
+  'PMT',
+  'ALMOX',
+  'APROVISIONAMENTO',
+  'HT',
+  'SFPC',
+  'SAÚDE',
+  'FISCALIZAÇÃO',
+  'NPOR'
+];
+
 function agruparPorSetor(linhas, metaDate) {
   const setores = {};
+  SETORES_OFICIAIS.forEach(s => {
+    setores[s] = { emp160: 0, prev160: 0, emp167: 0, prev167: 0 };
+  });
+
   linhas.forEach(r => {
     const piVal = (r.pi || '').toUpperCase().trim();
-    const s = MAPA_PI_RESP[piVal] || (r.setor||'').trim() || 'NÃO MAPEADO';
+    let s = (MAPA_PI_RESP[piVal] || r.setor || '').trim().toUpperCase();
     if (!s) return;
-    if (!setores[s]) setores[s] = {emp160:0, prev160:0, emp167:0, prev167:0};
+    if (s === 'SAUDE') s = 'SAÚDE';
+    if (s === 'FISCALIZACAO') s = 'FISCALIZAÇÃO';
+
+    if (!SETORES_OFICIAIS.includes(s)) return; // Exclui militares e outros não oficiais
+
     const prev = calcularPrevisto(r, metaDate);
     if (r.bloco === '160443') { setores[s].emp160 += num(r.emp); setores[s].prev160 += prev; }
     else                      { setores[s].emp167 += num(r.emp); setores[s].prev167 += prev; }
@@ -1647,7 +1905,14 @@ function render() {
 
   const setoresCorr = agruparPorSetor(DADOS.corrente||[], metaDate);
   const creditos = DADOS.creditos || {};
-  Object.keys(creditos).forEach(s=>{ if(!setoresCorr[s]) setoresCorr[s]={emp160:0,prev160:0,emp167:0,prev167:0}; });
+  Object.keys(creditos).forEach(s => {
+    let sNorm = (s || '').trim().toUpperCase();
+    if (sNorm === 'SAUDE') sNorm = 'SAÚDE';
+    if (sNorm === 'FISCALIZACAO') sNorm = 'FISCALIZAÇÃO';
+    if (SETORES_OFICIAIS.includes(sNorm)) {
+      if (!setoresCorr[sNorm]) setoresCorr[sNorm] = {emp160:0, prev160:0, emp167:0, prev167:0};
+    }
+  });
   const totaisCorr = somarSetores(setoresCorr);
 
   const setoresRpnp = agruparPorSetor(DADOS.rpnp||[], metaDate);
@@ -1733,22 +1998,20 @@ function render() {
   rR += `<tr class="total-row"><td>TOTAL</td><td class="num">${R$(tbR)}</td><td class="num">${R$(tlR)}</td><td class="num">${PCT((tbR>0?tlR/tbR*100:0)*progressScale)}</td></tr>`;
   el('tbodyUgeRpnp').innerHTML = rR;
 
-  // TABELAS SETOR
-  const sortC = Object.keys(setoresCorr).sort((a,b)=> ((setoresCorr[b].prev160||0)+(setoresCorr[b].prev167||0)) - ((setoresCorr[a].prev160||0)+(setoresCorr[a].prev167||0)) );
+  // TABELAS SETOR (Apenas 8 setores oficiais, sem coluna Status)
+  const sortC = SETORES_OFICIAIS.filter(s => setoresCorr[s]).sort((a,b)=> ((setoresCorr[b].prev160||0)+(setoresCorr[b].prev167||0)) - ((setoresCorr[a].prev160||0)+(setoresCorr[a].prev167||0)) );
   let rowsSetorC = sortC.map(s=>{
-    const r=setoresCorr[s], cred=creditos[s]||{};
+    const r=setoresCorr[s], cred=creditos[s]||creditos[s.toLowerCase()]||{};
     const empT=((r.emp160||0)+(r.emp167||0))*progressScale, prevT=((r.prev160||0)+(r.prev167||0))*progressScale, credT=((num(cred.c160)||0)+(num(cred.c167)||0))*progressScale;
     const totT=empT+credT;
-    let pill=prevT<=0?'<span class="pill warn">⚠ Sem projeção</span>':prevT>=empT*0.9?'<span class="pill ok">✔ Projetado</span>':'<span class="pill warn">⚡ Parcial</span>';
-    return `<tr><td><strong>${s}</strong></td><td class="num">${R$(prevT)}</td><td class="num">${credT>0?R$(credT):'—'}</td><td class="num">${R$(empT)}</td><td class="num">${R$(totT)}</td><td>${pill}</td></tr>`;
+    return `<tr><td><strong>${s}</strong></td><td class="num">${R$(prevT)}</td><td class="num">${credT>0?R$(credT):'—'}</td><td class="num">${R$(empT)}</td><td class="num">${R$(totT)}</td></tr>`;
   }).join('');
   el('tbodySetorCorr').innerHTML = rowsSetorC;
 
-  const sortR = Object.keys(setoresRpnp).sort((a,b)=> ((setoresRpnp[b].prev160||0)+(setoresRpnp[b].prev167||0)) - ((setoresRpnp[a].prev160||0)+(setoresRpnp[a].prev167||0)) );
+  const sortR = SETORES_OFICIAIS.filter(s => setoresRpnp[s]).sort((a,b)=> ((setoresRpnp[b].prev160||0)+(setoresRpnp[b].prev167||0)) - ((setoresRpnp[a].prev160||0)+(setoresRpnp[a].prev167||0)) );
   let rowsSetorR = sortR.map(s=>{
     const r=setoresRpnp[s], empT=((r.emp160||0)+(r.emp167||0))*progressScale, prevT=((r.prev160||0)+(r.prev167||0))*progressScale;
-    let pill=prevT<=0?'<span class="pill warn">⚠ Sem projeção</span>':prevT>=empT*0.9?'<span class="pill ok">✔ Projetado</span>':'<span class="pill warn">⚡ Parcial</span>';
-    return `<tr><td><strong>${s}</strong></td><td class="num">${empT>0?R$(empT):'—'}</td><td class="num">${R$(prevT)}</td><td>${pill}</td></tr>`;
+    return `<tr><td><strong>${s}</strong></td><td class="num">${empT>0?R$(empT):'—'}</td><td class="num">${R$(prevT)}</td></tr>`;
   }).join('');
   el('tbodySetorRpnp').innerHTML = rowsSetorR;
 
@@ -1796,7 +2059,7 @@ function renderEmpenhos40() {
     return list.map(r =>
       `<tr class="row-atencao">
         <td><strong>${r.setor}</strong></td>
-        <td><strong>${r.ne}</strong></td>
+        <td><span class="ne-clickable" onclick="event.stopPropagation(); abrirModalItensNE('${r.ne}', '', '${ugLabel(r.bloco)}', ${r.emp})">${r.ne}</span></td>
         <td style="font-size:11px">${r.pi}</td>
         <td><span class="pill info">${ugLabel(r.bloco)}</span></td>
         <td class="num">${diasBadge(r.dias)} dias</td>
@@ -2000,6 +2263,30 @@ function calcularDiasDesde(dataStr) {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 }
 
+function compararResponsaveis(a, b) {
+  const rawA = MAPA_PI_RESP[(a.pi || '').toUpperCase().trim()] || 'NÃO MAPEADO';
+  const rawB = MAPA_PI_RESP[(b.pi || '').toUpperCase().trim()] || 'NÃO MAPEADO';
+
+  const respA = rawA.trim();
+  const respB = rawB.trim();
+
+  const isNumA = /^\d/.test(respA);
+  const isNumB = /^\d/.test(respB);
+
+  // Responsáveis numéricos ou que começam com número vão para o final da tabela
+  if (isNumA && !isNumB) return 1;
+  if (!isNumA && isNumB) return -1;
+
+  // Ordenação alfabética padrão (A-Z)
+  const comp = respA.localeCompare(respB, 'pt-BR', { numeric: true, sensitivity: 'base' });
+  if (comp !== 0) return comp;
+
+  // Desempate por dias de emissão (maior tempo primeiro)
+  const diasA = calcularDiasDesde(a.data_emissao);
+  const diasB = calcularDiasDesde(b.data_emissao);
+  return diasB - diasA;
+}
+
 async function carregarEmpenhosCorrente(ug) {
   document.getElementById('btn-emp-corr-160').classList.toggle('active-filter-btn', ug === '160443');
   document.getElementById('btn-emp-corr-167').classList.toggle('active-filter-btn', ug === '167443');
@@ -2030,18 +2317,7 @@ async function carregarEmpenhosCorrente(ug) {
       return;
     }
     
-    data.sort((a, b) => {
-      const respA = (MAPA_PI_RESP[(a.pi || '').toUpperCase().trim()] || 'NÃO MAPEADO').toLowerCase();
-      const respB = (MAPA_PI_RESP[(b.pi || '').toUpperCase().trim()] || 'NÃO MAPEADO').toLowerCase();
-      
-      if (respA < respB) return -1;
-      if (respA > respB) return 1;
-      
-      const diasA = calcularDiasDesde(a.data_emissao);
-      const diasB = calcularDiasDesde(b.data_emissao);
-      
-      return diasB - diasA;
-    });
+    data.sort(compararResponsaveis);
     
     tbody.innerHTML = '';
     data.forEach(row => {
@@ -2062,7 +2338,7 @@ async function carregarEmpenhosCorrente(ug) {
       tr.onclick = () => ativarEdicaoLinha(tableName, ne);
       tr.innerHTML = `
         <td>${ug}</td>
-        <td><strong>${ne}</strong></td>
+        <td><span class="ne-clickable" onclick="event.stopPropagation(); abrirModalItensNE('${ne}', '${row.data_emissao || ''}', '${ug}', ${aLiquidar})">${ne}</span></td>
         <td>${tipo}</td>
         <td class="num font-mono">${dias}</td>
         <td>${pi}</td>
@@ -2150,18 +2426,7 @@ async function carregarEmpenhosRpnp(ug) {
       return;
     }
     
-    data.sort((a, b) => {
-      const respA = (MAPA_PI_RESP[(a.pi || '').toUpperCase().trim()] || 'NÃO MAPEADO').toLowerCase();
-      const respB = (MAPA_PI_RESP[(b.pi || '').toUpperCase().trim()] || 'NÃO MAPEADO').toLowerCase();
-      
-      if (respA < respB) return -1;
-      if (respA > respB) return 1;
-      
-      const diasA = calcularDiasDesde(a.data_emissao);
-      const diasB = calcularDiasDesde(b.data_emissao);
-      
-      return diasB - diasA;
-    });
+    data.sort(compararResponsaveis);
     
     tbody.innerHTML = '';
     data.forEach(row => {
@@ -2182,7 +2447,7 @@ async function carregarEmpenhosRpnp(ug) {
       tr.onclick = () => ativarEdicaoLinha(tableName, ne);
       tr.innerHTML = `
         <td>${ug}</td>
-        <td><strong>${ne}</strong></td>
+        <td><span class="ne-clickable" onclick="event.stopPropagation(); abrirModalItensNE('${ne}', '${row.data_emissao || ''}', '${ug}', ${aliq})">${ne}</span></td>
         <td>${tipo}</td>
         <td class="num font-mono">${dias}</td>
         <td>${pi}</td>
@@ -2394,10 +2659,16 @@ function abrirConfirmacaoPopup(tableName, ne, cbSalvar = null, cbDescartar = nul
     if (btnConfirm) btnConfirm.focus();
   }, 50);
   
-  confirmCallbackSalvar = () => {
-    modal.style.display = 'none';
-    salvarLinha(tableName, ne);
-    if (cbSalvar) cbSalvar();
+  confirmCallbackSalvar = async () => {
+    const btn = document.getElementById('btnConfirmSalvar');
+    if (btn) setButtonLoading(btn, true, 'Salvando...');
+    try {
+      await salvarLinha(tableName, ne);
+      if (cbSalvar) cbSalvar();
+    } finally {
+      if (btn) setButtonLoading(btn, false);
+      modal.style.display = 'none';
+    }
   };
   
   confirmCallbackCancelar = () => {
@@ -2721,7 +2992,7 @@ async function carregarCreditosTela(ug) {
           </button>
         </td>
         <td style="text-align: center; width: 55px; padding: 10px 4px;">${ug}</td>
-        <td style="text-align: center; width: 110px; padding: 10px 4px;"><strong style="color:var(--gold)">${cred.sector}</strong></td>
+        <td style="text-align: center; width: 145px; min-width: 145px; padding: 10px 4px; white-space: nowrap;"><strong style="color:var(--gold)">${cred.sector}</strong></td>
         <td style="text-align: center; width: 100px; padding: 10px 4px;"><strong>${cred.pi}</strong></td>
         <td style="text-align: center; width: 65px; padding: 10px 4px;">${cred.nd}</td>
         <td style="text-align: center; width: 100px; padding: 10px 4px; color: var(--black);" class="num font-mono">${R$(cred.somaNcs)}</td>
@@ -3272,6 +3543,10 @@ async function confirmarAtribuirNc(ug, pi, nd, uniqueId, credId) {
     showNotification('Selecione uma NC para atribuir.', 'error');
     return;
   }
+
+  const container = document.getElementById(`add-nc-container-${uniqueId}`);
+  const btn = container ? container.querySelector('.btn-primary') : null;
+  if (btn) setButtonLoading(btn, true, 'Atribuindo...');
   
   try {
     showNotification('Atribuindo NC...', 'info');
@@ -3324,6 +3599,8 @@ async function confirmarAtribuirNc(ug, pi, nd, uniqueId, credId) {
   } catch (err) {
     console.error("Erro ao atribuir NC:", err);
     showNotification("Erro ao atribuir NC: " + (err.message || err), "error");
+  } finally {
+    if (btn) setButtonLoading(btn, false);
   }
 }
 
@@ -3754,6 +4031,143 @@ function limparFiltrosLogs() {
   LOGS_CURRENT_PAGE = 0;
   compararSnapshots();
 }
+let CACHE_ITENS_NE = {};
+
+function fecharModalItensNE() {
+  const overlay = document.getElementById('modalItensNeOverlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+async function abrirModalItensNE(ne, dataEmissao, ug, valorEmpenho) {
+  const overlay = document.getElementById('modalItensNeOverlay');
+  const ugEl = document.getElementById('modalItensUg');
+  const neNumEl = document.getElementById('modalItensNeNum');
+  const dataEl = document.getElementById('modalItensData');
+  const valorNeEl = document.getElementById('modalItensValorNe');
+  const tbody = document.getElementById('modalItensTbody');
+
+  if (!overlay || !tbody) return;
+
+  const cleanUg = String(ug || '').trim();
+  const cacheKey = `${cleanUg}_${ne}`;
+
+  ugEl.textContent = cleanUg || '—';
+  neNumEl.textContent = ne || '—';
+  dataEl.textContent = dataEmissao || '—';
+  valorNeEl.textContent = valorEmpenho ? R$(valorEmpenho) : 'Calculando...';
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#666"><span class="loading-spinner" style="display:inline-block;width:18px;height:18px;margin-right:8px;vertical-align:middle"></span> Buscando itens do empenho no banco de dados...</td></tr>`;
+
+  overlay.classList.add('open');
+
+  try {
+    if (!CACHE_ITENS_NE[cacheKey]) {
+      if (LoginSystem.useSupabase && LoginSystem.supabase) {
+        let query = LoginSystem.supabase
+          .from('ne_com_itens')
+          .select('*')
+          .eq('ne', ne);
+
+        if (cleanUg) {
+          query = query.eq('ug', cleanUg);
+        }
+
+        const { data, error } = await query;
+          
+        if (error) throw error;
+        CACHE_ITENS_NE[cacheKey] = data || [];
+      } else {
+        CACHE_ITENS_NE[cacheKey] = [];
+      }
+    }
+
+    const items = CACHE_ITENS_NE[cacheKey];
+
+    if (!items || items.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#999">Nenhum item detalhado encontrado para o empenho ${ne}.</td></tr>`;
+      return;
+    }
+
+    const firstItem = items[0];
+    if (firstItem.data_operacao) dataEl.textContent = firstItem.data_operacao;
+    if (firstItem.valor_ne && (!valorEmpenho || valorEmpenho === 0)) {
+      valorNeEl.textContent = R$(firstItem.valor_ne);
+    }
+
+    tbody.innerHTML = items.map(item => {
+      const nr = item.nr_item || '—';
+      const op = item.operacao || 'INCLUSAO';
+      const desc = item.item || '—';
+      const qtd = num(item.quantidade);
+      const vUnit = num(item.v_unit);
+      const vTotal = num(item.v_total);
+
+      const opBadgeColor = op.toUpperCase().includes('ANULA') ? '#dc2626' : '#15803d';
+
+      return `
+        <tr>
+          <td><strong>${nr}</strong></td>
+          <td><span style="font-weight:700;color:${opBadgeColor};font-size:10px;padding:2px 6px;background:rgba(0,0,0,0.04);border-radius:4px">${op}</span></td>
+          <td style="text-align:left;font-size:11px;line-height:1.4">${desc}</td>
+          <td class="num font-mono">${qtd}</td>
+          <td class="num font-mono">${R$(vUnit)}</td>
+          <td class="num font-mono" style="font-weight:700;color:#3d5016">${R$(vTotal)}</td>
+        </tr>
+      `;
+    }).join('');
+
+  } catch (err) {
+    console.error("Erro ao buscar itens da NE:", err);
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:#dc2626">Erro ao carregar itens: ${err.message || err}</td></tr>`;
+  }
+}
 </script>
+
+<!-- MODAL DETALHAMENTO DE ITENS DA NE -->
+<div class="modal-itens-overlay" id="modalItensNeOverlay" onclick="if(event.target===this) fecharModalItensNE()">
+  <div class="modal-itens-card">
+    <div class="modal-itens-header">
+      <h3 id="modalItensNeTitle"><span>📋</span> Detalhamento dos Itens do Empenho</h3>
+      <button class="close-btn" onclick="fecharModalItensNE()">&times;</button>
+    </div>
+    <div class="modal-itens-info-bar">
+      <div class="info-item-box">
+        <div class="label">Unidade Gestora</div>
+        <div class="val" id="modalItensUg">—</div>
+      </div>
+      <div class="info-item-box">
+        <div class="label">Número do Empenho</div>
+        <div class="val gold" id="modalItensNeNum">—</div>
+      </div>
+      <div class="info-item-box">
+        <div class="label">Data Operação</div>
+        <div class="val" id="modalItensData">—</div>
+      </div>
+      <div class="info-item-box">
+        <div class="label">Valor Inicial Total (NE)</div>
+        <div class="val gold" id="modalItensValorNe">—</div>
+      </div>
+    </div>
+    <div class="modal-itens-body">
+      <table class="modal-itens-table">
+        <thead>
+          <tr>
+            <th style="width: 70px;">Item</th>
+            <th style="width: 100px;">Operação</th>
+            <th style="text-align: left;">Descrição do Item</th>
+            <th style="width: 80px;">Qtd</th>
+            <th style="width: 110px;">V. Unitário</th>
+            <th style="width: 120px;">V. Total</th>
+          </tr>
+        </thead>
+        <tbody id="modalItensTbody">
+          <tr><td colspan="6" style="text-align:center;padding:30px;color:#666">Carregando itens do empenho...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-itens-footer">
+      <button onclick="fecharModalItensNE()">Fechar</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

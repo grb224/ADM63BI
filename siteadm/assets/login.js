@@ -52,7 +52,32 @@
   };
 })();
 
+window.setButtonLoading = function(btn, isLoading, loadingText = 'Aguarde...') {
+  if (!btn) return;
+  if (typeof btn === 'string') btn = document.getElementById(btn);
+  if (!btn) return;
+
+  if (isLoading) {
+    if (!btn.dataset.originalHtml) {
+      btn.dataset.originalHtml = btn.innerHTML;
+    }
+    btn.disabled = true;
+    btn.style.pointerEvents = 'none';
+    btn.classList.add('btn-loading');
+    btn.innerHTML = `<span class="btn-spinner"></span> ${loadingText}`;
+  } else {
+    btn.disabled = false;
+    btn.style.pointerEvents = '';
+    btn.classList.remove('btn-loading');
+    if (btn.dataset.originalHtml) {
+      btn.innerHTML = btn.dataset.originalHtml;
+      delete btn.dataset.originalHtml;
+    }
+  }
+};
+
 const LoginSystem = {
+  setButtonLoading: window.setButtonLoading,
   pendingUrl: null,
   loginRequired: true, // default, overridden by config.json
 
@@ -65,10 +90,10 @@ const LoginSystem = {
     return path.includes('/projecao/') || path.includes('/comex/') || path.includes('/tesouraria/') || path.includes('/admin/');
   },
 
-  init: async function() {
+  init: async function(overrideRootPath) {
     // 0. Check if login is required
     let config = null;
-    const rootPath = this.getBasePath();
+    const rootPath = overrideRootPath || this.getBasePath();
     try {
       const configRes = await fetch(rootPath + 'api/config?_t=' + Date.now());
       if (configRes.ok) {
@@ -78,11 +103,14 @@ const LoginSystem = {
       console.log("[CONFIG] Falha ao carregar api/config local. Tentando fallback estático...");
     }
 
-    if (!config) {
+    if (!config || !config.supabase_url) {
       try {
         const publicRes = await fetch(rootPath + 'dados/config_public.json?_t=' + Date.now());
         if (publicRes.ok) {
-          config = await publicRes.json();
+          const pubConfig = await publicRes.json();
+          config = Object.assign({}, pubConfig, config || {});
+          if (pubConfig.supabase_url) config.supabase_url = pubConfig.supabase_url;
+          if (pubConfig.supabase_anon_key) config.supabase_anon_key = pubConfig.supabase_anon_key;
           console.log("[CONFIG] Configurações públicas do banco de dados carregadas.");
         }
       } catch (err) {
@@ -92,6 +120,11 @@ const LoginSystem = {
 
     if (config) {
       this.loginRequired = config.login_required !== false; // default true
+      
+      // Se a URL contiver '/admin/', o login é sempre obrigatório para evitar bloqueio
+      if (window.location.pathname.includes('/admin/')) {
+        this.loginRequired = true;
+      }
       
       // Dynamically initialize Supabase if keys are provided
       if (config.supabase_url && config.supabase_anon_key) {
@@ -130,12 +163,21 @@ const LoginSystem = {
       }
     }
 
-    // If login is disabled, auto-authenticate silently
+    // If login is disabled, auto-authenticate silently (unless we already have an active admin session)
     if (!this.loginRequired) {
-      sessionStorage.setItem('adm_auth_token', 'authenticated');
-      sessionStorage.setItem('adm_auth_perfil', 'acesso_livre');
-      sessionStorage.setItem('adm_auth_nome', 'Acesso Livre');
-      sessionStorage.setItem('adm_auth_tags', JSON.stringify(['admin']));
+      const token = sessionStorage.getItem('adm_auth_token') || localStorage.getItem('adm_auth_token');
+      const tagsStr = sessionStorage.getItem('adm_auth_tags') || localStorage.getItem('adm_auth_tags');
+      let currentTags = [];
+      try { currentTags = JSON.parse(tagsStr); } catch(e){}
+      
+      if (token && currentTags.includes('admin')) {
+        console.log("[LOGIN] Mantendo sessão de admin existente.");
+      } else {
+        sessionStorage.setItem('adm_auth_token', 'authenticated');
+        sessionStorage.setItem('adm_auth_perfil', 'acesso_livre');
+        sessionStorage.setItem('adm_auth_nome', 'Acesso Livre');
+        sessionStorage.setItem('adm_auth_tags', JSON.stringify(['projecao']));
+      }
     }
 
     // 1. Create Modal HTML
@@ -267,6 +309,15 @@ const LoginSystem = {
     return !!token;
   },
 
+  getTags: function() {
+    const tagsStr = localStorage.getItem('adm_auth_tags') || sessionStorage.getItem('adm_auth_tags') || "[]";
+    try {
+      return JSON.parse(tagsStr);
+    } catch (e) {
+      return [];
+    }
+  },
+
   openModal: function(msg = "") {
     const errorEl = document.getElementById('login-error');
     errorEl.textContent = msg;
@@ -286,12 +337,15 @@ const LoginSystem = {
     const senha = document.getElementById('login-senha').value;
     const remember = document.getElementById('login-remember').checked;
     const errorEl = document.getElementById('login-error');
+    const submitBtn = document.getElementById('btn-login-submit');
 
     if (!perfil || !senha) {
       errorEl.textContent = "Preencha perfil e senha.";
       errorEl.style.color = "var(--red)";
       return;
     }
+
+    setButtonLoading(submitBtn, true, 'Autenticando...');
 
     try {
       let resData;
@@ -309,6 +363,7 @@ const LoginSystem = {
         if (error) {
           errorEl.textContent = "Perfil não encontrado ou senha inválida no banco de dados.";
           errorEl.style.color = "var(--red)";
+          setButtonLoading(submitBtn, false);
           return;
         }
 
@@ -379,6 +434,7 @@ const LoginSystem = {
           const legacyErr = await response.json();
           errorEl.textContent = legacyErr.error || "Erro ao efetuar login.";
           errorEl.style.color = "var(--red)";
+          setButtonLoading(submitBtn, false);
           return;
         }
         
@@ -445,6 +501,7 @@ const LoginSystem = {
           successOverlay.style.display = 'none';
           successOverlay.classList.remove('animate-success');
           document.getElementById('login-senha').value = '';
+          setButtonLoading(submitBtn, false);
         }, 500);
 
         if (this.pendingUrl) {
@@ -456,6 +513,7 @@ const LoginSystem = {
       errorEl.textContent = "Erro de conexão com o servidor.";
       errorEl.style.color = "var(--red)";
       console.error(err);
+      setButtonLoading(submitBtn, false);
     }
   },
 
@@ -602,20 +660,30 @@ const LoginSystem = {
     }
 
     // Check Setor Financeiro buttons inside module-financeiro card
-    const finLiqBtn = document.querySelector('#module-financeiro .primary-btn');
+    const finLiqBtn = document.querySelector('#module-financeiro a.primary-btn');
+    const finConsultNfBtn = document.getElementById('btnConsultarNF');
     const finDashBtn = document.querySelector('#module-financeiro .secondary-btn');
     const finCard = document.getElementById('module-financeiro');
-    
+
     if (!isAdmin) {
       const hasLiq = tags.includes('setfinliq');
       const hasDash = tags.includes('setfindashboard');
-      
+      const hasNfConsult = tags.includes('projecao') || tags.includes('auditor');
+
       if (finLiqBtn && !hasLiq) {
         finLiqBtn.classList.add('unauthorized');
         finLiqBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
           this.showTabDeniedModal("Acesso Negado. Seu perfil não tem permissão para o Controle de Liquidações.");
+        }, true);
+      }
+      if (finConsultNfBtn && !hasNfConsult) {
+        finConsultNfBtn.classList.add('unauthorized');
+        finConsultNfBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.showTabDeniedModal("Acesso Negado. Seu perfil não tem permissão para consultar Notas Fiscais.");
         }, true);
       }
       if (finDashBtn && !hasDash) {
@@ -626,9 +694,12 @@ const LoginSystem = {
           this.showTabDeniedModal("Acesso Negado. Seu perfil não tem permissão para o Dashboard do Setor Financeiro.");
         }, true);
       }
-      
-      // If both actions are unauthorized, fade the whole card
-      if (finCard && finLiqBtn && finDashBtn && finLiqBtn.classList.contains('unauthorized') && finDashBtn.classList.contains('unauthorized')) {
+
+      // If all actions are unauthorized, fade the whole card
+      const allUnauth = finLiqBtn?.classList.contains('unauthorized') &&
+                        finConsultNfBtn?.classList.contains('unauthorized') &&
+                        finDashBtn?.classList.contains('unauthorized');
+      if (finCard && allUnauth) {
         finCard.classList.add('unauthorized');
       }
     }

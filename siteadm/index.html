@@ -20,6 +20,8 @@
       --white: #ffffff;
       --black: #1a1a1a;
       --gray-600: #6b7280;
+      --accent-red: #c0392b;
+      --border-default: rgba(0,0,0,0.08);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -164,6 +166,166 @@
       cursor: not-allowed;
     }
 
+    /* NF POPUP OVERLAY */
+    #nfPopupOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 9000;
+      align-items: center;
+      justify-content: center;
+    }
+    #nfPopupOverlay.open {
+      display: flex;
+    }
+    #nfPopup {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 28px 28px 24px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+      position: relative;
+      border-top: 4px solid var(--gold);
+      animation: popupIn 0.22s cubic-bezier(0.4,0,0.2,1);
+    }
+    @keyframes popupIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    #nfPopup h3 {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--olive-dark);
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #nfPopup .nf-popup-subtitle {
+      font-size: 12px;
+      color: var(--gray-600);
+      margin-bottom: 18px;
+    }
+    #nfPopupClose {
+      position: absolute;
+      top: 16px; right: 18px;
+      background: none; border: none;
+      font-size: 20px; cursor: pointer;
+      color: var(--gray-600);
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    #nfPopupClose:hover { color: var(--black); }
+    .nf-search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    #nfSearchInput {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border-default);
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      color: var(--black);
+    }
+    #nfSearchInput:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201,162,39,0.12);
+    }
+    #nfSearchBtn {
+      padding: 10px 18px;
+      background: var(--olive);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    #nfSearchBtn:hover { background: var(--olive-dark); }
+    #nfSearchBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+    #nfResultArea {
+      min-height: 60px;
+    }
+    .nf-loading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--gray-600);
+      font-size: 13px;
+      padding: 10px 0;
+    }
+    .nf-spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(0,0,0,0.12);
+      border-top-color: var(--olive);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .nf-not-found {
+      padding: 14px 16px;
+      background: rgba(201,162,39,0.08);
+      border-left: 4px solid var(--gold);
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--black);
+    }
+    .nf-result-card {
+      border: 1px solid var(--border-default);
+      border-left: 4px solid var(--olive);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      background: rgba(61,80,22,0.03);
+    }
+    .nf-result-card .nf-card-uge {
+      display: inline-block;
+      background: var(--olive-dark);
+      color: var(--gold-light);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .nf-result-card .nf-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      line-height: 1.4;
+    }
+    .nf-result-card .nf-label {
+      color: var(--gray-600);
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .nf-result-card .nf-value {
+      font-weight: 700;
+      color: var(--black);
+      text-align: right;
+    }
+    .nf-error {
+      padding: 12px 14px;
+      background: rgba(192,57,43,0.08);
+      border-left: 4px solid var(--accent-red);
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--accent-red);
+    }
+
     /* PLANILHAS LIST */
     .planilhas-section { margin-top: 48px; max-width: 800px; margin-left: auto; margin-right: auto; }
     
@@ -287,7 +449,23 @@
       <div class="desc">Gerenciamento de liquidações de documentos hábeis e relatórios analíticos de execução.</div>
       <div class="module-actions-container">
         <a href="tesouraria/liquidacoes.html" class="module-action-btn primary-btn">Controle das liquidações</a>
+        <button class="module-action-btn primary-btn" onclick="openNfPopup()" id="btnConsultarNF">🔍 Consultar NF</button>
         <a href="#" class="module-action-btn secondary-btn disabled-btn" onclick="event.preventDefault(); alert('Dashboard em desenvolvimento — Em breve!')">Dashboard interativo</a>
+      </div>
+    </div>
+
+    <!-- NF SEARCH POPUP -->
+    <div id="nfPopupOverlay" onclick="handleOverlayClick(event)">
+      <div id="nfPopup">
+        <button id="nfPopupClose" onclick="closeNfPopup()" title="Fechar">✕</button>
+        <h3>🔍 Consultar Nota Fiscal</h3>
+        <p class="nf-popup-subtitle">Pesquisa nas liquidações de ambas as UGEs (160443 e 167443)</p>
+        <div class="nf-search-row">
+          <input type="text" id="nfSearchInput" placeholder="Ex: NF 999" autocomplete="off"
+            onkeydown="if(event.key==='Enter') buscarNF()">
+          <button id="nfSearchBtn" onclick="buscarNF()">Pesquisar</button>
+        </div>
+        <div id="nfResultArea"></div>
       </div>
     </div>
 
@@ -331,6 +509,193 @@
 </body>
 <script src="assets/login.js?v=3"></script>
 <script>
+  // ────────────────────────────────────────────
+  // SUPABASE CONFIG (mirrors liquidacoes.html)
+  // ────────────────────────────────────────────
+  const nfSupabaseConfig = {
+    url: 'https://jrwwfbgxvgikeqbgaefy.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyd3dmYmd4dmdpa2VxYmdhZWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMzU4ODUsImV4cCI6MjA5OTgxMTg4NX0.ZUmoKR2WRb_EboAq7W5d7B8Ea7GA9WPp_Rj-5N3WK2w',
+    serviceKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyd3dmYmd4dmdpa2VxYmdhZWZ5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDIzNTg4NSwiZXhwIjoyMDk5ODExODg1fQ.tLdD_wkuSY8JUCr-ojmhEwsWQQlnods_oMBO9KKy1YY'
+  };
+
+  async function loadNfSupabaseConfig() {
+    try {
+      const res = await fetch('supabase_config.json?_t=' + Date.now());
+      if (res.ok) {
+        const cfg = await res.json();
+        if (cfg.supabase_url) nfSupabaseConfig.url = cfg.supabase_url.trim();
+        if (cfg.supabase_anon_key) nfSupabaseConfig.anonKey = cfg.supabase_anon_key.trim();
+        if (cfg.supabase_service_role_key) nfSupabaseConfig.serviceKey = cfg.supabase_service_role_key.trim();
+      }
+    } catch (e) { /* use embedded defaults */ }
+  }
+
+  // ────────────────────────────────────────────
+  // NF POPUP
+  // ────────────────────────────────────────────
+  function openNfPopup() {
+    // 1. Verificar login
+    if (typeof LoginSystem !== 'undefined' && !LoginSystem.isLoggedIn()) {
+      LoginSystem.openModal('Acesso bloqueado. Efetue login para continuar.');
+      return;
+    }
+
+    // 2. Verificar tag de acesso (projecao, auditor ou admin) — popup de acesso negado, NÃO o de login
+    if (typeof LoginSystem !== 'undefined') {
+      const tags = LoginSystem.getTags();
+      const hasAccess = tags.includes('admin') || tags.includes('projecao') || tags.includes('auditor');
+      if (!hasAccess) {
+        LoginSystem.showTabDeniedModal('Acesso Negado. Seu perfil não tem permissão para consultar Notas Fiscais.');
+        return;
+      }
+    }
+
+    document.getElementById('nfPopupOverlay').classList.add('open');
+    document.getElementById('nfSearchInput').focus();
+    document.getElementById('nfResultArea').innerHTML = '';
+    document.getElementById('nfSearchInput').value = '';
+  }
+
+  function closeNfPopup() {
+    document.getElementById('nfPopupOverlay').classList.remove('open');
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('nfPopupOverlay')) closeNfPopup();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeNfPopup();
+  });
+
+  // ────────────────────────────────────────────
+  // NF SEARCH LOGIC
+  // ────────────────────────────────────────────
+  function getDocDigitsNF(doc) {
+    if (!doc) return '';
+    return doc.toString().replace(/\D/g, '');
+  }
+
+  function formatMoneyNF(value) {
+    const num = parseFloat(value) || 0;
+    return 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function formatDateNF(dateStr) {
+    if (!dateStr) return '—';
+    // Accepts YYYY-MM-DD
+    const parts = dateStr.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return dateStr;
+  }
+
+  async function buscarNF() {
+    const input = document.getElementById('nfSearchInput');
+    const rawVal = input.value.trim();
+    const resultArea = document.getElementById('nfResultArea');
+    const searchBtn = document.getElementById('nfSearchBtn');
+
+    if (!rawVal) {
+      input.focus();
+      return;
+    }
+
+    const digits = getDocDigitsNF(rawVal);
+    if (!digits) {
+      resultArea.innerHTML = '<div class="nf-not-found">⚠️ Insira um número de NF válido para pesquisar.</div>';
+      return;
+    }
+
+    // Show loading
+    resultArea.innerHTML = '<div class="nf-loading"><div class="nf-spinner"></div> Pesquisando nas liquidações...</div>';
+    searchBtn.disabled = true;
+
+    try {
+      await loadNfSupabaseConfig();
+      const key = nfSupabaseConfig.serviceKey || nfSupabaseConfig.anonKey;
+      const headers = {
+        'apikey': nfSupabaseConfig.anonKey,
+        'Authorization': 'Bearer ' + key,
+        'Content-Type': 'application/json'
+      };
+
+      const baseUrl = nfSupabaseConfig.url.replace(/\/$/, '');
+      // Fetch ALL records from both UGEs and filter client-side by digit match
+      const endpoint = `${baseUrl}/rest/v1/liquidacoes?select=uge,tipo_dh,numero,doc_relacionado,cnpj,valor_bruto,data_ob,data_emissao&order=created_at.desc&limit=1000`;
+      const res = await fetch(endpoint, { headers });
+
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+
+      const rows = await res.json();
+
+      // Filter by digit match in doc_relacionado
+      const matches = rows.filter(r => {
+        if (!r.doc_relacionado) return false;
+        const recordDigits = getDocDigitsNF(r.doc_relacionado);
+        return recordDigits === digits;
+      });
+
+      searchBtn.disabled = false;
+
+      if (matches.length === 0) {
+        resultArea.innerHTML = `
+          <div class="nf-not-found">
+            📭 Nenhum registro encontrado para <strong>${rawVal.toUpperCase()}</strong> nas UGEs 160443 e 167443.
+          </div>`;
+        return;
+      }
+
+      let html = '';
+      matches.forEach(r => {
+        const ugeLabel = r.uge || '—';
+        const npLabel = r.tipo_dh ? `${r.tipo_dh} nº ${r.numero || '—'}` : (r.numero || '—');
+        const cnpj = r.cnpj || '—';
+        const valorBruto = formatMoneyNF(r.valor_bruto);
+        const docRel = r.doc_relacionado || '—';
+        const dataEmissao = r.data_emissao ? formatDateNF(r.data_emissao) : '—';
+        const ob = r.data_ob ? formatDateNF(r.data_ob) : '—';
+
+        html += `
+          <div class="nf-result-card">
+            <div class="nf-card-uge">UGE ${ugeLabel}</div>
+            <div class="nf-row">
+              <span class="nf-label">CNPJ da Empresa</span>
+              <span class="nf-value">${cnpj}</span>
+            </div>
+            <div class="nf-row">
+              <span class="nf-label">Nº da NP</span>
+              <span class="nf-value">${npLabel}</span>
+            </div>
+            <div class="nf-row">
+              <span class="nf-label">Valor Bruto</span>
+              <span class="nf-value">${valorBruto}</span>
+            </div>
+            <div class="nf-row">
+              <span class="nf-label">Doc. Relacionado</span>
+              <span class="nf-value">${docRel}</span>
+            </div>
+            <div class="nf-row">
+              <span class="nf-label">Data de Emissão</span>
+              <span class="nf-value">${dataEmissao}</span>
+            </div>
+            <div class="nf-row">
+              <span class="nf-label">OB (Data)</span>
+              <span class="nf-value">${ob}</span>
+            </div>
+          </div>`;
+      });
+
+      resultArea.innerHTML = html;
+
+    } catch (err) {
+      searchBtn.disabled = false;
+      resultArea.innerHTML = `<div class="nf-error">❌ Erro ao consultar Supabase: ${err.message}</div>`;
+    }
+  }
+
+  // ────────────────────────────────────────────
+  // ORIGINAL HELPER FUNCTIONS
+  // ────────────────────────────────────────────
   function handleImageError(img, title) {
     img.style.display = 'none';
     const fallback = document.createElement('div');

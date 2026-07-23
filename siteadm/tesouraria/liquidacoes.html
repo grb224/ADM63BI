@@ -182,7 +182,7 @@
       <div class="search-box">
         <span class="search-icon">🔍</span>
         <input type="text" id="searchInput" placeholder="Buscar por nº, documento, observação..."
-          oninput="renderTable()">
+          oninput="currentPage = 1; renderTable()">
       </div>
     </div>
 
@@ -435,13 +435,43 @@
         </div>
       </div>
 
+      <!-- PAGINATION CONTROLS -->
+      <div class="pagination-container" id="paginationContainer">
+        <div class="pagination-info" id="paginationInfo">
+          Exibindo <strong id="paginationRange">0–0</strong> de <strong id="paginationTotal">0</strong> liquidações
+        </div>
+
+        <div class="pagination-controls">
+          <div class="pagination-page-size">
+            <label for="pageSizeSelect">Exibir:</label>
+            <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize(this.value)">
+              <option value="10" selected>10 por página</option>
+              <option value="25">25 por página</option>
+              <option value="50">50 por página</option>
+              <option value="100">100 por página</option>
+              <option value="500">500 por página</option>
+              <option value="1000">1000 por página (Expandir)</option>
+            </select>
+          </div>
+
+          <div class="pagination-nav">
+            <button class="page-btn" id="btnFirstPage" onclick="goToPage(1)" title="Primeira página">«</button>
+            <button class="page-btn" id="btnPrevPage" onclick="prevPage()" title="Página anterior">‹</button>
+            <div class="page-numbers" id="pageNumbers"></div>
+            <button class="page-btn" id="btnNextPage" onclick="nextPage()" title="Próxima página">›</button>
+            <button class="page-btn" id="btnLastPage" onclick="goToLastPage()" title="Última página">»</button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </div>
 
   <script>
     // ═══════════════════════════════════════════════
-    // DATA STORE
+    // DATA STORE & SUPABASE HYBRID INTEGRATION
+    // (Works natively both on local Python backend AND Cloudflare Pages static deploy)
     // ═══════════════════════════════════════════════
     const STORAGE_KEY = 'liquidacoes_63bi';
     let currentUGE = '160443';
@@ -452,6 +482,29 @@
     let lastConfirmedDuplicateDoc = "";
 
     let cachedLiquidacoes = [];
+    let currentPage = 1;
+    let pageSize = 10;
+
+    // Supabase Config (Default credentials + dynamic load from supabase_config.json)
+    const supabaseConfig = {
+      url: 'https://jrwwfbgxvgikeqbgaefy.supabase.co',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyd3dmYmd4dmdpa2VxYmdhZWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMzU4ODUsImV4cCI6MjA5OTgxMTg4NX0.ZUmoKR2WRb_EboAq7W5d7B8Ea7GA9WPp_Rj-5N3WK2w',
+      serviceKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyd3dmYmd4dmdpa2VxYmdhZWZ5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDIzNTg4NSwiZXhwIjoyMDk5ODExODg1fQ.tLdD_wkuSY8JUCr-ojmhEwsWQQlnods_oMBO9KKy1YY'
+    };
+
+    async function initSupabaseConfig() {
+      try {
+        const res = await fetch('../supabase_config.json?_t=' + Date.now());
+        if (res.ok) {
+          const cfg = await res.json();
+          if (cfg.supabase_url) supabaseConfig.url = cfg.supabase_url.trim();
+          if (cfg.supabase_anon_key) supabaseConfig.anonKey = cfg.supabase_anon_key.trim();
+          if (cfg.supabase_service_role_key) supabaseConfig.serviceKey = cfg.supabase_service_role_key.trim();
+        }
+      } catch (e) {
+        // Fallback to embedded default credentials
+      }
+    }
 
     function loadData() {
       return cachedLiquidacoes;
@@ -459,17 +512,155 @@
 
     function saveData(data) {
       cachedLiquidacoes = data;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
-    function syncRecordToBackend(record) {
+    async function fetchLiquidacoesFromSupabase() {
+      // 1. Try local Python backend endpoint if available (localhost)
+      try {
+        const localRes = await fetch('/api/liquidacoes');
+        if (localRes.ok) {
+          const data = await localRes.json();
+          if (Array.isArray(data)) {
+            return data;
+          }
+        }
+      } catch (e) {
+        // Local Python server not running (e.g. static host Cloudflare Pages)
+      }
+
+      // 2. Direct Supabase REST API fetch (works 100% on Cloudflare Pages / Production)
+      await initSupabaseConfig();
+      const key = supabaseConfig.serviceKey || supabaseConfig.anonKey;
+      const headers = {
+        'apikey': supabaseConfig.anonKey,
+        'Authorization': 'Bearer ' + key,
+        'Content-Type': 'application/json'
+      };
+
+      const endpoint = supabaseConfig.url.replace(/\/$/, '') + '/rest/v1/liquidacoes?select=*';
+      const response = await fetch(endpoint, { headers });
+
+      if (!response.ok) {
+        throw new Error('Supabase HTTP ' + response.status);
+      }
+
+      const rows = await response.json();
+      return rows.map(row => ({
+        id: String(row.id),
+        uge: String(row.uge || ''),
+        tipoDH: row.tipo_dh || '',
+        numero: String(row.numero || ''),
+        dataEmissao: row.data_emissao || '',
+        optante: row.optante || '',
+        valorBruto: row.valor_bruto !== null ? parseFloat(row.valor_bruto) : 0.0,
+        deducoes: row.deducoes || [],
+        totalDeducoes: row.total_deducoes !== null ? parseFloat(row.total_deducoes) : 0.0,
+        valorLiquido: row.valor_liquido !== null ? parseFloat(row.valor_liquido) : 0.0,
+        codNatureza: row.cod_natureza || '',
+        docRelacionado: row.doc_relacionado || '',
+        cnpj: row.cnpj || '',
+        dataOB: row.data_ob || '',
+        eCac: row.e_cac || 'Não',
+        observacao: row.observacao || '',
+        fase: parseInt(row.fase || 1),
+        usuario: row.usuario || '',
+        createdAt: row.created_at || ''
+      }));
+    }
+
+    async function syncRecordToBackend(record) {
       const user = localStorage.getItem('adm_auth_nome') || sessionStorage.getItem('adm_auth_nome') || 'Acesso Livre';
       record.usuario = user;
-      fetch('/api/liquidacoes', {
+
+      // 1. Try local Python backend endpoint if available
+      try {
+        const localRes = await fetch('/api/liquidacoes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(record)
+        });
+        if (localRes.ok) return;
+      } catch (e) {
+        // Local Python server not running (Cloudflare Pages)
+      }
+
+      // 2. Direct Supabase REST API upsert
+      await initSupabaseConfig();
+      const key = supabaseConfig.serviceKey || supabaseConfig.anonKey;
+      const headers = {
+        'apikey': supabaseConfig.anonKey,
+        'Authorization': 'Bearer ' + key,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      };
+
+      const body = {
+        id: String(record.id),
+        uge: String(record.uge || ''),
+        tipo_dh: record.tipoDH || '',
+        numero: String(record.numero || ''),
+        data_emissao: record.dataEmissao || null,
+        optante: record.optante || '',
+        valor_bruto: parseFloat(record.valorBruto || 0.0),
+        deducoes: record.deducoes || [],
+        total_deducoes: parseFloat(record.totalDeducoes || 0.0),
+        valor_liquido: parseFloat(record.valorLiquido || 0.0),
+        cod_natureza: record.codNatureza || '',
+        doc_relacionado: record.docRelacionado || '',
+        cnpj: record.cnpj || '',
+        data_ob: record.dataOB || null,
+        e_cac: record.eCac || 'Não',
+        observacao: record.observacao || '',
+        fase: parseInt(record.fase || 1),
+        usuario: record.usuario || '',
+        created_at: record.createdAt || new Date().toISOString()
+      };
+
+      const endpoint = supabaseConfig.url.replace(/\/$/, '') + '/rest/v1/liquidacoes';
+      const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(record)
-      }).catch(err => console.error('[DB] Erro de sincronização com Sheets:', err));
+        headers: headers,
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'HTTP ' + res.status);
+      }
+    }
+
+    async function deleteRecordFromSupabase(id, uge) {
+      // 1. Try local Python backend endpoint if available
+      try {
+        const localRes = await fetch('/api/liquidacoes/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id, uge: uge })
+        });
+        if (localRes.ok) return;
+      } catch (e) {
+        // Local Python server not running (Cloudflare Pages)
+      }
+
+      // 2. Direct Supabase REST API delete
+      await initSupabaseConfig();
+      const key = supabaseConfig.serviceKey || supabaseConfig.anonKey;
+      const headers = {
+        'apikey': supabaseConfig.anonKey,
+        'Authorization': 'Bearer ' + key,
+        'Content-Type': 'application/json'
+      };
+
+      const endpoint = supabaseConfig.url.replace(/\/$/, '') + `/rest/v1/liquidacoes?id=eq.${encodeURIComponent(id)}`;
+      const res = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: headers
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'HTTP ' + res.status);
+      }
     }
 
     function getFilteredData() {
@@ -482,6 +673,7 @@
     // ═══════════════════════════════════════════════
     function switchUGE(uge) {
       currentUGE = uge;
+      currentPage = 1;
       document.querySelectorAll('.uge-tab').forEach(t => t.classList.toggle('active', t.dataset.uge === uge));
       document.getElementById('fieldUGE').value = uge;
       renderTable();
@@ -829,6 +1021,7 @@
     // SUBMIT / SAVE
     // ═══════════════════════════════════════════════
     function submitLiquidacao() {
+      const submitBtn = document.querySelector('#formPanel .btn-submit');
       // Gather data
       const data = gatherFormData();
 
@@ -836,25 +1029,32 @@
       if (!data.numero) { showToast('Informe o nº do documento hábil', 'error'); return; }
       if (!data.valorBruto) { showToast('Informe o valor bruto', 'error'); return; }
 
-      // If user already confirmed this duplicate on blur, bypass warning
-      if (data.docRelacionado && data.docRelacionado.trim() === lastConfirmedDuplicateDoc) {
-        proceedAfterDocDuplicateCheck(data);
-        return;
-      }
+      if (submitBtn) setButtonLoading(submitBtn, true, 'Registrando...');
 
-      // Check docRelacionado duplicates specifically with detailed popup
-      const duplicate = findDocRelacionadoDuplicate(data.docRelacionado, editingId);
-      if (duplicate) {
-        showDocDuplicatePopup(duplicate, () => {
-          // Mark as confirmed so subsequent actions don't show the duplicate dialog again
-          lastConfirmedDuplicateDoc = data.docRelacionado.trim();
-          // If confirmed, proceed to standard checks and save
+      try {
+        // If user already confirmed this duplicate on blur, bypass warning
+        if (data.docRelacionado && data.docRelacionado.trim() === lastConfirmedDuplicateDoc) {
           proceedAfterDocDuplicateCheck(data);
-        });
-        return;
-      }
+          return;
+        }
 
-      proceedAfterDocDuplicateCheck(data);
+        // Check docRelacionado duplicates specifically with detailed popup
+        const duplicate = findDocRelacionadoDuplicate(data.docRelacionado, editingId);
+        if (duplicate) {
+          if (submitBtn) setButtonLoading(submitBtn, false);
+          showDocDuplicatePopup(duplicate, () => {
+            // Mark as confirmed so subsequent actions don't show the duplicate dialog again
+            lastConfirmedDuplicateDoc = data.docRelacionado.trim();
+            // If confirmed, proceed to standard checks and save
+            proceedAfterDocDuplicateCheck(data);
+          });
+          return;
+        }
+
+        proceedAfterDocDuplicateCheck(data);
+      } finally {
+        setTimeout(() => { if (submitBtn) setButtonLoading(submitBtn, false); }, 400);
+      }
     }
 
     function proceedAfterDocDuplicateCheck(data) {
@@ -1026,25 +1226,30 @@
       pendingDeleteRowId = null;
     }
 
-    function confirmDeleteRecord() {
+    async function confirmDeleteRecord() {
+      const btn = document.getElementById('confirmDeleteBtn');
       if (pendingDeleteRowId) {
-        let all = loadData();
-        const record = all.find(r => r.id === pendingDeleteRowId);
-        if (record) {
-          fetch('/api/liquidacoes/delete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: pendingDeleteRowId, uge: record.uge })
-          }).catch(err => console.error('[DB] Erro ao excluir na planilha:', err));
-        }
+        if (btn) setButtonLoading(btn, true, 'Excluindo...');
+        try {
+          let all = loadData();
+          const targetId = pendingDeleteRowId;
+          const record = all.find(r => r.id === targetId);
+          const uge = record ? record.uge : currentUGE;
 
-        all = all.filter(r => r.id !== pendingDeleteRowId);
-        saveData(all);
-        renderTable();
-        updateStats();
-        updateCounts();
-        showToast('Liquidação excluída', 'info');
-        closeConfirmDeleteModal();
+          cachedLiquidacoes = all.filter(r => r.id !== targetId);
+          renderTable();
+          updateStats();
+          updateCounts();
+
+          await deleteRecordFromSupabase(targetId, uge);
+          showToast('Liquidação excluída com sucesso do Supabase', 'info');
+        } catch (err) {
+          console.error('[DB] Erro ao excluir no Supabase:', err);
+          showToast('Erro ao excluir no Supabase: ' + err.message, 'error');
+        } finally {
+          if (btn) setButtonLoading(btn, false);
+          closeConfirmDeleteModal();
+        }
       }
     }
 
@@ -1167,10 +1372,13 @@
     }
 
     function confirmSaveRowEdition() {
+      const btn = document.getElementById('confirmEditSaveBtn');
       if (pendingConfirmRowId) {
+        if (btn) setButtonLoading(btn, true, 'Salvando...');
         const id = pendingConfirmRowId;
         closeConfirmEditModal();
         saveRowEdition(id, true);
+        if (btn) setTimeout(() => setButtonLoading(btn, false), 400);
       }
     }
 
@@ -1467,18 +1675,33 @@
         return parseInt(b.numero || 0) - parseInt(a.numero || 0);
       });
 
-      if (data.length === 0) {
+      const totalCount = data.length;
+      const totalPages = Math.ceil(totalCount / pageSize) || 1;
+
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      if (totalCount === 0) {
         tbody.innerHTML = '';
         empty.style.display = '';
         document.getElementById('recordCount').textContent = '0 registros';
+        updatePaginationUI(0, 0, 0, 1, 1);
         updateStats();
         return;
       }
 
       empty.style.display = 'none';
-      document.getElementById('recordCount').textContent = `${data.length} registro${data.length > 1 ? 's' : ''}`;
+      
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, totalCount);
+      const pageData = data.slice(startIndex, endIndex);
 
-      tbody.innerHTML = data.map(r => {
+      const countText = totalCount === pageData.length
+        ? `${totalCount} registro${totalCount > 1 ? 's' : ''}`
+        : `${totalCount} registros (Página ${currentPage} de ${totalPages})`;
+      document.getElementById('recordCount').textContent = countText;
+
+      tbody.innerHTML = pageData.map(r => {
         const tipoCls = r.tipoDH.toLowerCase();
         const optanteCls = r.optante === 'Sim' ? 'sim' : (r.optante === 'N/A' ? 'na' : 'nao');
         const dateFormatted = r.dataEmissao ? new Date(r.dataEmissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
@@ -1611,7 +1834,189 @@
         }
       }).join('');
 
+      updatePaginationUI(startIndex + 1, endIndex, totalCount, currentPage, totalPages);
       updateStats();
+    }
+
+    // ═══════════════════════════════════════════════
+    // PAGINATION CONTROLS & HELPERS
+    // ═══════════════════════════════════════════════
+    function updatePaginationUI(from, to, total, current, totalPages) {
+      const rangeEl = document.getElementById('paginationRange');
+      const totalEl = document.getElementById('paginationTotal');
+      const firstBtn = document.getElementById('btnFirstPage');
+      const prevBtn = document.getElementById('btnPrevPage');
+      const nextBtn = document.getElementById('btnNextPage');
+      const lastBtn = document.getElementById('btnLastPage');
+      const pageNumbersEl = document.getElementById('pageNumbers');
+
+      if (!rangeEl || !totalEl || !pageNumbersEl) return;
+
+      if (total === 0) {
+        rangeEl.textContent = '0–0';
+        totalEl.textContent = '0';
+        if (firstBtn) firstBtn.disabled = true;
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        if (lastBtn) lastBtn.disabled = true;
+        pageNumbersEl.innerHTML = '';
+        return;
+      }
+
+      rangeEl.textContent = `${from}–${to}`;
+      totalEl.textContent = total;
+
+      if (firstBtn) firstBtn.disabled = (current <= 1);
+      if (prevBtn) prevBtn.disabled = (current <= 1);
+      if (nextBtn) nextBtn.disabled = (current >= totalPages);
+      if (lastBtn) lastBtn.disabled = (current >= totalPages);
+
+      let buttonsHtml = '';
+
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) {
+          buttonsHtml += `<button class="page-btn ${i === current ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+      } else {
+        let startPage = Math.max(1, current - 1);
+        let endPage = Math.min(totalPages, current + 1);
+
+        if (current <= 3) {
+          startPage = 1;
+          endPage = 4;
+        } else if (current >= totalPages - 2) {
+          startPage = totalPages - 3;
+          endPage = totalPages;
+        }
+
+        if (startPage > 1) {
+          buttonsHtml += `<button class="page-btn ${1 === current ? 'active' : ''}" onclick="goToPage(1)">1</button>`;
+          if (startPage > 2) {
+            buttonsHtml += `<span class="page-ellipsis">…</span>`;
+          }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+          buttonsHtml += `<button class="page-btn ${i === current ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+
+        if (endPage < totalPages) {
+          if (endPage < totalPages - 1) {
+            buttonsHtml += `<span class="page-ellipsis">…</span>`;
+          }
+          buttonsHtml += `<button class="page-btn ${totalPages === current ? 'active' : ''}" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+        }
+      }
+
+      pageNumbersEl.innerHTML = buttonsHtml;
+    }
+
+    function changePageSize(newSize) {
+      pageSize = parseInt(newSize, 10) || 10;
+      currentPage = 1;
+      renderTable();
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderTable();
+      scrollToTableTop();
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTable();
+        scrollToTableTop();
+      }
+    }
+
+    function nextPage() {
+      const searchInput = document.getElementById('searchInput');
+      const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      let data = getFilteredData();
+      if (search) data = data.filter(r => matchesSearch(r, search));
+
+      Object.keys(columnFilters).forEach(col => {
+        const allowedVals = columnFilters[col];
+        if (allowedVals) {
+          if (col === 'codigoRetencao') {
+            data = data.filter(r => {
+              if (r.optante === 'Não' && r.deducoes && r.deducoes.length > 0) {
+                return r.deducoes.some(d => allowedVals.includes(d.codigo));
+              } else {
+                return allowedVals.includes('—');
+              }
+            });
+          } else if (col === 'valorRetencao') {
+            data = data.filter(r => {
+              if (r.optante === 'Não' && r.deducoes && r.deducoes.length > 0) {
+                return r.deducoes.some(d => allowedVals.includes(formatMoney(d.valor)));
+              } else {
+                const fallback = r.totalDeducoes ? formatMoney(r.totalDeducoes) : '—';
+                return allowedVals.includes(fallback);
+              }
+            });
+          } else {
+            data = data.filter(r => allowedVals.includes(getColumnTextValue(r, col)));
+          }
+        }
+      });
+
+      const totalPages = Math.ceil(data.length / pageSize) || 1;
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderTable();
+        scrollToTableTop();
+      }
+    }
+
+    function goToLastPage() {
+      const searchInput = document.getElementById('searchInput');
+      const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      let data = getFilteredData();
+      if (search) data = data.filter(r => matchesSearch(r, search));
+
+      Object.keys(columnFilters).forEach(col => {
+        const allowedVals = columnFilters[col];
+        if (allowedVals) {
+          if (col === 'codigoRetencao') {
+            data = data.filter(r => {
+              if (r.optante === 'Não' && r.deducoes && r.deducoes.length > 0) {
+                return r.deducoes.some(d => allowedVals.includes(d.codigo));
+              } else {
+                return allowedVals.includes('—');
+              }
+            });
+          } else if (col === 'valorRetencao') {
+            data = data.filter(r => {
+              if (r.optante === 'Não' && r.deducoes && r.deducoes.length > 0) {
+                return r.deducoes.some(d => allowedVals.includes(formatMoney(d.valor)));
+              } else {
+                const fallback = r.totalDeducoes ? formatMoney(r.totalDeducoes) : '—';
+                return allowedVals.includes(fallback);
+              }
+            });
+          } else {
+            data = data.filter(r => allowedVals.includes(getColumnTextValue(r, col)));
+          }
+        }
+      });
+
+      const totalPages = Math.ceil(data.length / pageSize) || 1;
+      currentPage = totalPages;
+      renderTable();
+      scrollToTableTop();
+    }
+
+    function scrollToTableTop() {
+      const tableSec = document.querySelector('.table-section');
+      if (tableSec) {
+        const rect = tableSec.getBoundingClientRect();
+        if (rect.top < 0) {
+          tableSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
     }
 
     // ═══════════════════════════════════════════════
@@ -2069,40 +2474,14 @@
           btnSincronizar.style.display = '';
         }
       }
-      // Load data from backend
+      // Load data directly from Supabase (works on local python AND Cloudflare Pages deploy)
       try {
-        const response = await fetch('/api/liquidacoes');
-        if (response.ok) {
-          cachedLiquidacoes = await response.json();
-          console.log('[DB] Dados carregados do backend:', cachedLiquidacoes.length);
-        } else {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          cachedLiquidacoes = raw ? JSON.parse(raw) : [];
-          console.log('[DB] Fallback localStorage ativo:', cachedLiquidacoes.length);
-        }
+        cachedLiquidacoes = await fetchLiquidacoesFromSupabase();
+        console.log('[SUPABASE] Registros de liquidações carregados:', cachedLiquidacoes.length);
       } catch (e) {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        cachedLiquidacoes = raw ? JSON.parse(raw) : [];
-        console.log('[DB] Falha de conexão. Fallback localStorage ativo:', cachedLiquidacoes.length);
-      }
-
-      // Auto-import pre-existing CSV backup records on local load if not done yet
-      if (!localStorage.getItem('imported_backup_v1') && cachedLiquidacoes.length === 0) {
-        try {
-          const response = await fetch('../dados/liquidacoes_import.json');
-          if (response.ok) {
-            const importData = await response.json();
-            saveData(importData);
-            // Sync each to backend to populate Sheets
-            for (let r of importData) {
-              syncRecordToBackend(r);
-            }
-            localStorage.setItem('imported_backup_v1', 'true');
-            console.log('Importação de backups concluída com sucesso!');
-          }
-        } catch (e) {
-          console.warn('Erro ao carregar dados do backup:', e);
-        }
+        console.error('[SUPABASE] Erro ao carregar liquidações do Supabase:', e);
+        showToast('Erro ao carregar dados do Supabase', 'error');
+        cachedLiquidacoes = [];
       }
 
       renderTable();
@@ -2445,6 +2824,7 @@
       updateFilterIconState(activeFilterCol, false);
       document.getElementById('columnFilterPopup').classList.remove('show');
       activeFilterCol = null;
+      currentPage = 1;
       renderTable();
     }
 
@@ -2465,6 +2845,7 @@
 
       document.getElementById('columnFilterPopup').classList.remove('show');
       activeFilterCol = null;
+      currentPage = 1;
       renderTable();
     }
 

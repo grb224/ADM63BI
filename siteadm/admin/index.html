@@ -273,7 +273,7 @@
     
     <div style="display:flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
       <button class="btn" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveUser()">Salvar</button>
+      <button class="btn btn-primary" id="btn-save-user" onclick="saveUser(this)">Salvar</button>
     </div>
   </div>
 </div>
@@ -306,7 +306,7 @@
     
     <div style="display:flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
       <button class="btn" onclick="closeMilestoneModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveMilestone()">Confirmar</button>
+      <button class="btn btn-primary" id="btn-save-milestone" onclick="saveMilestone(this)">Confirmar</button>
     </div>
   </div>
 </div>
@@ -329,7 +329,7 @@
     
     <div style="display:flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
       <button class="btn" onclick="closePiModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="savePiMapping()">Salvar</button>
+      <button class="btn btn-primary" id="btn-save-pi" onclick="savePiMapping(this)">Salvar</button>
     </div>
   </div>
 </div>
@@ -441,7 +441,8 @@
     document.getElementById('tag-setfindashboard').checked = u.tags && u.tags.includes('setfindashboard');
   }
   
-  async function saveUser() {
+  async function saveUser(btnTarget) {
+    const btn = btnTarget || document.getElementById('btn-save-user');
     const idx = parseInt(document.getElementById('edit-index').value);
     const perfil = document.getElementById('ipt-perfil').value.trim().toLowerCase();
     const nome = document.getElementById('ipt-nome').value.trim();
@@ -457,9 +458,13 @@
     if(document.getElementById('tag-setfinliq').checked) tags.push('setfinliq');
     if(document.getElementById('tag-setfindashboard').checked) tags.push('setfindashboard');
     
-    if (LoginSystem.useSupabase && LoginSystem.supabase) {
-      try {
-        if (idx === -1 && !senha) return alert("A senha é obrigatória para um novo perfil.");
+    setButtonLoading(btn, true, 'Gravando...');
+    try {
+      if (LoginSystem.useSupabase && LoginSystem.supabase) {
+        if (idx === -1 && !senha) {
+          setButtonLoading(btn, false);
+          return alert("A senha é obrigatória para um novo perfil.");
+        }
         const action_type = idx === -1 ? 'create' : 'update';
         const { data, error } = await LoginSystem.supabase.rpc('manage_user_profile', {
           action_type,
@@ -473,29 +478,34 @@
         closeModal();
         await loadUsers();
         return;
-      } catch(e) {
-        return alert("Erro ao salvar no Supabase: " + (e.message || e));
       }
-    }
-    
-    let hash = "";
-    if (idx === -1) {
-      if(!senha) return alert("A senha é obrigatória para um novo perfil.");
-      hash = await sha256(senha);
-      users.push({ perfil, nome, hash, tags, senha });
-    } else {
-      users[idx].perfil = perfil;
-      users[idx].nome = nome;
-      users[idx].tags = tags;
-      if (senha) {
-        users[idx].hash = await sha256(senha);
-        users[idx].senha = senha;
+      
+      let hash = "";
+      if (idx === -1) {
+        if(!senha) {
+          setButtonLoading(btn, false);
+          return alert("A senha é obrigatória para um novo perfil.");
+        }
+        hash = await sha256(senha);
+        users.push({ perfil, nome, hash, tags, senha });
+      } else {
+        users[idx].perfil = perfil;
+        users[idx].nome = nome;
+        users[idx].tags = tags;
+        if (senha) {
+          users[idx].hash = await sha256(senha);
+          users[idx].senha = senha;
+        }
       }
+      
+      await saveToServer();
+      closeModal();
+      renderTable();
+    } catch(e) {
+      alert("Erro ao salvar perfil: " + (e.message || e));
+    } finally {
+      setButtonLoading(btn, false);
     }
-    
-    await saveToServer();
-    closeModal();
-    renderTable();
   }
   
   async function deleteUser(index) {
@@ -771,13 +781,15 @@
     document.getElementById('modal-pi').style.display = 'none';
   }
   
-  async function savePiMapping() {
+  async function savePiMapping(btnTarget) {
+    const btn = btnTarget || document.getElementById('btn-save-pi');
     const isNew = document.getElementById('edit-pi-is-new').value === 'true';
     const pi = document.getElementById('ipt-pi-code').value.trim().toUpperCase();
     const setor = document.getElementById('ipt-pi-setor').value.trim().toUpperCase();
     
     if (!pi || !setor) return alert("Código do PI e Setor são obrigatórios.");
     
+    setButtonLoading(btn, true, 'Salvando...');
     try {
       if (isNew) {
         const { error } = await LoginSystem.supabase
@@ -803,6 +815,8 @@
       
     } catch(e) {
       alert("Erro ao salvar mapeamento: " + (e.message || e));
+    } finally {
+      setButtonLoading(btn, false);
     }
   }
   
@@ -829,10 +843,26 @@
     }
   }
 
-  window.onload = () => { 
-    loadUsers(); 
-    loadConfig(); 
-    setTimeout(loadMapeamentoPI, 800); 
+  window.onload = async () => {
+    // Aguarda a inicialização do Supabase para evitar condição de corrida
+    await LoginSystem.init('../');
+    
+    // Verifica permissão de acesso
+    if (LoginSystem.loginRequired && !LoginSystem.isLoggedIn()) {
+      window.location.href = '../';
+      return;
+    }
+    const tagsStr = localStorage.getItem('adm_auth_tags') || sessionStorage.getItem('adm_auth_tags') || "[]";
+    const tags = JSON.parse(tagsStr);
+    if (LoginSystem.loginRequired && !tags.includes('admin')) {
+      alert("Acesso restrito a administradores.");
+      window.location.href = '../';
+      return;
+    }
+    
+    await loadUsers(); 
+    await loadConfig(); 
+    await loadMapeamentoPI(); 
   };
 </script>
 <script src="../assets/login.js?v=3"></script>
